@@ -88,6 +88,9 @@ class ProductoController
             return;
         }
 
+        // 🧩 Obtener variantes de este producto
+        $variantes = \Models\VarianteProducto::obtenerPorProductoId($id);
+
         // Incluyo la vista del formulario de edición
         require __DIR__ . '/../views/producto/editar.php';
     }
