@@ -22,3 +22,28 @@
 
     <button type="submit">Actualizar</button>
 </form>
+<h2>Variantes del Producto</h2>
+
+<?php if (!empty($variantes)): ?>
+    <?php foreach ($variantes as $variante): ?>
+        <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
+            <form action="/variante/actualizar/<?= $variante['id'] ?>" method="POST">
+                <input type="hidden" name="producto_id" value="<?= $producto['id'] ?>">
+
+                <label>Talla:</label>
+                <input type="text" name="talla" value="<?= htmlspecialchars($variante['talla']) ?>" required>
+
+                <label>Color:</label>
+                <input type="text" name="color" value="<?= htmlspecialchars($variante['color']) ?>" required>
+
+                <label>Stock:</label>
+                <input type="number" name="stock" value="<?= htmlspecialchars($variante['stock']) ?>" required>
+
+                <button type="submit">Actualizar Variante</button>
+                <a href="/variante/eliminar/<?= $variante['id'] ?>?producto_id=<?= $producto['id'] ?>" onclick="return confirm('¿Estás seguro de eliminar esta variante?')">❌ Eliminar</a>
+            </form>
+        </div>
+    <?php endforeach; ?>
+<?php else: ?>
+    <p>No hay variantes registradas.</p>
+<?php endif; ?>

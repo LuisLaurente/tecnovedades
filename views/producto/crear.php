@@ -22,5 +22,40 @@
     <label for="visible">Visible:</label>
     <input type="checkbox" name="visible" id="visible" value="1" checked><br><br>
 
+    <!-- Este campo es para ingresar variantes del producto -->
+    <h3>Variantes</h3>
+    <div id="variantes-container">
+        <div class="variante">
+            <label>Talla:</label>
+            <input type="text" name="variantes[talla][]" required>
+
+            <label>Color:</label>
+            <input type="text" name="variantes[color][]" required>
+
+            <label>Stock:</label>
+            <input type="number" name="variantes[stock][]" required>
+        </div>
+    </div>
+
+    <button type="button" onclick="agregarVariante()">➕ Agregar Variante</button>
+
+    <script>
+        function agregarVariante() {
+            const container = document.getElementById('variantes-container');
+            const html = `
+                <div class="variante">
+                    <label>Talla:</label>
+                    <input type="text" name="variantes[talla][]" required>
+
+                    <label>Color:</label>
+                    <input type="text" name="variantes[color][]" required>
+
+                    <label>Stock:</label>
+                    <input type="number" name="variantes[stock][]" required>
+                </div>`;
+            container.insertAdjacentHTML('beforeend', html);
+        }
+    </script>
+
     <button type="submit">Guardar Producto</button>
 </form>
