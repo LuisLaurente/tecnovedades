@@ -16,7 +16,7 @@ $scriptName = dirname($_SERVER['SCRIPT_NAME']);
 $url = str_replace($scriptName, '', $requestUri);
 $url = trim($url, '/');
 
-// Si está vacía, usar ruta por defecto
+// Si está vacía, usar ruta por defecto 2
 if ($url === '') {
     $url = 'home/index';
 }

@@ -37,7 +37,7 @@
         </div>
     </div>
 
-    <button type="button" onclick="agregarVariante()">➕ Agregar Variante</button>
+    <button type="button" onclick="agregarVariante()"> Agregar Variante</button>
 
     <script>
         function agregarVariante() {
