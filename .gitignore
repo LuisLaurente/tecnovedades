@@ -1,0 +1,29 @@
+# 🚢 Archivos relacionados con Docker
+Dockerfile
+*.dockerfile
+.dockerignore
+docker-compose.yml
+docker-compose*.yml
+
+config/database.php
+database.php
+core/Database.php
+
+# Archivos adicionales de Docker
+.docker/
+docker-data/
+docker-volumes/
+*.tar
+*.tar.gz
+docker-compose.override.yml
+.docker-compose.override.yml
+
+# 🐘 Archivos de entorno
+.env
+.env.*
+
+# 📦 Dependencias (si usas Composer o Node.js)
+vendor/
+node_modules/
+
+
