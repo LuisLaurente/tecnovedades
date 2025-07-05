@@ -31,5 +31,6 @@ class Router
         require_once __DIR__ . '/../controllers/ErrorController.php';
         $errorController = new \Controllers\ErrorController();
         $errorController->notFound();
+
     }
 }
