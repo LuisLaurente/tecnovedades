@@ -3,6 +3,7 @@
 namespace Controllers;
 
 use Models\Producto;
+use Models\VarianteProducto;
 
 class ProductoController
 {
@@ -24,17 +25,17 @@ class ProductoController
     }
     public function guardar()
     {
-        // Primero obtengo la conexión a la base de datos
+        //  Obtengo la conexión a la base de datos
         $db = \Core\Database::getInstance()->getConnection();
 
-        // Luego, obtengo los datos enviados desde el formulario
+        //  Obtengo los datos del formulario
         $nombre = $_POST['nombre'] ?? '';
         $descripcion = $_POST['descripcion'] ?? '';
         $precio = $_POST['precio'] ?? 0;
         $stock = $_POST['stock'] ?? 0;
         $visible = isset($_POST['visible']) ? 1 : 0;
 
-        // Esta consulta me sirve para insertar el producto en la base de datos
+        //  Inserto el producto en la tabla productos
         $sql = "INSERT INTO productos (nombre, descripcion, precio, stock, visible) 
                 VALUES (:nombre, :descripcion, :precio, :stock, :visible)";
         
@@ -44,14 +45,39 @@ class ProductoController
         $stmt->bindParam(':precio', $precio);
         $stmt->bindParam(':stock', $stock);
         $stmt->bindParam(':visible', $visible);
-
-        // Ejecuto la consulta
         $stmt->execute();
 
-        // Después de guardar, redirijo al listado de productos
+        //  Obtengo el ID del producto recién creado
+        $producto_id = $db->lastInsertId();
+
+        //  Verifico si se enviaron variantes
+        if ($producto_id && isset($_POST['variantes'])) {
+            $variantes = $_POST['variantes'];
+
+            $tallas = $variantes['talla'] ?? [];
+            $colores = $variantes['color'] ?? [];
+            $stocks = $variantes['stock'] ?? [];
+
+            //  Recorro todas las variantes y las inserto en la tabla variantes_producto
+            $sqlVariante = "INSERT INTO variantes_producto (producto_id, talla, color, stock) 
+                            VALUES (:producto_id, :talla, :color, :stock)";
+            $stmtVariante = $db->prepare($sqlVariante);
+
+            for ($i = 0; $i < count($tallas); $i++) {
+                $stmtVariante->execute([
+                    ':producto_id' => $producto_id,
+                    ':talla'       => trim($tallas[$i]),
+                    ':color'       => trim($colores[$i]),
+                    ':stock'       => (int)$stocks[$i]
+                ]);
+            }
+        }
+
+        //  Redirijo al listado de productos después de guardar
         header("Location: /producto/index");
         exit;
     }
+
     public function editar($id)
     {
         // Obtengo el producto desde el modelo por su ID
@@ -86,7 +112,7 @@ class ProductoController
         // Llamo al método eliminar del modelo Producto
         Producto::eliminar($id);
 
-        // Redirijo al listado de productos
+        // Redirijo al listado de productoss
         header('Location: /producto');
         exit;
     }
