@@ -1,8 +1,8 @@
 <?php
 
 return [
-    'host' => '127.0.0.1',
+    'host' => 'mysql-db',    // 'host' => '127.0.0.1',
     'dbname' => 'tecnovedades',
-    'username' => 'root',
-    'password' => '',
+    'username' => 'user',   // 'username' => 'root
+    'password' => 'password', // 'password' => '',
 ];
