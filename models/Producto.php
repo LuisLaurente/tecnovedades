@@ -42,4 +42,18 @@ class Producto
         $stmt = $db->prepare("UPDATE productos SET visible = 0 WHERE id = ?");
         $stmt->execute([$id]);
     }
+
+    public static function obtenerCategoriasPorProducto($productoId)
+    {
+        $db = Database::getInstance()->getConnection();
+
+        $stmt = $db->prepare("
+        SELECT c.nombre
+        FROM categorias c
+        INNER JOIN producto_categoria pc ON pc.id_categoria = c.id
+        WHERE pc.id_producto = ?
+    ");
+        $stmt->execute([$productoId]);
+        return array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'nombre');
+    }
 }
