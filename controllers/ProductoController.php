@@ -2,8 +2,10 @@
 
 namespace Controllers;
 
+use Etiqueta as GlobalEtiqueta;
 use Models\Producto;
 use Models\VarianteProducto;
+use Models\Etiqueta;
 
 class ProductoController
 {
@@ -50,6 +52,15 @@ class ProductoController
         //  Obtengo el ID del producto recién creado
         $producto_id = $db->lastInsertId();
 
+        //etiquetas
+
+        $etiquetas = $_POST['etiquetas'] ?? [];
+
+        foreach ($etiquetas as $etiqueta_id) {
+        $stmt = $db->prepare("INSERT INTO producto_etiqueta (producto_id, etiqueta_id) VALUES (?, ?)");
+        $stmt->execute([$producto_id, $etiqueta_id]);
+        }
+
         //  Verifico si se enviaron variantes
         if ($producto_id && isset($_POST['variantes'])) {
             $variantes = $_POST['variantes'];
@@ -76,7 +87,9 @@ class ProductoController
         //  Redirijo al listado de productos después de guardar
         header("Location: /producto/index");
         exit;
+
     }
+    
 
     public function editar($id)
     {
@@ -89,13 +102,25 @@ class ProductoController
         }
 
         // 🧩 Obtener variantes de este producto
-        $variantes = \Models\VarianteProducto::obtenerPorProductoId($id);
+        $variantes = VarianteProducto::obtenerPorProductoId($id);
+
+        
+
+        //etiquetas
+        $etiquetaModel = new Etiqueta;
+        $etiquetas = $etiquetaModel->obtenerTodas();
+        $etiquetasAsignadas = $etiquetaModel->obtenerEtiquetasPorProducto($id);
+
 
         // Incluyo la vista del formulario de edición
         require __DIR__ . '/../views/producto/editar.php';
+        
     }
     public function actualizar()
     {
+        //  Obtengo la conexión a la base de datos
+        $db = \Core\Database::getInstance()->getConnection();
+
         $id = $_POST['id'] ?? null;
         $nombre = $_POST['nombre'] ?? '';
         $descripcion = $_POST['descripcion'] ?? '';
@@ -104,11 +129,27 @@ class ProductoController
         $visible = isset($_POST['visible']) ? (int) $_POST['visible'] : 1;
 
         if ($id) {
-            Producto::actualizar($id, $nombre, $descripcion, $precio, $stock, $visible);
+            // Actualizar datos del producto
+        Producto::actualizar($id, $nombre, $descripcion, $precio, $stock, $visible);
+    
+        // ETIQUETAS
+        // 1. Eliminar etiquetas actuales
+        $stmt = $db->prepare("DELETE FROM producto_etiqueta WHERE producto_id = ?");
+        $stmt->execute([$id]);
+
+        // Insertar nuevas etiquetas seleccionadas
+        $etiquetas = $_POST['etiquetas'] ?? [];
+        foreach ($etiquetas as $etiqueta_id) {
+            $stmt = $db->prepare("INSERT INTO producto_etiqueta (producto_id, etiqueta_id) VALUES (?, ?)");
+            $stmt->execute([$id, $etiqueta_id]);
+        }
+
         }
 
         header('Location: /producto');
         exit;
+
+        
     }
     public function eliminar($id)
     {
