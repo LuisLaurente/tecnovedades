@@ -61,4 +61,10 @@ class VarianteProducto
         $stmt = $db->prepare("DELETE FROM variantes_producto WHERE id = ?");
         $stmt->execute([$id]);
     }
+
+    public function obtenerEtiquetasPorProducto($id_producto) {
+    $stmt = $this->db->prepare("SELECT etiqueta_id FROM producto_etiqueta WHERE producto_id = ?");
+    $stmt->execute([$id_producto]);
+    return $stmt->fetchAll(PDO::FETCH_COLUMN); // Devuelve array con IDs
+}
 }

@@ -2,6 +2,7 @@
 
 <form action="/producto/actualizar/<?= $producto['id'] ?>" method="POST">
     <input type="hidden" name="id" value="<?= $producto['id'] ?>">
+
     <label>Nombre:</label>
     <input type="text" name="nombre" value="<?= htmlspecialchars($producto['nombre']) ?>" required><br>
 
@@ -20,8 +21,58 @@
         <option value="0" <?= !$producto['visible'] ? 'selected' : '' ?>>No</option>
     </select><br><br>
 
+
+    <!-- Categorías con checkboxes -->
+    <h3>Categorías</h3>
+    <div style="margin-bottom: 20px;">
+        <?php
+        function renderCheckboxCategoriasEdit($categorias, $seleccionadas, $padre = null, $nivel = 0)
+        {
+            foreach ($categorias as $cat) {
+                if ($cat['id_padre'] == $padre) {
+                    $margen = $nivel * 20;
+                    $checked = in_array($cat['id'], $seleccionadas) ? 'checked' : '';
+                    echo "<div style='margin-left: {$margen}px'>";
+                    echo "<label>";
+                    echo "<input type='checkbox' name='categorias[]' value='{$cat['id']}' $checked> ";
+                    echo htmlspecialchars($cat['nombre']);
+                    echo "</label>";
+                    echo "</div>";
+                    renderCheckboxCategoriasEdit($categorias, $seleccionadas, $cat['id'], $nivel + 1);
+                }
+            }
+        }
+
+        renderCheckboxCategoriasEdit($categorias, $categoriasAsignadas);
+        ?>
+    </div>
+
+        <label>Etiquetas:</label>
+    <select name="etiquetas[]" multiple>
+    <?php foreach ($etiquetas as $et): ?>
+    <option value="<?= $et['id'] ?>" <?= in_array($et['id'], $etiquetasAsignadas ?? []) ? 'selected' : '' ?>>
+        <?= htmlspecialchars($et['nombre']) ?>
+    </option>
+    <?php endforeach; ?>
+</select>
+
+
     <button type="submit">Actualizar</button>
 </form>
+
+
+<hr>
+
+
+<h4>Etiquetas asignadas (debug):</h4>
+<ul>
+<?php foreach ($etiquetasAsignadas as $id_et): ?>
+  <li>ID etiqueta: <?= $id_et ?></li>
+<?php endforeach; ?>
+</ul>
+
+
+
 <h2>Variantes del Producto</h2>
 
 <?php if (!empty($variantes)): ?>
