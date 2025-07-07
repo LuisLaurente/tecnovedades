@@ -2,8 +2,8 @@
 namespace Controllers;
 
 class BaseController {
-    public function render($view, $data = []) {
+    public function render($vista, $data = []) {
         extract($data);
-        include "../views/{$view}.php";
+        include __DIR__ . '/../views/' . $vista . '.php';
     }
 }

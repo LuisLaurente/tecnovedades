@@ -20,8 +20,27 @@
         <option value="0" <?= !$producto['visible'] ? 'selected' : '' ?>>No</option>
     </select><br><br>
 
+        <label>Etiquetas:</label>
+    <select name="etiquetas[]" multiple>
+    <?php foreach ($etiquetas as $et): ?>
+    <option value="<?= $et['id'] ?>" <?= in_array($et['id'], $etiquetasAsignadas ?? []) ? 'selected' : '' ?>>
+        <?= htmlspecialchars($et['nombre']) ?>
+    </option>
+    <?php endforeach; ?>
+</select>
+
     <button type="submit">Actualizar</button>
 </form>
+
+
+<h4>Etiquetas asignadas (debug):</h4>
+<ul>
+<?php foreach ($etiquetasAsignadas as $id_et): ?>
+  <li>ID etiqueta: <?= $id_et ?></li>
+<?php endforeach; ?>
+</ul>
+
+
 <h2>Variantes del Producto</h2>
 
 <?php if (!empty($variantes)): ?>
