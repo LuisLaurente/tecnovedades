@@ -21,6 +21,8 @@
     </style>
 </head>
 <body>
+    <?php $base = '/TECNOVEDADES-MASTER/'; ?>
+
     <h1>Listado de Productos</h1>
 
     <?php if (!empty($productos)): ?>
@@ -49,5 +51,13 @@
     <?php else: ?>
         <p>No hay productos disponibles.</p>
     <?php endif; ?>
+    <?php foreach ($productos as $producto): ?>
+        <li>
+            <?= htmlspecialchars($producto['nombre']) ?> - S/ <?= htmlspecialchars($producto['precio']) ?>
+            | <a href="<?= $base ?>index.php?url=producto/editar/<?= $producto['id'] ?>">Editar</a>
+        <a href="<?= $base ?>index.php?url=producto/eliminar/<?= $producto['id'] ?>" onclick="return confirm('¿Estás seguro de eliminar este producto?')">Eliminar</a>
+        </li>
+    <?php endforeach; ?>
+
 </body>
 </html>

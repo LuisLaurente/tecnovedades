@@ -85,4 +85,14 @@
 
     <br>
     <button type="submit">Guardar Producto</button>
+
+    
+    <label>Etiquetas:</label>
+<select name="etiquetas[]" multiple>
+<?php foreach ($etiquetas as $et): ?>
+  <option value="<?= $et['id'] ?>" <?= in_array($et['id'], $etiquetasAsignadas ?? []) ? 'selected' : '' ?>>
+    <?= htmlspecialchars($et['nombre']) ?>
+  </option>
+<?php endforeach; ?>
+</select>
 </form>

@@ -22,6 +22,8 @@ class Producto
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+   
+
     public static function obtenerPorId($id)
     {
         $db = Database::getInstance()->getConnection();
@@ -55,5 +57,12 @@ class Producto
     ");
         $stmt->execute([$productoId]);
         return array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'nombre');
+
+     //etiqueta
+    public function obtenerEtiquetasPorProducto($id_producto) {
+    $stmt = $this->db->prepare("SELECT etiqueta_id FROM producto_etiqueta WHERE producto_id = ?");
+    $stmt->execute([$id_producto]);
+    return $stmt->fetchAll(PDO::FETCH_COLUMN); // Devuelve array con IDs
+
     }
 }

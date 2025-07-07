@@ -2,9 +2,11 @@
 
 namespace Controllers;
 
+use Etiqueta as GlobalEtiqueta;
 use Models\Producto;
 use Models\VarianteProducto;
 use Models\Categoria;
+use Models\Etiqueta;
 
 class ProductoController
 {
@@ -13,7 +15,7 @@ class ProductoController
         $productoModel = new Producto();
         $productos = $productoModel->obtenerTodos();
 
-        // ✅ Agregar las categorías asociadas a cada producto
+        // Agregar las categorías asociadas a cada producto
         foreach ($productos as &$producto) {
             $producto['categorias'] = Producto::obtenerCategoriasPorProducto($producto['id']);
         }
@@ -50,7 +52,8 @@ class ProductoController
 
         $producto_id = $db->lastInsertId();
 
-        // ✅ Insertar relación producto-categoría
+
+        // Insertar relación producto-categoría
         if ($producto_id && !empty($_POST['categorias'])) {
             $sqlCat = "INSERT INTO producto_categoria (id_producto, id_categoria) VALUES (?, ?)";
             $stmtCat = $db->prepare($sqlCat);
@@ -59,7 +62,18 @@ class ProductoController
             }
         }
 
-        // Insertar variantes si existen
+
+        //etiquetas
+
+        $etiquetas = $_POST['etiquetas'] ?? [];
+
+        foreach ($etiquetas as $etiqueta_id) {
+        $stmt = $db->prepare("INSERT INTO producto_etiqueta (producto_id, etiqueta_id) VALUES (?, ?)");
+        $stmt->execute([$producto_id, $etiqueta_id]);
+        }
+
+        //  Verifico si se enviaron variantes
+
         if ($producto_id && isset($_POST['variantes'])) {
             $variantes = $_POST['variantes'];
             $tallas = $variantes['talla'] ?? [];
@@ -82,7 +96,9 @@ class ProductoController
 
         header("Location: /producto");
         exit;
+
     }
+    
 
     public function editar($id)
     {
@@ -91,9 +107,11 @@ class ProductoController
             echo "Producto no encontrado.";
             return;
         }
-
         $variantes = VarianteProducto::obtenerPorProductoId($id);
         $categorias = Categoria::obtenerTodas();
+        //etiquetas
+        $etiquetaModel = new Etiqueta;
+        $etiquetas = $etiquetaModel->obtenerTodas();
 
         // Obtener categorías ya asociadas
         $db = \Core\Database::getInstance()->getConnection();
@@ -101,11 +119,19 @@ class ProductoController
         $stmt->execute([$id]);
         $categoriasAsignadas = array_column($stmt->fetchAll(\PDO::FETCH_ASSOC), 'id_categoria');
 
+        
+        $etiquetasAsignadas = $etiquetaModel->obtenerEtiquetasPorProducto($id);
+
+
         require __DIR__ . '/../views/producto/editar.php';
+        
     }
 
     public function actualizar()
     {
+        //  Obtengo la conexión a la base de datos
+        $db = \Core\Database::getInstance()->getConnection();
+
         $id = $_POST['id'] ?? null;
         $nombre = $_POST['nombre'] ?? '';
         $descripcion = $_POST['descripcion'] ?? '';
@@ -114,11 +140,10 @@ class ProductoController
         $visible = isset($_POST['visible']) ? (int) $_POST['visible'] : 1;
 
         if ($id) {
+            // Actualizar producto
             Producto::actualizar($id, $nombre, $descripcion, $precio, $stock, $visible);
 
-            $db = \Core\Database::getInstance()->getConnection();
-
-            // ✅ Actualizar categorías: eliminar todas y volver a insertar
+            // Actualizar categorías
             $db->prepare("DELETE FROM producto_categoria WHERE id_producto = ?")->execute([$id]);
 
             if (!empty($_POST['categorias'])) {
@@ -127,10 +152,22 @@ class ProductoController
                     $stmt->execute([$id, $id_categoria]);
                 }
             }
+
+            // Actualizar etiquetas
+            $db->prepare("DELETE FROM producto_etiqueta WHERE producto_id = ?")->execute([$id]);
+
+            if (!empty($_POST['etiquetas'])) {
+                foreach ($_POST['etiquetas'] as $etiqueta_id) {
+                    $stmt = $db->prepare("INSERT INTO producto_etiqueta (producto_id, etiqueta_id) VALUES (?, ?)");
+                    $stmt->execute([$id, $etiqueta_id]);
+                }
+            }
         }
 
         header('Location: /producto');
         exit;
+
+        
     }
 
     public function eliminar($id)

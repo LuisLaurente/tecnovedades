@@ -21,7 +21,8 @@
         <option value="0" <?= !$producto['visible'] ? 'selected' : '' ?>>No</option>
     </select><br><br>
 
-    <!-- ✅ Categorías con checkboxes -->
+
+    <!-- Categorías con checkboxes -->
     <h3>Categorías</h3>
     <div style="margin-bottom: 20px;">
         <?php
@@ -46,10 +47,31 @@
         ?>
     </div>
 
+        <label>Etiquetas:</label>
+    <select name="etiquetas[]" multiple>
+    <?php foreach ($etiquetas as $et): ?>
+    <option value="<?= $et['id'] ?>" <?= in_array($et['id'], $etiquetasAsignadas ?? []) ? 'selected' : '' ?>>
+        <?= htmlspecialchars($et['nombre']) ?>
+    </option>
+    <?php endforeach; ?>
+</select>
+
+
     <button type="submit">Actualizar</button>
 </form>
 
+
 <hr>
+
+
+<h4>Etiquetas asignadas (debug):</h4>
+<ul>
+<?php foreach ($etiquetasAsignadas as $id_et): ?>
+  <li>ID etiqueta: <?= $id_et ?></li>
+<?php endforeach; ?>
+</ul>
+
+
 
 <h2>Variantes del Producto</h2>
 
