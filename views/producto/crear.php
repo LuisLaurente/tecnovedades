@@ -1,7 +1,7 @@
 <!-- views/producto/crear.php -->
 <h2>Crear Nuevo Producto</h2>
 
-<form action="/producto/guardar" method="POST">
+<form action="/producto/guardar" method="POST" enctype="multipart/form-data">
     <!-- Este campo sirve para ingresar el nombre del producto -->
     <label for="nombre">Nombre:</label>
     <input type="text" name="nombre" id="nombre" required><br><br>
@@ -36,6 +36,9 @@
             <input type="number" name="variantes[stock][]" required>
         </div>
     </div>
+
+    <label>Imágenes del producto:</label>
+    <input type="file" name="imagenes[]" multiple><br>
 
     <button type="button" onclick="agregarVariante()"> Agregar Variante</button>
 

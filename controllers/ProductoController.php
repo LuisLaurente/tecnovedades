@@ -4,6 +4,7 @@ namespace Controllers;
 
 use Models\Producto;
 use Models\VarianteProducto;
+use Models\ImagenProducto;
 
 class ProductoController
 {
@@ -46,6 +47,27 @@ class ProductoController
         $stmt->bindParam(':stock', $stock);
         $stmt->bindParam(':visible', $visible);
         $stmt->execute();
+
+        $idProducto = $db->lastInsertId(); // ID del producto insertado
+
+        // Procesar imágenes
+        if (!empty($_FILES['imagenes']['name'][0])) {
+            $rutaDestino = __DIR__ . '/../public/uploads/';
+
+            if (!is_dir($rutaDestino)) {
+                mkdir($rutaDestino, 0777, true); // Crear carpeta si no existe
+            }
+
+            foreach ($_FILES['imagenes']['tmp_name'] as $index => $tmpName) {
+                $nombreOriginal = $_FILES['imagenes']['name'][$index];
+                $nombreFinal = uniqid() . '_' . basename($nombreOriginal);
+                $rutaFinal = $rutaDestino . $nombreFinal;
+
+                if (move_uploaded_file($tmpName, $rutaFinal)) {
+                    ImagenProducto::guardar($idProducto, $nombreFinal);
+                }
+            }
+        }
 
         //  Obtengo el ID del producto recién creado
         $producto_id = $db->lastInsertId();
@@ -90,6 +112,9 @@ class ProductoController
 
         // 🧩 Obtener variantes de este producto
         $variantes = \Models\VarianteProducto::obtenerPorProductoId($id);
+
+        $imagenes = \Models\ImagenProducto::obtenerPorProducto($id);
+        
 
         // Incluyo la vista del formulario de edición
         require __DIR__ . '/../views/producto/editar.php';
