@@ -78,7 +78,7 @@
 <?php if (!empty($variantes)): ?>
     <?php foreach ($variantes as $variante): ?>
         <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
-            <form action="/variante/actualizar/<?= $variante['id'] ?>" method="POST">
+            <form action="/variante/actualizar/<?= $variante['id'] ?>" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="producto_id" value="<?= $producto['id'] ?>">
 
                 <label>Talla:</label>
@@ -90,9 +90,19 @@
                 <label>Stock:</label>
                 <input type="number" name="stock" value="<?= htmlspecialchars($variante['stock']) ?>" required>
 
+                <label>Imágenes del producto:</label>
+                <input type="file" name="imagenes[]" multiple><br>
+
                 <button type="submit">Actualizar Variante</button>
                 <a href="/variante/eliminar/<?= $variante['id'] ?>?producto_id=<?= $producto['id'] ?>" onclick="return confirm('¿Estás seguro de eliminar esta variante?')">❌ Eliminar</a>
             </form>
+            <h2>Imágenes del Producto</h2>
+            <?php foreach ($imagenes as $img): ?>
+                <div style="margin-bottom: 10px;">
+                    <img src="/uploads/<?= htmlspecialchars($img['nombre_imagen']) ?>" alt="Imagen" width="120">
+                    <a href="/imagen/eliminar/<?= $img['id'] ?>" onclick="return confirm('¿Eliminar esta imagen?')">❌ Eliminar</a>
+                </div>
+            <?php endforeach; ?>
         </div>
     <?php endforeach; ?>
 <?php else: ?>
