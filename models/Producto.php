@@ -57,7 +57,7 @@ class Producto
     ");
         $stmt->execute([$productoId]);
         return array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'nombre');
-
+    }
      //etiqueta
     public function obtenerEtiquetasPorProducto($id_producto) {
     $stmt = $this->db->prepare("SELECT etiqueta_id FROM producto_etiqueta WHERE producto_id = ?");
