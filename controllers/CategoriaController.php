@@ -14,14 +14,31 @@ class CategoriaController
 
     public function crear()
     {
-        $categorias = Categoria::obtenerTodas();
+        $errores = [];
+        $nombre = '';
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $nombre = trim($_POST['nombre'] ?? '');
+
+            if (!\Core\Helpers\Validator::isRequired($nombre)) {
+                $errores[] = "El nombre de la categoría es obligatorio.";
+            }
+
+            if (empty($errores)) {
+                \Models\Categoria::crear($nombre);
+                header("Location: /categoria");
+                exit;
+            }
+        }
+
+        // Para mostrar formulario vacío o con errores
         require_once __DIR__ . '/../views/categoria/crear.php';
     }
 
     public function guardar()
     {
         $nombre = trim($_POST['nombre'] ?? '');
-        $id_padre = $_POST['id_padre'] ?? null;
+        $id_padre = $_POST['id_padre'] ?? '';
         if ($id_padre === '') $id_padre = null;
 
         try {
