@@ -21,22 +21,22 @@
     </style>
 </head>
 <body>
-    <?php $base = '/TECNOVEDADES-MASTER/'; ?>
-
     <h1>Listado de Productos</h1>
 
+    <a href="/producto/crear">+ Nuevo Producto</a><br><br>
+
     <?php if (!empty($productos)): ?>
-        <?php foreach ($productos as $a): ?>
+        <?php foreach ($productos as $producto): ?>
             <div class="producto-card">
-                <strong><?= htmlspecialchars($a['nombre']) ?></strong><br>
-                <?= htmlspecialchars($a['descripcion']) ?><br>
-                Precio: S/ <?= number_format($a['precio'], 2) ?><br>
-                Visible: <?= $a['visible'] ? 'Sí' : 'No' ?><br>
+                <strong><?= htmlspecialchars($producto['nombre']) ?></strong><br>
+                <?= htmlspecialchars($producto['descripcion']) ?><br>
+                Precio: S/ <?= number_format($producto['precio'], 2) ?><br>
+                Visible: <?= $producto['visible'] ? 'Sí' : 'No' ?><br>
 
                 <!-- Mostrar categorías -->
-                <?php if (!empty($a['categorias'])): ?>
+                <?php if (!empty($producto['categorias'])): ?>
                     <div class="categoria-lista">
-                        Categorías: <?= implode(', ', array_map('htmlspecialchars', $a['categorias'])) ?>
+                        Categorías: <?= implode(', ', array_map('htmlspecialchars', $producto['categorias'])) ?>
                     </div>
                 <?php else: ?>
                     <div class="categoria-lista">Sin categoría</div>
@@ -51,13 +51,5 @@
     <?php else: ?>
         <p>No hay productos disponibles.</p>
     <?php endif; ?>
-    <?php foreach ($productos as $producto): ?>
-        <li>
-            <?= htmlspecialchars($producto['nombre']) ?> - S/ <?= htmlspecialchars($producto['precio']) ?>
-            | <a href="<?= $base ?>index.php?url=producto/editar/<?= $producto['id'] ?>">Editar</a>
-        <a href="<?= $base ?>index.php?url=producto/eliminar/<?= $producto['id'] ?>" onclick="return confirm('¿Estás seguro de eliminar este producto?')">Eliminar</a>
-        </li>
-    <?php endforeach; ?>
-
 </body>
 </html>

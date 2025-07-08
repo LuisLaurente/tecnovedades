@@ -57,6 +57,7 @@ class Producto
     ");
         $stmt->execute([$productoId]);
         return array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'nombre');
+
     }
      //etiqueta
     public function obtenerEtiquetasPorProducto($id_producto) {
