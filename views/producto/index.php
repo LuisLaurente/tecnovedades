@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <title>Listado de Productos</title>
@@ -10,9 +11,11 @@
             margin-bottom: 16px;
             border-radius: 5px;
         }
+
         .acciones {
             margin-top: 8px;
         }
+
         .categoria-lista {
             color: #555;
             font-size: 0.9em;
@@ -20,8 +23,18 @@
         }
     </style>
 </head>
+
 <body>
     <h1>Listado de Productos</h1>
+
+    <a href="/cargaMasiva/descargarPlantilla">📥 Descargar Plantilla CSV</a><br>
+
+    <!-- 📤 Formulario para subir CSV -->
+    <form action="/cargaMasiva/procesarCSV" method="POST" enctype="multipart/form-data" style="display: inline-block;">
+        <input type="file" name="archivo_csv" accept=".csv" required>
+        <button type="submit">📤 Subir CSV</button>
+    </form>
+    <br>
 
     <a href="/producto/crear">+ Nuevo Producto</a><br><br>
 
@@ -52,4 +65,5 @@
         <p>No hay productos disponibles.</p>
     <?php endif; ?>
 </body>
+
 </html>
