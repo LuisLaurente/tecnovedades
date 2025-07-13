@@ -16,6 +16,10 @@ $scriptName = dirname($_SERVER['SCRIPT_NAME']);
 $url = str_replace($scriptName, '', $requestUri);
 $url = trim($url, '/');
 
+// Separar la URL de los parámetros GET
+$urlParts = parse_url($url);
+$url = $urlParts['path'] ?? '';
+
 // Si está vacía, usar ruta por defecto 2
 if ($url === '') {
     $url = 'home/index';

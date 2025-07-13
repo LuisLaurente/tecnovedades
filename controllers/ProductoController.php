@@ -14,17 +14,61 @@ class ProductoController
     public function index()
     {
         $productoModel = new Producto();
-        $productos = $productoModel->obtenerTodos();
 
+        // Validar filtros usando el Validator
+        $validacionFiltros = \Core\Helpers\Validator::validarFiltrosGET($_GET);
+        
+        // Obtener valores validados o null
+        $minPrice = $validacionFiltros['filtros_validos']['min_price'] ?? null;
+        $maxPrice = $validacionFiltros['filtros_validos']['max_price'] ?? null;
+        
+        // Obtener estadísticas de precios para el frontend
+        $estadisticasPrecios = $productoModel->obtenerEstadisticasPrecios();
 
-        // Agregar las categorías asociadas a cada producto
+        // Obtener productos con filtro (si aplica)
+        $productos = $productoModel->obtenerFiltrados($minPrice, $maxPrice);
+
+        // Contar total de productos que coinciden con el filtro
+        $totalFiltrados = $productoModel->contarFiltrados($minPrice, $maxPrice);
+
+        // Agregar categorías asociadas a cada producto
         foreach ($productos as &$producto) {
             $producto['categorias'] = Producto::obtenerCategoriasPorProducto($producto['id']);
         }
         unset($producto);
 
+        // Verificar si es una petición AJAX
+        if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
+            header('Content-Type: application/json');
+            
+            $response = [
+                'success' => empty($validacionFiltros['errores']),
+                'productos' => $productos,
+                'total' => $totalFiltrados,
+                'filtros' => [
+                    'min_price' => $minPrice,
+                    'max_price' => $maxPrice
+                ],
+                'errores' => $validacionFiltros['errores'] ?? []
+            ];
+            
+            echo json_encode($response);
+            exit;
+        }
+
+        // Pasar las variables a la vista (para carga inicial)
+        $filtrosActivos = [
+            'min_price' => $minPrice,
+            'max_price' => $maxPrice,
+            'hay_filtros' => !is_null($minPrice) || !is_null($maxPrice)
+        ];
+
+        // Errores de validación para mostrar en la vista
+        $errorFiltros = $validacionFiltros['errores'] ?? [];
+
         require_once __DIR__ . '/../views/producto/index.php';
     }
+
 
     public function crear()
     {
