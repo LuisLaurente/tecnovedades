@@ -174,17 +174,6 @@ fetch('/producto/index?' + params.toString(), {
 });
 ```
 
-## 🧪 Testing y Depuración
-
-### URLs de Prueba
-- **Inicio**: `http://localhost/tecnovedades/`
-- **Productos**: `http://localhost/tecnovedades/producto/index`
-- **Crear Producto**: `http://localhost/tecnovedades/producto/crear`
-
-### Herramientas de Depuración
-- **Consola del Navegador**: Para errores de JavaScript
-- **Network Tab**: Para monitorear peticiones AJAX
-- **PHP Error Log**: En `C:\xampp\apache\logs\error.log`
 
 ## 📚 Guía de Desarrollo
 
@@ -226,14 +215,17 @@ tail -f C:\xampp\php\logs\php_error_log
 4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
 5. Crear un Pull Request
 
-## 📄 Licencia
 
 Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para más detalles.
 
-## 👨‍💻 Autor
+## 👨‍💻 Autores
 
+- GitHub: [@LuisLaurente](https://github.com/LuisLaurente) 
 **Luis Laurente**
-- GitHub: [@LuisLaurente](https://github.com/LuisLaurente)
+
+- GitHub: [@CarlJSL](https://github.com/CarlJSL) **Carlos Sipan**
+
+- GitHub: [@RodrigoSsria](https://github.com/RodrigoSsria) **Rodrigo Sanchú**
 - Proyecto: TecnoVedades
 
 ## 🎉 Agradecimientos
