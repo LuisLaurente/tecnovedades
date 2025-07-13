@@ -49,10 +49,52 @@
     font-size: 1.2em;
 }
 
-.estadisticas-precios {
-    font-size: 0.9em;
-    color: #6c757d;
-    margin-bottom: 15px;
+/* Nuevos estilos para grupos de filtros */
+.filtro-grupo {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #e3e6ea;
+}
+
+.filtro-grupo h4 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    color: #343a40;
+    font-size: 1em;
+    font-weight: 600;
+}
+
+.filtro-precio {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.filtro-precio > div {
+    flex: 1;
+    min-width: 200px;
+}
+
+.filtro-categoria {
+    max-width: 300px;
+}
+
+.filtro-select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 14px;
+    background: white;
+    color: #495057;
+}
+
+.filtro-select:focus {
+    outline: none;
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
 .filtros-form {
@@ -191,5 +233,18 @@
     .estadisticas-precios span {
         display: block;
         margin: 5px 0;
+    }
+    
+    .filtro-precio {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .filtro-precio > div {
+        min-width: auto;
+    }
+    
+    .filtro-categoria {
+        max-width: 100%;
     }
 }

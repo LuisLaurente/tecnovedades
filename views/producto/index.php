@@ -23,7 +23,7 @@
 
     <!-- Filtros de productos -->
     <div class="filtros-container">
-        <h3 class="filtros-titulo">🔍 Filtros de precio</h3>
+        <h3 class="filtros-titulo">🔍 Filtros de búsqueda</h3>
         
         <?php if (isset($estadisticasPrecios)): ?>
             <div class="estadisticas-precios">
@@ -34,19 +34,45 @@
         <?php endif; ?>
 
         <form id="filtroForm" method="GET" action="/producto/index" class="filtros-form">
-            <div>
-                <label class="filtro-label">Precio mínimo (S/):</label>
-                <input type="number" id="min_price" name="min_price" step="1" min="0" 
-                       class="filtro-input"
-                       value="<?= isset($_GET['min_price']) ? htmlspecialchars($_GET['min_price']) : '' ?>"
-                       placeholder="<?= isset($estadisticasPrecios) ? $estadisticasPrecios['precio_minimo'] : '0' ?>">
+            <!-- Filtros de precio -->
+            <div class="filtro-grupo">
+                <h4>Filtros de precio</h4>
+                <div class="filtro-precio">
+                    <div>
+                        <label class="filtro-label">Precio mínimo (S/):</label>
+                        <input type="number" id="min_price" name="min_price" step="1" min="0" 
+                               class="filtro-input"
+                               value="<?= isset($_GET['min_price']) ? htmlspecialchars($_GET['min_price']) : '' ?>"
+                               placeholder="<?= isset($estadisticasPrecios) ? $estadisticasPrecios['precio_minimo'] : '0' ?>">
+                    </div>
+                    <div>
+                        <label class="filtro-label">Precio máximo (S/):</label>
+                        <input type="number" id="max_price" name="max_price" step="1" min="0" 
+                               class="filtro-input"
+                               value="<?= isset($_GET['max_price']) ? htmlspecialchars($_GET['max_price']) : '' ?>"
+                               placeholder="<?= isset($estadisticasPrecios) ? $estadisticasPrecios['precio_maximo'] : '999' ?>">
+                    </div>
+                </div>
             </div>
-            <div>
-                <label class="filtro-label">Precio máximo (S/):</label>
-                <input type="number" id="max_price" name="max_price" step="1" min="0" 
-                       class="filtro-input"
-                       value="<?= isset($_GET['max_price']) ? htmlspecialchars($_GET['max_price']) : '' ?>"
-                       placeholder="<?= isset($estadisticasPrecios) ? $estadisticasPrecios['precio_maximo'] : '999' ?>">
+
+            <!-- Filtros de categoría -->
+            <div class="filtro-grupo">
+                <h4>🏷️ Filtro por categoría</h4>
+                <div class="filtro-categoria">
+                    <label class="filtro-label">Categoría:</label>
+                    <select id="categoria" name="categoria" class="filtro-select">
+                        <option value="">-- Todas las categorías --</option>
+                        <?php if (isset($categoriasDisponibles) && !empty($categoriasDisponibles)): ?>
+                            <?php foreach ($categoriasDisponibles as $categoria): ?>
+                                <option value="<?= $categoria['id'] ?>" 
+                                        <?= (isset($_GET['categoria']) && $_GET['categoria'] == $categoria['id']) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($categoria['nombre']) ?> 
+                                    (<?= $categoria['total_productos'] ?> productos)
+                                </option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
+                </div>
             </div>
             <div>
                 <button type="button" id="btnFiltrar" class="btn-filtrar">

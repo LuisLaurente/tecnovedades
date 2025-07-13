@@ -22,14 +22,22 @@ class ProductoController
         $minPrice = $validacionFiltros['filtros_validos']['min_price'] ?? null;
         $maxPrice = $validacionFiltros['filtros_validos']['max_price'] ?? null;
         
+        // Obtener filtro por categoría
+        $categoriaId = isset($_GET['categoria']) && is_numeric($_GET['categoria']) && $_GET['categoria'] > 0 
+            ? (int)$_GET['categoria'] 
+            : null;
+        
         // Obtener estadísticas de precios para el frontend
         $estadisticasPrecios = $productoModel->obtenerEstadisticasPrecios();
 
-        // Obtener productos con filtro (si aplica)
-        $productos = $productoModel->obtenerFiltrados($minPrice, $maxPrice);
+        // Obtener categorías disponibles para el filtro
+        $categoriasDisponibles = Producto::obtenerCategoriasConProductos();
 
-        // Contar total de productos que coinciden con el filtro
-        $totalFiltrados = $productoModel->contarFiltrados($minPrice, $maxPrice);
+        // Obtener productos con filtros aplicados
+        $productos = $productoModel->obtenerFiltrados($minPrice, $maxPrice, $categoriaId);
+
+        // Contar total de productos que coinciden con los filtros
+        $totalFiltrados = $productoModel->contarFiltrados($minPrice, $maxPrice, $categoriaId);
 
         // Agregar categorías asociadas a cada producto
         foreach ($productos as &$producto) {
@@ -47,7 +55,8 @@ class ProductoController
                 'total' => $totalFiltrados,
                 'filtros' => [
                     'min_price' => $minPrice,
-                    'max_price' => $maxPrice
+                    'max_price' => $maxPrice,
+                    'categoria' => $categoriaId
                 ],
                 'errores' => $validacionFiltros['errores'] ?? []
             ];
@@ -60,7 +69,8 @@ class ProductoController
         $filtrosActivos = [
             'min_price' => $minPrice,
             'max_price' => $maxPrice,
-            'hay_filtros' => !is_null($minPrice) || !is_null($maxPrice)
+            'categoria' => $categoriaId,
+            'hay_filtros' => !is_null($minPrice) || !is_null($maxPrice) || !is_null($categoriaId)
         ];
 
         // Errores de validación para mostrar en la vista

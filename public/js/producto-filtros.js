@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const minPriceInput = document.getElementById('min_price');
     const maxPriceInput = document.getElementById('max_price');
+    const categoriaSelect = document.getElementById('categoria');
     const btnFiltrar = document.getElementById('btnFiltrar');
     const btnLimpiar = document.getElementById('btnLimpiar');
     const loading = document.getElementById('loading');
@@ -34,23 +35,39 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Función para mostrar filtros activos
     function mostrarFiltrosActivos(filtros, total) {
-        if (filtros.min_price || filtros.max_price) {
-            let info = '';
-            if (filtros.min_price) {
-                info += `<span class="filtro-tag">
-                    Mínimo: S/ ${parseFloat(filtros.min_price).toFixed(2)}
-                </span>`;
-            }
-            if (filtros.max_price) {
-                info += `<span class="filtro-tag">
-                    Máximo: S/ ${parseFloat(filtros.max_price).toFixed(2)}
-                </span>`;
-            }
-            if (total !== undefined) {
-                info += `<span class="filtro-tag total">
-                    ${total} producto(s) encontrado(s)
-                </span>`;
-            }
+        let hayFiltros = false;
+        let info = '';
+        
+        if (filtros.min_price) {
+            info += `<span class="filtro-tag">
+                Mínimo: S/ ${parseFloat(filtros.min_price).toFixed(2)}
+            </span>`;
+            hayFiltros = true;
+        }
+        
+        if (filtros.max_price) {
+            info += `<span class="filtro-tag">
+                Máximo: S/ ${parseFloat(filtros.max_price).toFixed(2)}
+            </span>`;
+            hayFiltros = true;
+        }
+        
+        if (filtros.categoria) {
+            const categoriaOption = categoriaSelect.querySelector(`option[value="${filtros.categoria}"]`);
+            const categoriaNombre = categoriaOption ? categoriaOption.textContent : 'Categoría seleccionada';
+            info += `<span class="filtro-tag">
+                Categoría: ${categoriaNombre}
+            </span>`;
+            hayFiltros = true;
+        }
+        
+        if (total !== undefined) {
+            info += `<span class="filtro-tag total">
+                ${total} producto(s) encontrado(s)
+            </span>`;
+        }
+        
+        if (hayFiltros) {
             infoFiltros.innerHTML = info;
             filtrosActivos.style.display = 'block';
         } else {
@@ -93,6 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function filtrarProductos() {
         const minPrice = minPriceInput.value.trim();
         const maxPrice = maxPriceInput.value.trim();
+        const categoria = categoriaSelect.value;
 
         toggleLoading(true);
         mostrarErrores([]);
@@ -101,6 +119,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const params = new URLSearchParams();
         if (minPrice) params.append('min_price', minPrice);
         if (maxPrice) params.append('max_price', maxPrice);
+        if (categoria) params.append('categoria', categoria);
         params.append('ajax', '1');
 
         // Realizar petición AJAX
@@ -133,6 +152,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function limpiarFiltros() {
         minPriceInput.value = '';
         maxPriceInput.value = '';
+        categoriaSelect.value = '';
         
         toggleLoading(true);
         mostrarErrores([]);
@@ -160,6 +180,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Event listeners
     btnFiltrar.addEventListener('click', filtrarProductos);
     btnLimpiar.addEventListener('click', limpiarFiltros);
+
+    // Filtrado automático al cambiar categoría
+    categoriaSelect.addEventListener('change', filtrarProductos);
 
     // Filtrado en tiempo real mientras se escribe (opcional)
     let timeout;
