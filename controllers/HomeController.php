@@ -12,6 +12,7 @@ class HomeController
 {
     public function index()
     {
+        
         try {
             // ✅ Prueba de conexión a base de datos
             $db = Database::getInstance()->getConnection();
@@ -51,6 +52,9 @@ class HomeController
             SessionHelper::remove('usuario');
             echo "<br>Después de eliminar: " . (SessionHelper::get('usuario') ?? 'No existe');
 
+
+            
+
         } catch (PDOException $e) {
             echo "❌ Error ejecutando consulta: " . $e->getMessage();
         } catch (\Throwable $t) {
@@ -58,3 +62,5 @@ class HomeController
         }
     }
 }
+
+

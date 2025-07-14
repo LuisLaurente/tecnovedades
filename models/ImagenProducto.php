@@ -9,7 +9,7 @@ class ImagenProducto
 {
     public static function guardar($producto_id, $nombre_imagen)
     {
-        $db = Database::getInstance()->getConnection();
+        $db = \Core\Database::getInstance()->getConnection();
         $stmt = $db->prepare("INSERT INTO imagenes_producto (producto_id, nombre_imagen) VALUES (?, ?)");
         $stmt->execute([$producto_id, $nombre_imagen]);
     }
