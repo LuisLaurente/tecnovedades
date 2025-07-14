@@ -32,8 +32,8 @@ class EtiquetaController extends BaseController
                 $nombre = Validator::validarTexto($_POST['nombre'], 'Nombre');
                 $slug = Validator::generarSlug($nombre);
                 $this->modelo->crear($nombre, $slug);
-                header("Location: /etiqueta");
-                exit;
+                header("Location: /TECNOVEDADES-MASTER/public/etiqueta/index");
+exit;
             } catch (\Exception $e) {
                 $errores[] = $e->getMessage();
             }
@@ -58,7 +58,7 @@ class EtiquetaController extends BaseController
                 $slug = \Core\Helpers\Validator::generarSlug($nombre);
 
                 $this->modelo->actualizar($id, $nombre, $slug);
-                header("Location: /etiqueta");
+                header("Location: /TECNOVEDADES-MASTER/public/etiqueta/index");
                 exit;
             } catch (\Exception $e) {
                 $errores[] = $e->getMessage();
@@ -70,13 +70,40 @@ class EtiquetaController extends BaseController
             'errores' => $errores
         ]);
     }
+    public function guardar()
+{
+    $nombre = $_POST['nombre'] ?? '';
+    if (!$nombre) {
+        echo "❌ Nombre vacío";
+        return;
+    }
+
+    $slug = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', $nombre), '-'));
+
+    $db = \Core\Database::getInstance()->getConnection();
+    $stmt = $db->prepare("INSERT INTO etiquetas (nombre, slug) VALUES (?, ?)");
+    $stmt->execute([$nombre, $slug]);
+
+    // Redirige de vuelta a donde venías (por ejemplo, producto/editar)
+    header("Location: " . $_SERVER['HTTP_REFERER']);
+    exit;
+}
+
 
 
 
     public function eliminar($id)
     {
         $this->modelo->eliminar($id);
-        header("Location: /etiqueta/index");
+
+
+        $db = \Core\Database::getInstance()->getConnection();
+        $stmt = $db->prepare("DELETE FROM etiquetas WHERE id = ?");
+        $stmt->execute([$id]);
+
+        // Redirigir al lugar indicado o a /etiqueta/index
+        $redirect = $_GET['redirect'] ?? '/TECNOVEDADES-MASTER/public/etiqueta/index';
+        header("Location: " . $redirect);
         exit;
     }
 }
