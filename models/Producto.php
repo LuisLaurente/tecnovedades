@@ -15,13 +15,45 @@ class Producto
         $this->db = Database::getInstance()->getConnection();
     }
 
-    public function obtenerTodos()
+    public function obtenerTodos($etiquetas = [], $soloDisponibles = false, $orden = '')
     {
-        // Consulta SQL para obtener todos los productos visibles
-        $sql = "SELECT * FROM productos WHERE visible = 1";
-        $stmt = $this->db->query($sql);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $sql = "SELECT DISTINCT p.* FROM productos p";
+        $params = [];
+
+        if (!empty($etiquetas)) {
+            $sql .= " 
+            JOIN producto_etiqueta pe ON p.id = pe.producto_id
+            WHERE pe.etiqueta_id IN (" . implode(',', array_fill(0, count($etiquetas), '?')) . ")";
+            $params = array_merge($params, $etiquetas);
+        } else {
+            $sql .= " WHERE 1=1";
+        }
+
+        $sql .= " AND p.visible = 1";
+
+        if ($soloDisponibles) {
+            $sql .= " AND p.stock > 0";
+        }
+        // Validar ordenamiento
+        $ordenesValidos = [
+            'precio_asc'   => 'p.precio ASC',
+            'precio_desc'  => 'p.precio DESC',
+            'nombre_asc'   => 'p.nombre ASC',
+            'nombre_desc'  => 'p.nombre DESC',
+            'fecha_desc'   => 'p.created_at DESC'
+        ];
+
+        if (array_key_exists($orden, $ordenesValidos)) {
+            $sql .= " ORDER BY " . $ordenesValidos[$orden];
+        }
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
+
+
 
 
     public static function obtenerPorId($id)
@@ -66,241 +98,40 @@ class Producto
         return $stmt->fetchAll(PDO::FETCH_COLUMN); // Devuelve array con IDs
 
     }
-
-    public function obtenerFiltrados($min = null, $max = null, $categoriaId = null)
+    /*public function obtenerFiltradosPorEtiquetas($etiquetas)
     {
-        // Sanitizar parámetros usando Validator
-        $min = \Core\Helpers\Validator::sanitizarPrecio($min);
-        $max = \Core\Helpers\Validator::sanitizarPrecio($max);
+        $sql = "SELECT DISTINCT p.* 
+            FROM productos p
+            INNER JOIN producto_etiqueta pe ON p.id = pe.producto_id 
+            WHERE pe.etiqueta_id IN (" . implode(',', array_fill(0, count($etiquetas), '?')) . ")";
 
-        // Consulta base con campos necesarios y optimizada
-        $sql = "SELECT DISTINCT p.id, p.nombre, p.descripcion, p.precio, p.stock, p.visible, p.created_at 
-                FROM productos p";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($etiquetas);
 
-        // Si hay filtro por categoría, hacer JOIN con la tabla de relación
-        $categoriaIds = [];
-        if (!is_null($categoriaId) && $categoriaId > 0) {
-            $sql .= " INNER JOIN producto_categoria pc ON p.id = pc.id_producto";
-
-            // Obtener IDs de subcategorías
-            $categoriaIds = [$categoriaId];
-            $db = $this->db;
-            $stmt = $db->prepare("SELECT id FROM categorias WHERE id_padre = ?");
-            $stmt->execute([$categoriaId]);
-            $subcats = $stmt->fetchAll(\PDO::FETCH_COLUMN);
-            if (!empty($subcats)) {
-                $categoriaIds = array_merge($categoriaIds, $subcats);
-            }
-        }
-
-        $sql .= " WHERE p.visible = 1";
-
-        $params = [];
-        $conditions = [];
-
-        // Aplicar filtro de precio mínimo
-        if (!is_null($min) && $min >= 0) {
-            $conditions[] = "p.precio >= :min_price";
-            $params[':min_price'] = $min;
-        }
-
-        // Aplicar filtro de precio máximo
-        if (!is_null($max) && $max >= 0) {
-            $conditions[] = "p.precio <= :max_price";
-            $params[':max_price'] = $max;
-        }
-
-        // Aplicar filtro por categoría o subcategoría
-        if (!empty($categoriaIds)) {
-            $inClause = [];
-            foreach ($categoriaIds as $i => $catId) {
-                $key = ":cat_$i";
-                $inClause[] = $key;
-                $params[$key] = $catId;
-            }
-            $conditions[] = "pc.id_categoria IN (" . implode(",", $inClause) . ")";
-        }
-
-        // Agregar condiciones a la consulta
-        if (!empty($conditions)) {
-            $sql .= " AND " . implode(" AND ", $conditions);
-        }
-
-        // Ordenar por precio para mejor experiencia de usuario
-        $sql .= " ORDER BY p.precio ASC, p.nombre ASC";
-
-        try {
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute($params);
-            
-            $productos = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-            
-            // Formatear precios para consistencia
-            foreach ($productos as &$producto) {
-                $producto['precio'] = number_format((float)$producto['precio'], 2, '.', '');
-            }
-            
-            return $productos;
-            
-        } catch (\PDOException $e) {
-            // En caso de error, log y devolver array vacío
-            error_log("Error en obtenerFiltrados: " . $e->getMessage());
-            return [];
-        }
-    }
-
-    /**
-     * Obtener estadísticas de precios para mejorar el filtrado
-     */
-    public function obtenerEstadisticasPrecios()
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }*/
+    public function obtenerFiltrados($etiquetas = [], $soloDisponibles = false)
     {
-        $sql = "SELECT 
-                    MIN(precio) as precio_minimo,
-                    MAX(precio) as precio_maximo,
-                    AVG(precio) as precio_promedio,
-                    COUNT(*) as total_productos
-                FROM productos 
-                WHERE visible = 1 AND precio > 0";
-        
-        try {
-            $stmt = $this->db->query($sql);
-            $resultado = $stmt->fetch(\PDO::FETCH_ASSOC);
-            
-            return [
-                'precio_minimo' => round((float)$resultado['precio_minimo'], 2),
-                'precio_maximo' => round((float)$resultado['precio_maximo'], 2),
-                'precio_promedio' => round((float)$resultado['precio_promedio'], 2),
-                'total_productos' => (int)$resultado['total_productos']
-            ];
-            
-        } catch (\PDOException $e) {
-            error_log("Error en obtenerEstadisticasPrecios: " . $e->getMessage());
-            return [
-                'precio_minimo' => 0,
-                'precio_maximo' => 0,
-                'precio_promedio' => 0,
-                'total_productos' => 0
-            ];
-        }
-    }
+        $sql = "SELECT DISTINCT p.* 
+            FROM productos p 
+            LEFT JOIN producto_etiqueta pe ON p.id = pe.producto_id 
+            WHERE 1";
 
-    /**
-     * Contar productos que coinciden con los filtros
-     */
-    public function contarFiltrados($min = null, $max = null, $categoriaId = null)
-    {
-        // Sanitizar parámetros usando Validator
-        $min = \Core\Helpers\Validator::sanitizarPrecio($min);
-        $max = \Core\Helpers\Validator::sanitizarPrecio($max);
+        $parametros = [];
 
-        $sql = "SELECT COUNT(DISTINCT p.id) as total FROM productos p";
-        
-        // Si hay filtro por categoría, hacer JOIN con la tabla de relación
-        $categoriaIds = [];
-        if (!is_null($categoriaId) && $categoriaId > 0) {
-            $sql .= " INNER JOIN producto_categoria pc ON p.id = pc.id_producto";
-
-            // Obtener IDs de subcategorías
-            $categoriaIds = [$categoriaId];
-            $db = $this->db;
-            $stmt = $db->prepare("SELECT id FROM categorias WHERE id_padre = ?");
-            $stmt->execute([$categoriaId]);
-            $subcats = $stmt->fetchAll(\PDO::FETCH_COLUMN);
-            if (!empty($subcats)) {
-                $categoriaIds = array_merge($categoriaIds, $subcats);
-            }
-        }
-        
-        $sql .= " WHERE p.visible = 1";
-        
-        $params = [];
-        $conditions = [];
-
-        if (!is_null($min) && $min >= 0) {
-            $conditions[] = "p.precio >= :min_price";
-            $params[':min_price'] = $min;
+        if (!empty($etiquetas)) {
+            $placeholders = implode(',', array_fill(0, count($etiquetas), '?'));
+            $sql .= " AND pe.etiqueta_id IN ($placeholders)";
+            $parametros = array_merge($parametros, $etiquetas);
         }
 
-        if (!is_null($max) && $max >= 0) {
-            $conditions[] = "p.precio <= :max_price";
-            $params[':max_price'] = $max;
+        if ($soloDisponibles) {
+            $sql .= " AND p.stock > 0";
         }
 
-        // Aplicar filtro por categoría o subcategoría
-        if (!empty($categoriaIds)) {
-            $inClause = [];
-            foreach ($categoriaIds as $i => $catId) {
-                $key = ":cat_$i";
-                $inClause[] = $key;
-                $params[$key] = $catId;
-            }
-            $conditions[] = "pc.id_categoria IN (" . implode(",", $inClause) . ")";
-        }
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($parametros);
 
-        if (!empty($conditions)) {
-            $sql .= " AND " . implode(" AND ", $conditions);
-        }
-
-        try {
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute($params);
-            $resultado = $stmt->fetch(\PDO::FETCH_ASSOC);
-            
-            return (int)$resultado['total'];
-            
-        } catch (\PDOException $e) {
-            error_log("Error en contarFiltrados: " . $e->getMessage());
-            return 0;
-        }
-    }
-
-    /**
-     * Obtener categorías con productos para el filtro
-     */
-    public static function obtenerCategoriasConProductos()
-    {
-        $db = Database::getInstance()->getConnection();
-        
-        // Obtener todas las categorías con su conteo directo de productos
-        $sql = "SELECT DISTINCT c.id, c.nombre, c.id_padre, COUNT(pc.id_producto) as productos_directos
-                FROM categorias c
-                INNER JOIN producto_categoria pc ON c.id = pc.id_categoria
-                INNER JOIN productos p ON pc.id_producto = p.id
-                WHERE p.visible = 1
-                GROUP BY c.id, c.nombre, c.id_padre
-                ORDER BY c.nombre ASC";
-        
-        try {
-            $stmt = $db->query($sql);
-            $categorias = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-            
-            // Para cada categoría, calcular el total incluyendo subcategorías
-            foreach ($categorias as &$categoria) {
-                $totalProductos = $categoria['productos_directos'];
-                
-                // Buscar subcategorías y sumar sus productos
-                $sqlSubcategorias = "SELECT COUNT(pc.id_producto) as productos_subcategoria
-                                    FROM categorias sub
-                                    INNER JOIN producto_categoria pc ON sub.id = pc.id_categoria
-                                    INNER JOIN productos p ON pc.id_producto = p.id
-                                    WHERE sub.id_padre = ? AND p.visible = 1";
-                
-                $stmtSub = $db->prepare($sqlSubcategorias);
-                $stmtSub->execute([$categoria['id']]);
-                $resultSub = $stmtSub->fetch(\PDO::FETCH_ASSOC);
-                
-                if ($resultSub) {
-                    $totalProductos += $resultSub['productos_subcategoria'];
-                }
-                
-                $categoria['total_productos'] = $totalProductos;
-            }
-            
-            return $categorias;
-            
-        } catch (\PDOException $e) {
-            error_log("Error en obtenerCategoriasConProductos: " . $e->getMessage());
-            return [];
-        }
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 }

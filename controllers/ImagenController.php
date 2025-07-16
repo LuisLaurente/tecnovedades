@@ -29,4 +29,35 @@ class ImagenController
         header('Location: ' . $_SERVER['HTTP_REFERER']);
         exit;
     }
+
+    public function subir()
+    {
+        if (!isset($_FILES['imagen']) || $_FILES['imagen']['error'] !== UPLOAD_ERR_OK) {
+            echo "❌ Error al subir la imagen.";
+            return;
+        }
+
+        $producto_id = $_POST['producto_id'] ?? null;
+        if (!$producto_id) {
+            echo "❌ No se recibió ID de producto.";
+            return;
+        }
+
+        $nombreOriginal = $_FILES['imagen']['name'];
+        $nombreFinal = uniqid() . '_' . basename($nombreOriginal);
+        $tmpPath = $_FILES['imagen']['tmp_name'];
+        $destino = __DIR__ . '/../public/uploads/' . $nombreFinal;
+
+        if (!move_uploaded_file($tmpPath, $destino)) {
+            echo "❌ No se pudo mover la imagen al destino.";
+            return;
+        }
+
+        // Guardar en base de datos
+        \Models\ImagenProducto::guardar($producto_id, $nombreFinal);
+
+        // Redirigir de nuevo a la edición del producto
+        header("Location: /TECNOVEDADES/public/producto/editar/$producto_id");
+        exit;
+    }
 }

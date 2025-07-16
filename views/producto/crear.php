@@ -1,6 +1,6 @@
 <h2>Crear Nuevo Producto</h2>
 
-<form action="/producto/guardar" method="POST" enctype="multipart/form-data">
+<form action="/TECNOVEDADES/public/producto/guardar" method="POST" enctype="multipart/form-data">
     <!-- Nombre -->
     <label for="nombre">Nombre:</label><br>
     <input type="text" name="nombre" id="nombre" required><br><br>
@@ -79,7 +79,7 @@
 
     <br><br>
     <button type="submit">Guardar Producto</button>
-    <a href="/producto" style="margin-left: 10px;">← Cancelar</a>
+    <a href="/TECNOVEDADES/public/producto" style="margin-left: 10px;">← Cancelar</a>
 </form>
 
 <script>

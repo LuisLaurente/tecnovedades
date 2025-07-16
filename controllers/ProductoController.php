@@ -13,71 +13,26 @@ class ProductoController
 {
     public function index()
     {
+        $etiquetasSeleccionadas = $_GET['etiquetas'] ?? [];
+        $soloDisponibles = isset($_GET['disponibles']) && $_GET['disponibles'] == '1';
+
+        $orden = $_GET['orden'] ?? '';
         $productoModel = new Producto();
+        $productos = $productoModel->obtenerTodos($etiquetasSeleccionadas, $soloDisponibles, $orden);
 
-        // Validar filtros usando el Validator
-        $validacionFiltros = \Core\Helpers\Validator::validarFiltrosGET($_GET);
-        
-        // Obtener valores validados o null
-        $minPrice = $validacionFiltros['filtros_validos']['min_price'] ?? null;
-        $maxPrice = $validacionFiltros['filtros_validos']['max_price'] ?? null;
-        
-        // Obtener filtro por categoría
-        $categoriaId = isset($_GET['categoria']) && is_numeric($_GET['categoria']) && $_GET['categoria'] > 0 
-            ? (int)$_GET['categoria'] 
-            : null;
-        
-        // Obtener estadísticas de precios para el frontend
-        $estadisticasPrecios = $productoModel->obtenerEstadisticasPrecios();
-
-        // Obtener categorías disponibles para el filtro
-        $categoriasDisponibles = Producto::obtenerCategoriasConProductos();
-
-        // Obtener productos con filtros aplicados
-        $productos = $productoModel->obtenerFiltrados($minPrice, $maxPrice, $categoriaId);
-
-        // Contar total de productos que coinciden con los filtros
-        $totalFiltrados = $productoModel->contarFiltrados($minPrice, $maxPrice, $categoriaId);
-
-        // Agregar categorías asociadas a cada producto
+        // Asociar categorías
         foreach ($productos as &$producto) {
             $producto['categorias'] = Producto::obtenerCategoriasPorProducto($producto['id']);
         }
         unset($producto);
 
-        // Verificar si es una petición AJAX
-        if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
-            header('Content-Type: application/json');
-            
-            $response = [
-                'success' => empty($validacionFiltros['errores']),
-                'productos' => $productos,
-                'total' => $totalFiltrados,
-                'filtros' => [
-                    'min_price' => $minPrice,
-                    'max_price' => $maxPrice,
-                    'categoria' => $categoriaId
-                ],
-                'errores' => $validacionFiltros['errores'] ?? []
-            ];
-            
-            echo json_encode($response);
-            exit;
-        }
-
-        // Pasar las variables a la vista (para carga inicial)
-        $filtrosActivos = [
-            'min_price' => $minPrice,
-            'max_price' => $maxPrice,
-            'categoria' => $categoriaId,
-            'hay_filtros' => !is_null($minPrice) || !is_null($maxPrice) || !is_null($categoriaId)
-        ];
-
-        // Errores de validación para mostrar en la vista
-        $errorFiltros = $validacionFiltros['errores'] ?? [];
+        // Obtener todas las etiquetas para el formulario
+        $etiquetaModel = new \Models\Etiqueta();
+        $todasEtiquetas = $etiquetaModel->obtenerTodas();
 
         require_once __DIR__ . '/../views/producto/index.php';
     }
+
 
 
     public function crear()
@@ -203,7 +158,7 @@ class ProductoController
         }
 
         // 📌 9. Redirigimos al listado
-        header("Location: /producto");
+        header('Location: /TECNOVEDADES/public/producto');
         exit;
     }
 
@@ -274,14 +229,14 @@ class ProductoController
             }
         }
 
-        header('Location: /producto');
+        header("Location: /TECNOVEDADES/public/producto/editar/$id");
         exit;
     }
 
     public function eliminar($id)
     {
         Producto::eliminar($id);
-        header('Location: /producto');
+        header('Location: /TECNOVEDADES/public/producto');
         exit;
     }
 }

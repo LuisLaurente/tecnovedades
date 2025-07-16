@@ -14,6 +14,13 @@ class Router
         $controllerClass = 'Controllers\\' . $controllerName;
         $controllerFile = __DIR__ . '/../controllers/' . $controllerName . '.php';
 
+           /* echo "<pre>";
+            echo "Ruta solicitada: $url\n";
+            echo "Archivo controlador: $controllerFile\n";
+            echo "Clase: $controllerClass\n";
+            echo "Método: $methodName\n";
+            echo "</pre>";*/
+
         if (file_exists($controllerFile)) {
             require_once $controllerFile;
 
