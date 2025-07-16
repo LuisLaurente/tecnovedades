@@ -1,5 +1,5 @@
 <h1>Editar Producto</h1>
-<?php $base = '/TECNOVEDADES-MASTER/public/'; ?>
+<?php $base = '/TECNOVEDADES/public/'; ?>
 
 <form action="<?= $base ?>producto/actualizar" method="POST">
     <input type="hidden" name="id" value="<?= $producto['id'] ?>">
@@ -83,7 +83,7 @@
                 </td>
                 <td>
                     <input type="hidden" name="id" value="<?= $et['id'] ?>">
-                    <a href="<?= $base ?>etiqueta/eliminar/<?= $et['id'] ?>?redirect=<?= urlencode("/TECNOVEDADES-MASTER/public/producto/editar/" . $producto['id']) ?>" onclick="return confirm('¿Eliminar esta etiqueta?')">❌ Eliminar</a>
+                    <a href="<?= $base ?>etiqueta/eliminar/<?= $et['id'] ?>?redirect=<?= urlencode("/TECNOVEDADES/public/producto/editar/" . $producto['id']) ?>" onclick="return confirm('¿Eliminar esta etiqueta?')">❌ Eliminar</a>
 
                 </td>
             </form>
