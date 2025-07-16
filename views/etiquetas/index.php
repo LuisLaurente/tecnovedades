@@ -1,4 +1,4 @@
-<?php $base = '/TECNOVEDADES-MASTER/public/'; ?>
+<?php $base = '/TECNOVEDADES/public/'; ?>
 
 <h2>Listado de Etiquetas</h2>
 

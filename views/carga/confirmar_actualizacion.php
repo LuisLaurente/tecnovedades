@@ -1,4 +1,4 @@
-<?php $base = '/TECNOVEDADES-MASTER/public/'; ?>
+<?php $base = '/TECNOVEDADES/public/'; ?>
 
 <h2>Productos Duplicados por SKU</h2>
 <form action="<?= $base ?>cargaMasiva/confirmarActualizacion" method="POST">

@@ -13,18 +13,27 @@ class ProductoController
 {
     public function index()
     {
+        $etiquetasSeleccionadas = $_GET['etiquetas'] ?? [];
+        $soloDisponibles = isset($_GET['disponibles']) && $_GET['disponibles'] == '1';
+
+        $orden = $_GET['orden'] ?? '';
         $productoModel = new Producto();
-        $productos = $productoModel->obtenerTodos();
+        $productos = $productoModel->obtenerTodos($etiquetasSeleccionadas, $soloDisponibles, $orden);
 
-
-        // Agregar las categorías asociadas a cada producto
+        // Asociar categorías
         foreach ($productos as &$producto) {
             $producto['categorias'] = Producto::obtenerCategoriasPorProducto($producto['id']);
         }
         unset($producto);
 
+        // Obtener todas las etiquetas para el formulario
+        $etiquetaModel = new \Models\Etiqueta();
+        $todasEtiquetas = $etiquetaModel->obtenerTodas();
+
         require_once __DIR__ . '/../views/producto/index.php';
     }
+
+
 
     public function crear()
     {
@@ -149,7 +158,7 @@ class ProductoController
         }
 
         // 📌 9. Redirigimos al listado
-        header("Location: /producto");
+        header('Location: /TECNOVEDADES/public/producto');
         exit;
     }
 
@@ -220,14 +229,14 @@ class ProductoController
             }
         }
 
-        header("Location: /TECNOVEDADES-MASTER/public/producto/editar/$id");
+        header("Location: /TECNOVEDADES/public/producto/editar/$id");
         exit;
     }
 
     public function eliminar($id)
     {
         Producto::eliminar($id);
-        header('Location: /producto');
+        header('Location: /TECNOVEDADES/public/producto');
         exit;
     }
 }
