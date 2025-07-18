@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
         loading.style.display = show ? 'inline' : 'none';
         btnFiltrar.disabled = show;
         btnLimpiar.disabled = show;
+        //comentario
     }
 
     // Función para mostrar errores
