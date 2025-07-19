@@ -1,5 +1,5 @@
 <?php
-session_start(); // 🔴 Esto es obligatorio para usar $_SESSION
+session_start(); 
 // Autocarga de clases
 require_once __DIR__ . '/../core/autoload.php';
 
@@ -11,7 +11,7 @@ error_reporting(E_ALL);
 
 
 
-// Obtener solo la ruta relativa limpia desde la URL
+// Obtener solo la ruta relativa limpia desde la UR
 $url = isset($_GET['url']) ? $_GET['url'] : 'home/index';
 
 // Si está vacía, usar ruta por defecto 2

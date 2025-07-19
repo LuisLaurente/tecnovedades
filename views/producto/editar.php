@@ -104,13 +104,6 @@
 <hr>
 
 
-<h4>Etiquetas asignadas (debug):</h4>
-<ul>
-<?php foreach ($etiquetasAsignadas as $id_et): ?>
-  <li>ID etiqueta: <?= $id_et ?></li>
-<?php endforeach; ?>
-</ul>
-
 <hr>
 
 <h2>Variantes del Producto</h2>
