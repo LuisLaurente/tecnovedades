@@ -210,7 +210,7 @@ class ProductoController
                ->execute([$id, $etiqueta_id]);
         }
 
-        header("Location: /producto/editar/$id");
+        header("Location: /TECNOVEDADES/public/producto/editar/$id");
         exit;
     }
 

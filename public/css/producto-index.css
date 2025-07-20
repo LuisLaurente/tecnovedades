@@ -145,7 +145,8 @@
     margin-left: 10px;
     transition: background-color 0.3s ease;
 }
-
+    
+      
 .btn-limpiar:hover {
     background: #c82333;
 }
@@ -208,6 +209,7 @@
     cursor: not-allowed;
 }
 
+
 /* Estilos responsivos */
 @media (max-width: 768px) {
     .filtros-form {
@@ -247,4 +249,5 @@
     .filtro-categoria {
         max-width: 100%;
     }
+    
 }

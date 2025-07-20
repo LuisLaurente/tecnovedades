@@ -1,4 +1,17 @@
-<?php $base = '/TECNOVEDADES/public/'; ?>
+<?php $base = '/TECNOVEDADES/public/'; 
+ // Asegura que la sesión esté activa con verificador
+ if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+// Inicializa contador del carrito
+$cantidadEnCarrito = 0;
+
+if (isset($_SESSION['carrito'])) {
+    foreach ($_SESSION['carrito'] as $item) {
+        $cantidadEnCarrito += $item['cantidad'];
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -74,18 +87,77 @@
         #productosContainer {
             min-height: 100px;
         }
-        
+        .boton-carrito {
+        background-color: #28a745;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: bold;
+        float:right;
+        position: relative;
+        right: 260px;
+        }       
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
         }
     </style>
+    <!-- Alerta carrito -->
+    <?php if (isset($_SESSION['mensaje_carrito'])): ?>
+        <div id="mensaje-alerta" style="
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #28a745;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 9999;
+            text-align: center;
+            animation: fadein 0.5s;
+        ">
+            <?= $_SESSION['mensaje_carrito'] ?>
+        </div>
+
+        <script>
+            setTimeout(() => {
+                const alerta = document.getElementById('mensaje-alerta');
+                if (alerta) {
+                    alerta.style.display = 'none';
+                }
+            }, 3000);
+        </script>
+        <?php unset($_SESSION['mensaje_carrito']); ?>
+    <?php endif; ?>
+
+
 </head>
 <body>
+    <!-- Lista -->
     <h1>Listado de Productos</h1>
 
     <a href="<?= $base ?>cargaMasiva/descargarPlantilla">📥 Descargar Plantilla CSV</a><br>
-
+    <!-- Carrito -->
+    <a href="/TECNOVEDADES/public/carrito/ver" class="boton-carrito">🛒 Ver Carrito<?php if ($cantidadEnCarrito > 0): ?>
+        <span style="
+            position: absolute;
+            top: -8px;
+            right: -12px;
+            background-color: rgb(245, 115, 8);
+            color: white;
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 50%;
+            font-weight: bold;
+        ">
+            <?= $cantidadEnCarrito ?>
+        </span>
+    <?php endif; ?>
+</a>
     <form action="<?= $base ?>cargaMasiva/procesarCSV" method="POST" enctype="multipart/form-data">
         <input type="file" name="archivo_csv" accept=".csv" required>
         <button type="submit">📤 Subir CSV</button>
@@ -194,6 +266,14 @@
                     <a href="<?= $base ?>producto/eliminar/<?= $producto['id'] ?>" onclick="return confirm('¿Estás seguro de eliminar este producto?')">Eliminar</a>
                 </div>
             </div>
+            <form method="POST" action="/tecnovedades/public/carrito/agregar">
+                <input type="hidden" name="producto_id" value="<?= $producto['id'] ?>">
+                <label>Talla: <input type="text" name="talla"></label>
+                <label>Color: <input type="text" name="color"></label>
+                <label>Cantidad: <input type="number" name="cantidad" value="1" min="1"></label>
+                <button type="submit">Agregar al Carrito</button>
+            </form>
+
         <?php endforeach; ?>
     <?php else: ?>
         <p>No hay productos disponibles.</p>
