@@ -1,4 +1,5 @@
 <?php
+
 namespace Controllers;
 
 class CarritoController
@@ -27,7 +28,7 @@ class CarritoController
             ];
         }
 
-                // Guardar mensaje en sesión
+        // Guardar mensaje en sesión
         $_SESSION['mensaje_carrito'] = '✅ Agregado con éxito.';
 
         // Redirigir a la página anterior
@@ -46,24 +47,45 @@ class CarritoController
 
     public function ver()
     {
+        $productosDetallados = [];
+        $total = 0;
+
+        if (!empty($_SESSION['carrito'])) {
+            $productoModel = new \Models\Producto();
+
+            foreach ($_SESSION['carrito'] as $clave => $item) {
+                $producto = $productoModel->obtenerPorId($item['producto_id']);
+                if ($producto) {
+                    $producto['cantidad'] = $item['cantidad'];
+                    $producto['talla'] = $item['talla'];
+                    $producto['color'] = $item['color'];
+                    $producto['clave'] = $clave;
+                    $producto['subtotal'] = $producto['precio'] * $item['cantidad'];
+                    $total += $producto['subtotal'];
+                    $productosDetallados[] = $producto;
+                }
+            }
+        }
+
         require __DIR__ . '/../views/carrito/ver.php';
     }
-    public function aumentar($clave)
-{
-    if (isset($_SESSION['carrito'][$clave])) {
-        $_SESSION['carrito'][$clave]['cantidad']++;
-    }
-    header('Location: /tecnovedades/public/carrito/ver');
-}
 
-public function disminuir($clave)
-{
-    if (isset($_SESSION['carrito'][$clave])) {
-        $_SESSION['carrito'][$clave]['cantidad']--;
-        if ($_SESSION['carrito'][$clave]['cantidad'] <= 0) {
-            unset($_SESSION['carrito'][$clave]); // Eliminar si llega a 0
+    public function aumentar($clave)
+    {
+        if (isset($_SESSION['carrito'][$clave])) {
+            $_SESSION['carrito'][$clave]['cantidad']++;
         }
+        header('Location: /tecnovedades/public/carrito/ver');
     }
-    header('Location: /tecnovedades/public/carrito/ver');
-}
+
+    public function disminuir($clave)
+    {
+        if (isset($_SESSION['carrito'][$clave])) {
+            $_SESSION['carrito'][$clave]['cantidad']--;
+            if ($_SESSION['carrito'][$clave]['cantidad'] <= 0) {
+                unset($_SESSION['carrito'][$clave]); // Eliminar si llega a 0
+            }
+        }
+        header('Location: /tecnovedades/public/carrito/ver');
+    }
 }
