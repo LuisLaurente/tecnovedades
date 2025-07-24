@@ -1,8 +1,9 @@
 <?php
 
 return [
-    'host' => '127.0.0.1',    // 'host' => '127.0.0.1',
-    'dbname' => 'tecnovedades',
+    'host' => 'centerbeam.proxy.rlwy.net',    // 'host' => '127.0.0.1',
+    'dbname' => 'railway',
     'username' => 'root',   // 'username' => 'root
-    'password' => '', // 'password' => '',
+    'password' => 'sKaoBVvJJAcfvcBEbtZDOLywRuVdXDdz', // 'password' => '',
+    'port' = 52436;
 ];
