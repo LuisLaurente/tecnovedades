@@ -5,5 +5,5 @@ return [
     'dbname' => 'railway',
     'username' => 'root',   // 'username' => 'root
     'password' => 'sKaoBVvJJAcfvcBEbtZDOLywRuVdXDdz', // 'password' => '',
-    'port' = 52436;
+    'port' => 52436;
 ];
