@@ -4,7 +4,19 @@
 <!-- Estilos y botón de volver -->
 <link rel="stylesheet" href="<?= $base ?>css/producto-index.css">
 <a href="<?= $base ?>producto/index" class="boton-volver">🛒 Volver</a>
+<a href="/TECNOVEDADES/public/pedido/checkout" class="boton-checkout">Finalizar compra</a>
 <style>
+    .boton-checkout {
+        background-color: #28a745;
+        color: white;
+        padding: 10px 18px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: bold;
+        float: left;
+        margin-bottom: 20px;
+        margin-right: 10px;
+    }
     .boton-volver {
         background-color: rgb(245, 39, 12);
         color: white;

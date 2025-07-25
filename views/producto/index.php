@@ -142,7 +142,11 @@ if (isset($_SESSION['carrito'])) {
 
     <a href="<?= $base ?>cargaMasiva/descargarPlantilla">📥 Descargar Plantilla CSV</a><br>
     <!-- Carrito -->
+    <a href="/TECNOVEDADES/public/pedido/listar" class="boton-carrito" style="background:#007cba;float:right;right:180px;">📦 Listado de Pedidos</a>
+
     <a href="/TECNOVEDADES/public/carrito/ver" class="boton-carrito">🛒 Ver Carrito<?php if ($cantidadEnCarrito > 0): ?>
+
+    <!-- Botón para listado de pedidos (admin) -->
         <span style="
             position: absolute;
             top: -8px;
