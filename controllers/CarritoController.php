@@ -2,6 +2,10 @@
 
 namespace Controllers;
 
+use Models\Producto;
+use Models\Promocion;
+use Core\Helpers\PromocionHelper; // Importamos el helper de promociones
+
 class CarritoController
 {
     public function agregar()
@@ -12,7 +16,7 @@ class CarritoController
         $cantidad = $_POST['cantidad'] ?? 1;
 
         // Obtener el precio actual del producto
-        $producto = \Models\Producto::obtenerPorId($producto_id);
+        $producto = Producto::obtenerPorId($producto_id);
         $precio = $producto && isset($producto['precio']) ? $producto['precio'] : 0;
 
         $clave = $producto_id . '_' . $talla . '_' . $color;
@@ -33,6 +37,10 @@ class CarritoController
             ];
         }
 
+        // Evaluar promociones y actualizar sesión
+        $usuario = $_SESSION['usuario'] ?? null;
+        $_SESSION['promociones'] = PromocionHelper::evaluar($_SESSION['carrito'], $usuario);
+
         // Guardar mensaje en sesión
         $_SESSION['mensaje_carrito'] = '✅ Agregado con éxito.';
 
@@ -47,6 +55,10 @@ class CarritoController
             unset($_SESSION['carrito'][$clave]);
         }
 
+        // Recalcular promociones tras eliminar
+        $usuario = $_SESSION['usuario'] ?? null;
+        $_SESSION['promociones'] = PromocionHelper::evaluar($_SESSION['carrito'] ?? [], $usuario);
+
         header('Location: ' . url('carrito/ver'));
         exit;
     }
@@ -54,12 +66,16 @@ class CarritoController
     public function ver()
     {
         $productosDetallados = [];
-        $total = 0;
+        $carrito = $_SESSION['carrito'] ?? [];
+        $usuario = $_SESSION['usuario'] ?? null;
+        // Evaluar promociones siempre que se cargue el carrito
+        $promociones = PromocionHelper::evaluar($carrito, $usuario);
+        $totales = PromocionHelper::calcularTotales($carrito, $promociones);
 
-        if (!empty($_SESSION['carrito'])) {
-            $productoModel = new \Models\Producto();
+        if (!empty($carrito)) {
+            $productoModel = new Producto();
 
-            foreach ($_SESSION['carrito'] as $clave => $item) {
+            foreach ($carrito as $clave => $item) {
                 $producto = $productoModel->obtenerPorId($item['producto_id']);
                 if ($producto) {
                     $producto['cantidad'] = $item['cantidad'];
@@ -67,7 +83,6 @@ class CarritoController
                     $producto['color'] = $item['color'];
                     $producto['clave'] = $clave;
                     $producto['subtotal'] = $producto['precio'] * $item['cantidad'];
-                    $total += $producto['subtotal'];
                     $productosDetallados[] = $producto;
                 }
             }
@@ -81,6 +96,11 @@ class CarritoController
         if (isset($_SESSION['carrito'][$clave])) {
             $_SESSION['carrito'][$clave]['cantidad']++;
         }
+
+        // Recalcular promociones
+        $usuario = $_SESSION['usuario'] ?? null;
+        $_SESSION['promociones'] = PromocionHelper::evaluar($_SESSION['carrito'], $usuario);
+
         header('Location: ' . url('carrito/ver'));
         exit;
     }
@@ -90,9 +110,14 @@ class CarritoController
         if (isset($_SESSION['carrito'][$clave])) {
             $_SESSION['carrito'][$clave]['cantidad']--;
             if ($_SESSION['carrito'][$clave]['cantidad'] <= 0) {
-                unset($_SESSION['carrito'][$clave]); // Eliminar si llega a 0
+                unset($_SESSION['carrito'][$clave]);
             }
         }
+
+        // Recalcular promociones
+        $usuario = $_SESSION['usuario'] ?? null;
+        $_SESSION['promociones'] = PromocionHelper::evaluar($_SESSION['carrito'] ?? [], $usuario);
+
         header('Location: ' . url('carrito/ver'));
         exit;
     }
