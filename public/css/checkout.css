@@ -270,3 +270,59 @@ body {
   content: "🔙";
   margin-right: 8px;
 }
+
+/* Estilos para sección de cupones */
+.cupon-container {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.cupon-container input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 2px solid #e9ecef;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.cupon-container input:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+}
+
+.cupon-container button {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cupon-container button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 15px rgba(243, 156, 18, 0.3);
+}
+
+#mensaje-cupon {
+  font-size: 0.85rem;
+  margin-top: 5px;
+  font-weight: 500;
+}
+
+/* Mejorar responsive para móviles */
+@media (max-width: 480px) {
+  .cupon-container {
+    flex-direction: column;
+  }
+  
+  .cupon-container button {
+    margin-top: 5px;
+  }
+}
