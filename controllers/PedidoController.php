@@ -53,14 +53,14 @@ class PedidoController
             }
             if (!empty($errores)) {
                 $_SESSION['errores_checkout'] = $errores;
-                header('Location: /TECNOVEDADES/public/pedido/checkout');
+                header('Location: ' . url('pedido/checkout'));
                 exit;
             }
             // Crear cliente
             $cliente_id = $this->clienteModel->crear($nombre, $direccion, $telefono, $correo);
             if (!$cliente_id) {
                 $_SESSION['errores_checkout'] = ['No se pudo registrar el cliente.'];
-                header('Location: /TECNOVEDADES/public/pedido/checkout');
+                header('Location: ' . url('pedido/checkout'));
                 exit;
             }
             // Calcular monto total
@@ -72,7 +72,7 @@ class PedidoController
             $pedido_id = $this->pedidoModel->crear($cliente_id, $monto_total);
             if (!$pedido_id) {
                 $_SESSION['errores_checkout'] = ['No se pudo registrar el pedido.'];
-                header('Location: /TECNOVEDADES/public/pedido/checkout');
+                header('Location: ' . url('pedido/checkout'));
                 exit;
             }
             // Guardar detalle
@@ -83,11 +83,11 @@ class PedidoController
             }
             if ($falloDetalle) {
                 $_SESSION['errores_checkout'] = ['No se pudo registrar el detalle del pedido.'];
-                header('Location: /TECNOVEDADES/public/pedido/checkout');
+                header('Location: ' . url('pedido/checkout'));
                 exit;
             }
             $_SESSION['carrito'] = [];
-            header('Location: /TECNOVEDADES/public/pedido/confirmacion/' . $pedido_id);
+            header('Location: ' . url('pedido/confirmacion/' . $pedido_id));
             exit;
         }
     }
@@ -116,7 +116,7 @@ class PedidoController
             if ($id && $estado) {
                 $this->pedidoModel->actualizarEstado($id, $estado);
             }
-            header('Location: /TECNOVEDADES/public/pedido/listar');
+            header('Location: ' . url('pedido/listar'));
             exit;
         }
     }
@@ -141,7 +141,7 @@ class PedidoController
             if ($id) {
                 $this->pedidoModel->actualizarObservacionesAdmin($id, $observacion);
             }
-            header('Location: /TECNOVEDADES/public/pedido/listar');
+            header('Location: ' . url('pedido/listar'));
 
             exit;
         }

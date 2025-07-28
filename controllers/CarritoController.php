@@ -73,7 +73,7 @@ class CarritoController
             }
         }
 
-        require __DIR__ . '/../views/carga/carrito/ver.php';
+        require __DIR__ . '/../views/carrito/ver.php';
     }
 
     public function aumentar($clave)

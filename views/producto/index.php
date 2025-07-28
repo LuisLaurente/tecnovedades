@@ -76,6 +76,8 @@ if (isset($_SESSION['carrito'])) {
         </span>
     <?php endif; ?>
     </a>
+    <a href="<?= url('pedido/listar') ?>" class="boton-carrito" style="background:#007cba;float:right;right:180px;">📦 Listado de Pedidos</a>
+
     <form action="<?= url('cargaMasiva/procesarCSV') ?>" method="POST" enctype="multipart/form-data">
         <input type="file" name="archivo_csv" accept=".csv" required>
         <button type="submit">📤 Subir CSV</button>
@@ -223,4 +225,5 @@ if (isset($_SESSION['carrito'])) {
 
     <script src="<?= url('js/producto-filtros.js') ?>?v=<?= time() ?>"></script>
 </body>
+
 </html>

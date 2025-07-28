@@ -2,9 +2,22 @@
 
 <!-- Estilos y botón de volver -->
 <link rel="stylesheet" href="<?= url('css/producto-index.css') ?>">
-<a href="<?= url('producto/index') ?>" class="boton-volver">🛒 Volver</a>
+<a href="<?= url('producto/index') ?>" class="boton-volver">🛒 Volverrrr</a>
+<a href="<?= url('pedido/checkout') ?>" class="boton-checkout">Finalizar compra</a>
+
 
 <style>
+    .boton-checkout {
+        background-color: #28a745;
+        color: white;
+        padding: 10px 18px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: bold;
+        float: left;
+        margin-bottom: 20px;
+        margin-right: 10px;
+    }
     /* Variables específicas del carrito */
     :root {
         --color-danger-light: #f8d7da;
@@ -25,6 +38,7 @@
         justify-content: center;
         gap: 10px;
     }
+
     .boton-volver {
         background: linear-gradient(135deg, var(--color-danger), var(--color-danger-dark));
         color: white;
@@ -342,10 +356,10 @@
                     </td>
                     <td class="producto-subtotal">S/ <?= number_format($item['subtotal'], 2) ?></td>
                     <td>
-                        <a href="<?= url('carrito/eliminar/' . urlencode($item['clave'])) ?>" class="btn-eliminar" title="Eliminar del carrito">❌</a>
-                        class="btn-eliminar"
-                        title="Eliminar producto"
-                        onclick="return confirm('¿Eliminar este producto del carrito?')">🗑️</a>
+                        <a href="<?= url('carrito/eliminar/' . urlencode($item['clave'])) ?>"
+                         class="btn-eliminar"
+                         title="Eliminar producto"
+                         onclick="return confirm('¿Eliminar este producto del carrito?')">🗑️</a>>
                     </td>
                 </tr>
             <?php endforeach; ?>
