@@ -11,6 +11,10 @@ class CarritoController
         $color = $_POST['color'] ?? null;
         $cantidad = $_POST['cantidad'] ?? 1;
 
+        // Obtener el precio actual del producto
+        $producto = \Models\Producto::obtenerPorId($producto_id);
+        $precio = $producto && isset($producto['precio']) ? $producto['precio'] : 0;
+
         $clave = $producto_id . '_' . $talla . '_' . $color;
 
         if (!isset($_SESSION['carrito'])) {
@@ -24,7 +28,8 @@ class CarritoController
                 'producto_id' => $producto_id,
                 'talla' => $talla,
                 'color' => $color,
-                'cantidad' => $cantidad
+                'cantidad' => $cantidad,
+                'precio' => $precio
             ];
         }
 

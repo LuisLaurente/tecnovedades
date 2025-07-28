@@ -25,7 +25,6 @@
         justify-content: center;
         gap: 10px;
     }
-
     .boton-volver {
         background: linear-gradient(135deg, var(--color-danger), var(--color-danger-dark));
         color: white;
