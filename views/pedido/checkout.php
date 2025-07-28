@@ -2,18 +2,24 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
+use Core\Helpers\PromocionHelper;
+use Models\Cupon;
+
 $errores = [];
 if (isset($_SESSION['errores_checkout']) && is_array($_SESSION['errores_checkout'])) {
     $errores = $_SESSION['errores_checkout'];
 }
 unset($_SESSION['errores_checkout']);
 
-// Resumen de compra igual que en carrito/ver.php
+// Preparar datos de carrito
 $productosDetallados = [];
+$carrito = $_SESSION['carrito'] ?? [];
 $total = 0;
-if (!empty($_SESSION['carrito'])) {
+
+if (!empty($carrito)) {
     $productoModel = new \Models\Producto();
-    foreach ($_SESSION['carrito'] as $clave => $item) {
+    foreach ($carrito as $clave => $item) {
         $producto = $productoModel->obtenerPorId($item['producto_id']);
         if ($producto) {
             $producto['nombre'] = $producto['nombre'];
@@ -28,189 +34,47 @@ if (!empty($_SESSION['carrito'])) {
         }
     }
 }
+
+// Calcular promociones y totales
+$usuario = $_SESSION['usuario'] ?? null;
+$promociones = PromocionHelper::evaluar($carrito, $usuario);
+$totales = PromocionHelper::calcularTotales($carrito, $promociones);
+
+// Aplicar cupón si existe
+$cupon_aplicado = $_SESSION['cupon_aplicado'] ?? null;
+if ($cupon_aplicado) {
+    if ($cupon_aplicado['tipo'] === 'descuento_porcentaje') {
+        $totales['descuento'] += $totales['subtotal'] * ($cupon_aplicado['valor'] / 100);
+    } elseif ($cupon_aplicado['tipo'] === 'descuento_fijo') {
+        $totales['descuento'] += $cupon_aplicado['valor'];
+    } elseif ($cupon_aplicado['tipo'] === 'envio_gratis') {
+        $totales['envio_gratis'] = true;
+    }
+    $totales['total'] = max($totales['subtotal'] - $totales['descuento'], 0);
+}
 ?>
 
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="<?= url('css/checkout.css') ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finalizar Compra - TecnoVedades</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-        
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            font-weight: 300;
-        }
-        
-        .header p {
-            opacity: 0.9;
-            font-size: 1.1rem;
-        }
-        
-        .content {
-            padding: 40px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-        }
-        
-        .summary-section, .form-section {
-            background: #f8f9fa;
-            padding: 30px;
-            border-radius: 10px;
-            border: 1px solid #e9ecef;
-        }
-        
-        .section-title {
-            color: #2c3e50;
-            font-size: 1.5rem;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #3498db;
-            display: flex;
-            align-items: center;
-        }
-        
-        .section-title::before {
-            content: "🛒";
-            margin-right: 10px;
-            font-size: 1.2rem;
-        }
-        
-        .form-section .section-title::before {
-            content: "📝";
-        }
-        
-        .error-alerts {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 4px solid #dc3545;
-        }
-        
-        .error-alerts ul {
-            list-style: none;
-        }
-        
-        .error-alerts li {
-            padding: 5px 0;
-            display: flex;
-            align-items: center;
-        }
-        
-        .error-alerts li::before {
-            content: "⚠️";
-            margin-right: 8px;
-        }
-        
-        @media (max-width: 768px) {
-            .content {
-                grid-template-columns: 1fr;
-                gap: 20px;
-                padding: 20px;
-            }
-            
-            .header {
-                padding: 20px;
-            }
-            
-            .header h1 {
-                font-size: 2rem;
-            }
-        }
-    </style>
 </head>
+
 <body>
     <div class="container">
         <div class="header">
             <h1>Finalizar Compra</h1>
             <p>Revisa tu pedido y completa tus datos</p>
         </div>
-        
+
         <div class="content">
             <div class="summary-section">
                 <h3 class="section-title">Resumen de tu compra</h3>
                 <?php if (!empty($productosDetallados)): ?>
-                    <style>
-                        .checkout-table {
-                            width: 100%;
-                            border-collapse: collapse;
-                            margin-bottom: 20px;
-                            border-radius: 8px;
-                            overflow: hidden;
-                            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                        }
-                        .checkout-table th {
-                            background: linear-gradient(135deg, #3498db, #2980b9);
-                            color: white;
-                            padding: 15px 10px;
-                            text-align: center;
-                            font-weight: 500;
-                            font-size: 0.9rem;
-                        }
-                        .checkout-table td {
-                            padding: 12px 10px;
-                            text-align: center;
-                            border-bottom: 1px solid #eee;
-                            font-size: 0.9rem;
-                        }
-                        .checkout-table tr:nth-child(even) {
-                            background-color: #f8f9fa;
-                        }
-                        .checkout-table tr:hover {
-                            background-color: #e3f2fd;
-                            transition: background-color 0.2s;
-                        }
-                        .checkout-table .total-row {
-                            background: linear-gradient(135deg, #27ae60, #2ecc71) !important;
-                            color: white;
-                            font-weight: bold;
-                            font-size: 1rem;
-                        }
-                        .checkout-table .total-row td {
-                            border-bottom: none;
-                        }
-                        .product-name {
-                            font-weight: 500;
-                            color: #2c3e50;
-                        }
-                        .price {
-                            color: #27ae60;
-                            font-weight: 500;
-                        }
-                    </style>
                     <table class="checkout-table">
                         <thead>
                             <tr>
@@ -233,9 +97,33 @@ if (!empty($_SESSION['carrito'])) {
                                     <td class="price">S/ <?= number_format($item['subtotal'], 2) ?></td>
                                 </tr>
                             <?php endforeach; ?>
+
+                            <!-- Sección de cupon -->
+                            <tr>
+                                <td colspan="6">
+                                    <h4>¿Tienes un cupón?</h4>
+                                    <div class="cupon-container">
+                                        <input type="text" id="codigo-cupon" placeholder="Ingresa tu cupón" value="<?= $cupon_aplicado['codigo'] ?? '' ?>">
+                                        <button type="button" id="btn-aplicar-cupon">Aplicar</button>
+                                    </div>
+                                    <p id="mensaje-cupon" style="color:green;">
+                                        <?= isset($cupon_aplicado) ? 'Cupón aplicado: ' . htmlspecialchars($cupon_aplicado['codigo']) : '' ?>
+                                    </p>
+                                </td>
+                            </tr>
+
+                            <!-- Totales -->
+                            <tr>
+                                <td colspan="5" style="text-align: right;">Subtotal:</td>
+                                <td>S/ <?= number_format($totales['subtotal'], 2) ?></td>
+                            </tr>
+                            <tr>
+                                <td colspan="5" style="text-align: right;">Descuento:</td>
+                                <td>- S/ <?= number_format($totales['descuento'], 2) ?></td>
+                            </tr>
                             <tr class="total-row">
-                                <td colspan="5" style="text-align: right; padding-right: 20px;">Total a pagar:</td>
-                                <td>S/ <?= number_format($total, 2) ?></td>
+                                <td colspan="5" style="text-align: right;"><strong>Total a pagar:</strong></td>
+                                <td><strong>S/ <?= number_format($totales['total'], 2) ?></strong></td>
                             </tr>
                         </tbody>
                     </table>
@@ -248,9 +136,10 @@ if (!empty($_SESSION['carrito'])) {
                 <?php endif; ?>
             </div>
 
+            <!-- Formulario de entrega -->
             <div class="form-section">
                 <h3 class="section-title">Datos de entrega</h3>
-                
+
                 <?php if ($errores): ?>
                     <div class="error-alerts">
                         <ul>
@@ -261,139 +150,54 @@ if (!empty($_SESSION['carrito'])) {
                     </div>
                 <?php endif; ?>
 
-                <style>
-                    .checkout-form {
-                        display: flex;
-                        flex-direction: column;
-                        gap: 20px;
-                    }
-                    
-                    .form-group {
-                        display: flex;
-                        flex-direction: column;
-                    }
-                    
-                    .form-group label {
-                        color: #2c3e50;
-                        font-weight: 500;
-                        margin-bottom: 8px;
-                        display: flex;
-                        align-items: center;
-                    }
-                    
-                    .form-group label::before {
-                        margin-right: 8px;
-                        font-size: 1.1rem;
-                    }
-                    
-                    .form-group:nth-child(1) label::before { content: "👤"; }
-                    .form-group:nth-child(2) label::before { content: "📍"; }
-                    .form-group:nth-child(3) label::before { content: "📱"; }
-                    .form-group:nth-child(4) label::before { content: "✉️"; }
-                    
-                    .form-group input {
-                        padding: 12px 15px;
-                        border: 2px solid #e9ecef;
-                        border-radius: 8px;
-                        font-size: 1rem;
-                        transition: all 0.3s ease;
-                        background: white;
-                    }
-                    
-                    .form-group input:focus {
-                        outline: none;
-                        border-color: #3498db;
-                        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-                        transform: translateY(-2px);
-                    }
-                    
-                    .form-group input:required {
-                        border-left: 4px solid #e74c3c;
-                    }
-                    
-                    .form-group input:required:valid {
-                        border-left: 4px solid #27ae60;
-                    }
-                    
-                    .submit-btn {
-                        background: linear-gradient(135deg, #27ae60, #2ecc71);
-                        color: white;
-                        padding: 15px 30px;
-                        border: none;
-                        border-radius: 8px;
-                        font-size: 1.1rem;
-                        font-weight: 500;
-                        cursor: pointer;
-                        transition: all 0.3s ease;
-                        margin-top: 10px;
-                        position: relative;
-                        overflow: hidden;
-                    }
-                    
-                    .submit-btn:hover {
-                        transform: translateY(-2px);
-                        box-shadow: 0 10px 25px rgba(39, 174, 96, 0.3);
-                    }
-                    
-                    .submit-btn:active {
-                        transform: translateY(0);
-                    }
-                    
-                    .submit-btn::before {
-                        content: "🛍️";
-                        margin-right: 8px;
-                    }
-                    
-                    .back-link {
-                        display: inline-flex;
-                        align-items: center;
-                        color: #3498db;
-                        text-decoration: none;
-                        font-weight: 500;
-                        margin-top: 20px;
-                        padding: 10px 15px;
-                        border-radius: 5px;
-                        transition: all 0.3s ease;
-                    }
-                    
-                    .back-link:hover {
-                        background: #e3f2fd;
-                        transform: translateX(-5px);
-                    }
-                    
-                    .back-link::before {
-                        content: "🔙";
-                        margin-right: 8px;
-                    }
-                </style>
-
                 <form method="post" action="<?= url('pedido/registrar') ?>" class="checkout-form">
                     <div class="form-group">
                         <label for="nombre">Nombre completo *</label>
                         <input type="text" id="nombre" name="nombre" required placeholder="Ingresa tu nombre completo">
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="direccion">Dirección de entrega *</label>
                         <input type="text" id="direccion" name="direccion" required placeholder="Calle, número, distrito, ciudad">
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="telefono">Teléfono</label>
                         <input type="tel" id="telefono" name="telefono" placeholder="999 999 999">
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="correo">Correo electrónico</label>
                         <input type="email" id="correo" name="correo" placeholder="tu@email.com">
                     </div>
-                    
+
                     <button type="submit" class="submit-btn">Confirmar pedido</button>
                 </form>
-                
+
                 <a href="<?= url('carrito/ver') ?>" class="back-link">Volver al carrito</a>
             </div>
         </div>
     </div>
+
+    <!-- Script para aplicar cupon -->
+    <script>
+    document.getElementById('btn-aplicar-cupon').addEventListener('click', function(){
+        const codigo = document.getElementById('codigo-cupon').value;
+        fetch('<?= url("cupon/validar") ?>', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'codigo=' + encodeURIComponent(codigo)
+        })
+        .then(r => r.json())
+        .then(data => {
+            const mensaje = document.getElementById('mensaje-cupon');
+            mensaje.style.color = data.status === 'success' ? 'green' : 'red';
+            mensaje.innerText = data.mensaje;
+            if (data.status === 'success') {
+                location.reload();
+            }
+        });
+    });
+    </script>
 </body>
 </html>

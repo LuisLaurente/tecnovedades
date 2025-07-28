@@ -5,6 +5,8 @@ namespace Controllers;
 use Models\Pedido;
 use Models\Cliente;
 use Models\DetallePedido;
+use Core\Helpers\PromocionHelper;
+use Models\Cupon;
 
 class PedidoController
 {
@@ -35,6 +37,8 @@ class PedidoController
             $correo = trim($_POST['correo'] ?? '');
             $carrito = isset($_SESSION['carrito']) && is_array($_SESSION['carrito']) ? $_SESSION['carrito'] : [];
             $errores = [];
+
+            // Validaciones básicas
             if ($nombre === '') $errores[] = 'El nombre es obligatorio.';
             if ($direccion === '') $errores[] = 'La dirección es obligatoria.';
             if ($telefono === '' && $correo === '') {
@@ -44,6 +48,7 @@ class PedidoController
                 $errores[] = 'El teléfono solo debe contener números.';
             }
             if (empty($carrito)) $errores[] = 'El carrito está vacío.';
+
             // Validar que todos los productos tengan precio
             foreach ($carrito as $item) {
                 if (!isset($item['precio'])) {
@@ -51,11 +56,13 @@ class PedidoController
                     break;
                 }
             }
+
             if (!empty($errores)) {
                 $_SESSION['errores_checkout'] = $errores;
                 header('Location: ' . url('pedido/checkout'));
                 exit;
             }
+
             // Crear cliente
             $cliente_id = $this->clienteModel->crear($nombre, $direccion, $telefono, $correo);
             if (!$cliente_id) {
@@ -63,22 +70,43 @@ class PedidoController
                 header('Location: ' . url('pedido/checkout'));
                 exit;
             }
-            // Calcular monto total
-            $monto_total = 0;
-            foreach ($carrito as $item) {
-                $monto_total += $item['precio'] * $item['cantidad'];
+
+            // Calcular subtotal y aplicar promociones
+            $usuario = $_SESSION['usuario'] ?? null;
+            $promociones = PromocionHelper::evaluar($carrito, $usuario);
+            $totales = PromocionHelper::calcularTotales($carrito, $promociones);
+
+            // Aplicar cupón si existe
+            $cupon_aplicado = $_SESSION['cupon_aplicado'] ?? null;
+            if ($cupon_aplicado) {
+                if ($cupon_aplicado['tipo'] === 'descuento_porcentaje') {
+                    $totales['descuento'] += $totales['subtotal'] * ($cupon_aplicado['valor'] / 100);
+                } elseif ($cupon_aplicado['tipo'] === 'descuento_fijo') {
+                    $totales['descuento'] += $cupon_aplicado['valor'];
+                } elseif ($cupon_aplicado['tipo'] === 'envio_gratis') {
+                    $totales['envio_gratis'] = true;
+                }
+                $totales['total'] = max($totales['subtotal'] - $totales['descuento'], 0);
             }
-            // Crear pedido
-            $pedido_id = $this->pedidoModel->crear($cliente_id, $monto_total);
+
+            // Crear pedido usando el total calculado
+            $pedido_id = $this->pedidoModel->crear($cliente_id, $totales['total']);
             if (!$pedido_id) {
                 $_SESSION['errores_checkout'] = ['No se pudo registrar el pedido.'];
                 header('Location: ' . url('pedido/checkout'));
                 exit;
             }
-            // Guardar detalle
+
+            // Guardar detalle del pedido
             $falloDetalle = false;
             foreach ($carrito as $item) {
-                $ok = $this->detalleModel->crear($pedido_id, $item['producto_id'], $item['cantidad'], $item['precio'], $item['variante_id'] ?? null);
+                $ok = $this->detalleModel->crear(
+                    $pedido_id,
+                    $item['producto_id'],
+                    $item['cantidad'],
+                    $item['precio'],
+                    $item['variante_id'] ?? null
+                );
                 if (!$ok) $falloDetalle = true;
             }
             if ($falloDetalle) {
@@ -86,6 +114,15 @@ class PedidoController
                 header('Location: ' . url('pedido/checkout'));
                 exit;
             }
+
+            // Registrar uso del cupón (si existe)
+            if ($cupon_aplicado) {
+                $cuponModel = new Cupon();
+                $cuponModel->registrarUso($cupon_aplicado['id'], $usuario['id'] ?? null, $pedido_id);
+                unset($_SESSION['cupon_aplicado']); // limpiar sesión del cupón
+            }
+
+            // Vaciar carrito y redirigir a confirmación
             $_SESSION['carrito'] = [];
             header('Location: ' . url('pedido/confirmacion/' . $pedido_id));
             exit;
@@ -142,7 +179,6 @@ class PedidoController
                 $this->pedidoModel->actualizarObservacionesAdmin($id, $observacion);
             }
             header('Location: ' . url('pedido/listar'));
-
             exit;
         }
     }
