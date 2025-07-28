@@ -220,7 +220,7 @@ class CargaMasivaController
 
 
         // Redirigir al listado de productos
-        header("Location: /TECNOVEDADES/public/producto/index");
+        header("Location: /producto/index");
         exit;
     }
     public function confirmarActualizacion()
@@ -332,7 +332,7 @@ class CargaMasivaController
     unset($_SESSION['productos_pendientes']);
 
     // Redirigir al listado
-    header("Location: /TECNOVEDADES/public/producto/index");
+    header("Location: /producto/index");
     exit;
 }
 

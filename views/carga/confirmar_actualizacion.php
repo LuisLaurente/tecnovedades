@@ -1,7 +1,5 @@
-<?php $base = '/TECNOVEDADES/public/'; ?>
-
 <h2>Productos Duplicados por SKU</h2>
-<form action="<?= $base ?>cargaMasiva/confirmarActualizacion" method="POST">
+<form action="<?= url('cargaMasiva/confirmarActualizacion') ?>" method="POST">
     <input type="hidden" name="confirmar" value="1">
 
     <table border="1">

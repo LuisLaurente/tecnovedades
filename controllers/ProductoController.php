@@ -210,14 +210,14 @@ class ProductoController
                ->execute([$id, $etiqueta_id]);
         }
 
-        header("Location: /TECNOVEDADES/public/producto/editar/$id");
+        header("Location: /producto/editar/$id");
         exit;
     }
 
     public function eliminar($id)
     {
         Producto::eliminar($id);
-        header("Location: /producto");
+        header('Location: ' . url('carrito/ver'));
         exit;
     }
 }

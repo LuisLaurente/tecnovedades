@@ -1,6 +1,6 @@
-<?php $base = '/TECNOVEDADES/public/'; 
- // Asegura que la sesión esté activa con verificador
- if (session_status() === PHP_SESSION_NONE) {
+<?php
+// Asegura que la sesión esté activa con verificador
+if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 // Inicializa contador del carrito
@@ -14,95 +14,12 @@ if (isset($_SESSION['carrito'])) {
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <title>Listado de Productos</title>
-    <link rel="stylesheet" href="<?= $base ?>css/producto-index.css">
-    <style>
-        .producto-card {
-            border: 1px solid #ccc;
-            padding: 12px;
-            margin-bottom: 16px;
-            border-radius: 5px;
-        }
-        .acciones {
-            margin-top: 8px;
-        }
-        .categoria-lista {
-            color: #555;
-            font-size: 0.9em;
-            margin-top: 5px;
-        }
-        .filtros-container { margin-bottom: 20px; }
-        .loading { display: none; color: orange; }
-        
-        /* Estilos para filtros activos */
-        .filtro-tag {
-            display: inline-block;
-            background: #007cba;
-            color: white;
-            padding: 4px 8px;
-            margin: 2px 4px;
-            border-radius: 4px;
-            font-size: 0.9em;
-        }
-        .filtro-tag.total {
-            background: #28a745;
-        }
-        
-        /* Botones */
-        #btnFiltrar, #btnLimpiar {
-            padding: 8px 15px;
-            margin: 5px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        #btnFiltrar {
-            background: #007cba;
-            color: white;
-        }
-        #btnFiltrar:hover {
-            background: #005a8b;
-        }
-        #btnLimpiar {
-            background: #dc3545;
-            color: white;
-        }
-        #btnLimpiar:hover {
-            background: #b02a37;
-        }
-        #btnFiltrar:disabled, #btnLimpiar:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        
-        /* Contenedores de estado */
-        #errorFiltros {
-            animation: fadeIn 0.3s ease-in;
-        }
-        #filtrosActivos {
-            animation: fadeIn 0.3s ease-in;
-        }
-        #productosContainer {
-            min-height: 100px;
-        }
-        .boton-carrito {
-        background-color: #28a745;
-        color: white;
-        padding: 8px 12px;
-        border-radius: 6px;
-        text-decoration: none;
-        font-weight: bold;
-        float:right;
-        position: relative;
-        right: 260px;
-        }       
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-    </style>
+    <link rel="stylesheet" href="<?= url('css/producto-index.css') ?>">
+
     <!-- Alerta carrito -->
     <?php if (isset($_SESSION['mensaje_carrito'])): ?>
         <div id="mensaje-alerta" style="
@@ -136,13 +53,14 @@ if (isset($_SESSION['carrito'])) {
 
 
 </head>
-<body>
+
+<body data-base-url="<?= url('') ?>">
     <!-- Lista -->
     <h1>Listado de Productos</h1>
 
-    <a href="<?= $base ?>cargaMasiva/descargarPlantilla">📥 Descargar Plantilla CSV</a><br>
+    <a href="<?= url('cargaMasiva/descargarPlantilla') ?>">📥 Descargar Plantilla CSV</a><br>
     <!-- Carrito -->
-    <a href="/TECNOVEDADES/public/carrito/ver" class="boton-carrito">🛒 Ver Carrito<?php if ($cantidadEnCarrito > 0): ?>
+    <a href="<?= url('carrito/ver') ?>" class="boton-carrito">🛒 Ver Carrito<?php if ($cantidadEnCarrito > 0): ?>
         <span style="
             position: absolute;
             top: -8px;
@@ -157,13 +75,13 @@ if (isset($_SESSION['carrito'])) {
             <?= $cantidadEnCarrito ?>
         </span>
     <?php endif; ?>
-</a>
-    <form action="<?= $base ?>cargaMasiva/procesarCSV" method="POST" enctype="multipart/form-data">
+    </a>
+    <form action="<?= url('cargaMasiva/procesarCSV') ?>" method="POST" enctype="multipart/form-data">
         <input type="file" name="archivo_csv" accept=".csv" required>
         <button type="submit">📤 Subir CSV</button>
     </form>
 
-    <a href="<?= $base ?>producto/crear">+ Nuevo Producto</a><br><br>
+    <a href="<?= url('producto/crear') ?>">+ Nuevo Producto</a><br><br>
 
     <!-- Filtros -->
     <div class="filtros-container">
@@ -177,7 +95,7 @@ if (isset($_SESSION['carrito'])) {
             </div>
         <?php endif; ?>
 
-        <form id="filtroForm" method="GET" action="<?= $base ?>producto">
+        <form id="filtroForm" method="GET" action="<?= url('producto') ?>">
             <!-- Filtros por precio -->
             <label>Precio mínimo (S/):</label>
             <input type="number" id="min_price" name="min_price" value="<?= $_GET['min_price'] ?? '' ?>" step="1" min="0"><br>
@@ -245,40 +163,64 @@ if (isset($_SESSION['carrito'])) {
     </div>
 
     <!-- Productos -->
-    <div id="productosContainer"><?php if (!empty($productos)): ?>
-        <?php foreach ($productos as $producto): ?>
-            <div class="producto-card">
-                <strong><?= htmlspecialchars($producto['nombre']) ?></strong><br>
-                <?= htmlspecialchars($producto['descripcion']) ?><br>
-                Precio: S/ <?= number_format($producto['precio'], 2) ?><br>
-                Visible: <?= $producto['visible'] ? 'Sí' : 'No' ?><br>
+    <div id="productosContainer">
+        <?php if (!empty($productos)): ?>
+            <?php foreach ($productos as $producto): ?>
+                <div class="producto-card">
+                    <div class="producto-info">
+                        <div class="producto-titulo"><?= htmlspecialchars($producto['nombre']) ?></div>
+                        <div class="producto-descripcion"><?= htmlspecialchars($producto['descripcion']) ?></div>
+                        <div class="producto-precio">S/ <?= number_format($producto['precio'], 2) ?></div>
+                        <div class="producto-visible <?= $producto['visible'] ? 'disponible' : 'no-disponible' ?>">
+                            Visible: <?= $producto['visible'] ? 'Sí' : 'No' ?>
+                        </div>
 
-                <?php if (!empty($producto['categorias'])): ?>
-                    <div class="categoria-lista">
-                        Categorías: <?= implode(', ', array_map('htmlspecialchars', $producto['categorias'])) ?>
+                        <?php if (!empty($producto['categorias'])): ?>
+                            <div class="categoria-lista">
+                                Categorías: <?= implode(', ', array_map('htmlspecialchars', $producto['categorias'])) ?>
+                            </div>
+                        <?php else: ?>
+                            <div class="categoria-lista">Sin categoría</div>
+                        <?php endif; ?>
                     </div>
-                <?php else: ?>
-                    <div class="categoria-lista">Sin categoría</div>
-                <?php endif; ?>
 
-                <div class="acciones">
-                    <a href="<?= $base ?>producto/editar/<?= $producto['id'] ?>">Editar</a> |
-                    <a href="<?= $base ?>producto/eliminar/<?= $producto['id'] ?>" onclick="return confirm('¿Estás seguro de eliminar este producto?')">Eliminar</a>
+                    <div class="acciones">
+                        <a href="<?= url('producto/editar/' . $producto['id']) ?>">✏️ Editar</a>
+                        <a href="<?= url('producto/eliminar/' . $producto['id']) ?>"
+                            class="eliminar"
+                            onclick="return confirm('¿Estás seguro de eliminar este producto?')">🗑️ Eliminar</a>
+                    </div>
+
+                    <form method="POST" action="<?= url('carrito/agregar') ?>" class="carrito-form">
+                        <input type="hidden" name="producto_id" value="<?= $producto['id'] ?>">
+
+                        <div class="carrito-form-row">
+                            <div class="carrito-form-group">
+                                <label>Talla:</label>
+                                <input type="text" name="talla">
+                            </div>
+                            <div class="carrito-form-group">
+                                <label>Color:</label>
+                                <input type="text" name="color">
+                            </div>
+                        </div>
+
+                        <div class="carrito-form-group">
+                            <label>Cantidad:</label>
+                            <input type="number" name="cantidad" value="1" min="1">
+                        </div>
+
+                        <button type="submit">🛒 Agregar al Carrito</button>
+                    </form>
                 </div>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <div class="no-productos">
+                📦 No hay productos disponibles
             </div>
-            <form method="POST" action="/tecnovedades/public/carrito/agregar">
-                <input type="hidden" name="producto_id" value="<?= $producto['id'] ?>">
-                <label>Talla: <input type="text" name="talla"></label>
-                <label>Color: <input type="text" name="color"></label>
-                <label>Cantidad: <input type="number" name="cantidad" value="1" min="1"></label>
-                <button type="submit">Agregar al Carrito</button>
-            </form>
+        <?php endif; ?>
+    </div>
 
-        <?php endforeach; ?>
-    <?php else: ?>
-        <p>No hay productos disponibles.</p>
-    <?php endif; ?></div>
-
-    <script src="<?= $base ?>js/producto-filtros.js?v=<?= time() ?>"></script>
+    <script src="<?= url('js/producto-filtros.js') ?>?v=<?= time() ?>"></script>
 </body>
 </html>

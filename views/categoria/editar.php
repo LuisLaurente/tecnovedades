@@ -13,7 +13,7 @@
     <?php endif; ?>
 
 
-    <form method="POST" action="/categoria/actualizar">
+    <form method="POST" action="<?= url('categoria/actualizar') ?>">
         <input type="hidden" name="id" value="<?= $categoria['id'] ?>">
 
         <label for="nombre">Nombre de la categoría:</label><br>
@@ -34,7 +34,7 @@
         <button type="submit">Actualizar categoría</button>
     </form>
 
-    <p><a href="/categoria">← Volver al listado</a></p>
+    <p><a href="<?= url('categoria') ?>">← Volver al listado</a></p>
 </body>
 
 </html>

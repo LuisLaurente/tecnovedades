@@ -343,10 +343,10 @@
                     </td>
                     <td class="producto-subtotal">S/ <?= number_format($item['subtotal'], 2) ?></td>
                     <td>
-                        <a href="<?= url('carrito/eliminar/' . urlencode($item['clave'])) ?>" class="btn-eliminar" title="Eliminar del carrito">❌</a>
-                        class="btn-eliminar"
-                        title="Eliminar producto"
-                        onclick="return confirm('¿Eliminar este producto del carrito?')">🗑️</a>
+                        <a href="<?= url('carrito/eliminar/' . urlencode($item['clave'])) ?>"
+                         class="btn-eliminar"
+                         title="Eliminar producto"
+                         onclick="return confirm('¿Eliminar este producto del carrito?')">🗑️</a>>
                     </td>
                 </tr>
             <?php endforeach; ?>
