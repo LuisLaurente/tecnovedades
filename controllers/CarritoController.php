@@ -47,7 +47,8 @@ class CarritoController
             unset($_SESSION['carrito'][$clave]);
         }
 
-        header('Location: /tecnovedades/public/carrito/ver');
+        header('Location: ' . url('carrito/ver'));
+        exit;
     }
 
     public function ver()
@@ -72,7 +73,7 @@ class CarritoController
             }
         }
 
-        require __DIR__ . '/../views/carrito/ver.php';
+        require __DIR__ . '/../views/carga/carrito/ver.php';
     }
 
     public function aumentar($clave)
@@ -80,7 +81,8 @@ class CarritoController
         if (isset($_SESSION['carrito'][$clave])) {
             $_SESSION['carrito'][$clave]['cantidad']++;
         }
-        header('Location: /tecnovedades/public/carrito/ver');
+        header('Location: ' . url('carrito/ver'));
+        exit;
     }
 
     public function disminuir($clave)
@@ -91,6 +93,7 @@ class CarritoController
                 unset($_SESSION['carrito'][$clave]); // Eliminar si llega a 0
             }
         }
-        header('Location: /tecnovedades/public/carrito/ver');
+        header('Location: ' . url('carrito/ver'));
+        exit;
     }
 }

@@ -19,7 +19,7 @@
         </div>
     <?php endif; ?>
 
-    <form method="POST" action="/categoria/crear">
+    <form method="POST" action="<?= url('categoria/crear') ?>">
         <label for="nombre">Nombre de la categoría:</label><br>
         <input type="text" name="nombre" id="nombre" value="<?= htmlspecialchars($nombre ?? '') ?>" required><br><br>
 
@@ -36,7 +36,7 @@
         <button type="submit">Guardar categoría</button>
     </form>
 
-    <p><a href="/categoria">← Volver al listado</a></p>
+    <p><a href="<?= url('categoria') ?>">← Volver al listado</a></p>
 </body>
 
 </html>

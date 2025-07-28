@@ -57,7 +57,7 @@ class ImagenController
         \Models\ImagenProducto::guardar($producto_id, $nombreFinal);
 
         // Redirigir de nuevo a la edición del producto
-        header("Location: /TECNOVEDADES/public/producto/editar/$producto_id");
+        header("Location: /producto/editar/$producto_id");
         exit;
     }
 }

@@ -131,8 +131,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
 
                     <div class="acciones">
-                        <a href="/TECNOVEDADES/public/producto/editar/${producto.id}">Editar</a> |
-                        <a href="/TECNOVEDADES/public/producto/eliminar/${producto.id}" onclick="return confirm('¿Estás seguro de eliminar este producto?')">Eliminar</a>
+                        <a href="/producto/editar/${producto.id}">Editar</a> |
+                        <a href="/producto/eliminar/${producto.id}" onclick="return confirm('¿Estás seguro de eliminar este producto?')">Eliminar</a>
                     </div>
                 </div>
             `;
@@ -174,7 +174,8 @@ document.addEventListener('DOMContentLoaded', function() {
         params.append('ajax', '1');
 
         // Realizar petición AJAX
-        const baseUrl = window.location.origin + '/TECNOVEDADES/public/producto';
+        const baseUrl = document.querySelector('body').getAttribute('data-base-url') + 'producto';
+
         const fullUrl = baseUrl + '?' + params.toString();
         
         fetch(fullUrl, {
@@ -232,7 +233,8 @@ document.addEventListener('DOMContentLoaded', function() {
         mostrarErrores([]);
         mostrarFiltrosActivos({}, 0);
 
-        const baseUrl = window.location.origin + '/TECNOVEDADES/public/producto';
+        const baseUrl = document.querySelector('body').getAttribute('data-base-url') + 'producto';
+
         const fullUrl = baseUrl + '?ajax=1';
 
         fetch(fullUrl, {

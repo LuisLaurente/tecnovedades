@@ -32,7 +32,7 @@ class EtiquetaController extends BaseController
                 $nombre = Validator::validarTexto($_POST['nombre'], 'Nombre');
                 $slug = Validator::generarSlug($nombre);
                 $this->modelo->crear($nombre, $slug);
-                header("Location: /TECNOVEDADES/public/etiqueta/index");
+                header("Location: /etiqueta/index");
 exit;
             } catch (\Exception $e) {
                 $errores[] = $e->getMessage();
@@ -58,7 +58,7 @@ exit;
                 $slug = \Core\Helpers\Validator::generarSlug($nombre);
 
                 $this->modelo->actualizar($id, $nombre, $slug);
-                header("Location: /TECNOVEDADES/public/etiqueta/index");
+                header("Location: /etiqueta/index");
                 exit;
             } catch (\Exception $e) {
                 $errores[] = $e->getMessage();
@@ -102,7 +102,7 @@ exit;
         $stmt->execute([$id]);
 
         // Redirigir al lugar indicado o a /etiqueta/index
-        $redirect = $_GET['redirect'] ?? '/TECNOVEDADES/public/etiqueta/index';
+        $redirect = $_GET['redirect'] ?? '/etiqueta/index';
         header("Location: " . $redirect);
         exit;
     }
