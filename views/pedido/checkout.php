@@ -42,16 +42,28 @@ $totales = PromocionHelper::calcularTotales($carrito, $promociones);
 
 // Aplicar cupón si existe
 $cupon_aplicado = $_SESSION['cupon_aplicado'] ?? null;
+$descuento_cupon = 0;
 if ($cupon_aplicado) {
     if ($cupon_aplicado['tipo'] === 'descuento_porcentaje') {
-        $totales['descuento'] += $totales['subtotal'] * ($cupon_aplicado['valor'] / 100);
+        $descuento_cupon = $totales['subtotal'] * ($cupon_aplicado['valor'] / 100);
     } elseif ($cupon_aplicado['tipo'] === 'descuento_fijo') {
-        $totales['descuento'] += $cupon_aplicado['valor'];
+        $descuento_cupon = min($cupon_aplicado['valor'], $totales['subtotal']); // No puede ser mayor al subtotal
     } elseif ($cupon_aplicado['tipo'] === 'envio_gratis') {
         $totales['envio_gratis'] = true;
+        $descuento_cupon = 0; // El envío gratis no afecta el total monetario
+    } else {
+        // Manejar tipos alternativos que podrían estar en la BD
+        if ($cupon_aplicado['tipo'] === 'porcentaje') {
+            $descuento_cupon = $totales['subtotal'] * ($cupon_aplicado['valor'] / 100);
+        } elseif ($cupon_aplicado['tipo'] === 'fijo') {
+            $descuento_cupon = min($cupon_aplicado['valor'], $totales['subtotal']);
+        }
     }
-    $totales['total'] = max($totales['subtotal'] - $totales['descuento'], 0);
 }
+
+// Recalcular total final considerando descuentos de promociones y cupones por separado
+$total_descuentos = $totales['descuento'] + $descuento_cupon;
+$totales['total'] = max($totales['subtotal'] - $total_descuentos, 0);
 ?>
 
 <!DOCTYPE html>
@@ -103,11 +115,24 @@ if ($cupon_aplicado) {
                                 <td colspan="6">
                                     <h4>¿Tienes un cupón?</h4>
                                     <div class="cupon-container">
-                                        <input type="text" id="codigo-cupon" placeholder="Ingresa tu cupón" value="<?= $cupon_aplicado['codigo'] ?? '' ?>">
-                                        <button type="button" id="btn-aplicar-cupon">Aplicar</button>
+                                        <input type="text" id="codigo-cupon" placeholder="Ingresa tu cupón" value="<?= $cupon_aplicado['codigo'] ?? '' ?>" <?= isset($cupon_aplicado) ? 'readonly' : '' ?>>
+                                        <?php if (isset($cupon_aplicado)): ?>
+                                            <button type="button" id="btn-remover-cupon" style="background-color: #e74c3c;">Remover</button>
+                                        <?php else: ?>
+                                            <button type="button" id="btn-aplicar-cupon">Aplicar</button>
+                                        <?php endif; ?>
                                     </div>
                                     <p id="mensaje-cupon" style="color:green;">
-                                        <?= isset($cupon_aplicado) ? 'Cupón aplicado: ' . htmlspecialchars($cupon_aplicado['codigo']) : '' ?>
+                                        <?php if (isset($cupon_aplicado)): ?>
+                                            <strong>✓ Cupón aplicado: <?= htmlspecialchars($cupon_aplicado['codigo']) ?></strong>
+                                            <?php if ($cupon_aplicado['tipo'] === 'descuento_porcentaje'): ?>
+                                                <br><small>Descuento del <?= $cupon_aplicado['valor'] ?>%</small>
+                                            <?php elseif ($cupon_aplicado['tipo'] === 'descuento_fijo'): ?>
+                                                <br><small>Descuento de S/ <?= number_format($cupon_aplicado['valor'], 2) ?></small>
+                                            <?php elseif ($cupon_aplicado['tipo'] === 'envio_gratis'): ?>
+                                                <br><small>Envío gratuito</small>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
                                     </p>
                                 </td>
                             </tr>
@@ -117,10 +142,31 @@ if ($cupon_aplicado) {
                                 <td colspan="5" style="text-align: right;">Subtotal:</td>
                                 <td>S/ <?= number_format($totales['subtotal'], 2) ?></td>
                             </tr>
-                            <tr>
-                                <td colspan="5" style="text-align: right;">Descuento:</td>
-                                <td>- S/ <?= number_format($totales['descuento'], 2) ?></td>
-                            </tr>
+                            <?php if ($totales['descuento'] > 0): ?>
+                                <tr>
+                                    <td colspan="5" style="text-align: right;">Descuento por promociones:</td>
+                                    <td>- S/ <?= number_format($totales['descuento'], 2) ?></td>
+                                </tr>
+                            <?php endif; ?>
+                            <?php if ($cupon_aplicado && ($descuento_cupon > 0 || in_array($cupon_aplicado['tipo'], ['descuento_porcentaje', 'descuento_fijo', 'porcentaje', 'fijo']))): ?>
+                                <tr style="background-color: #e8f5e8;">
+                                    <td colspan="5" style="text-align: right;">
+                                        <strong>Descuento cupón (<?= htmlspecialchars($cupon_aplicado['codigo']) ?>):</strong>
+                                        <?php if (in_array($cupon_aplicado['tipo'], ['descuento_porcentaje', 'porcentaje'])): ?>
+                                            <small>(<?= $cupon_aplicado['valor'] ?>%)</small>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td><strong>- S/ <?= number_format($descuento_cupon, 2) ?></strong></td>
+                                </tr>
+                            <?php endif; ?>
+                            <?php if ($cupon_aplicado && $cupon_aplicado['tipo'] === 'envio_gratis'): ?>
+                                <tr style="background-color: #e8f5e8;">
+                                    <td colspan="5" style="text-align: right;">
+                                        <strong>Beneficio cupón (<?= htmlspecialchars($cupon_aplicado['codigo']) ?>):</strong>
+                                    </td>
+                                    <td><strong>🚚 Envío gratis</strong></td>
+                                </tr>
+                            <?php endif; ?>
                             <tr class="total-row">
                                 <td colspan="5" style="text-align: right;"><strong>Total a pagar:</strong></td>
                                 <td><strong>S/ <?= number_format($totales['total'], 2) ?></strong></td>
@@ -195,23 +241,94 @@ if ($cupon_aplicado) {
 
     <!-- Script para aplicar cupon -->
     <script>
-    document.getElementById('btn-aplicar-cupon').addEventListener('click', function(){
-        const codigo = document.getElementById('codigo-cupon').value;
-        fetch('<?= url("cupon/validar") ?>', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: 'codigo=' + encodeURIComponent(codigo)
-        })
-        .then(r => r.json())
-        .then(data => {
-            const mensaje = document.getElementById('mensaje-cupon');
-            mensaje.style.color = data.status === 'success' ? 'green' : 'red';
-            mensaje.innerText = data.mensaje;
-            if (data.status === 'success') {
-                location.reload();
+        // Función para aplicar cupón
+        function aplicarCupon() {
+            const codigo = document.getElementById('codigo-cupon').value;
+            if (!codigo.trim()) {
+                document.getElementById('mensaje-cupon').innerHTML = '<span style="color: red;">Por favor ingresa un código de cupón</span>';
+                return;
             }
+
+            fetch('<?= url("cupon/validar") ?>', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: 'codigo=' + encodeURIComponent(codigo)
+                })
+                .then(r => r.json())
+                .then(data => {
+                    const mensaje = document.getElementById('mensaje-cupon');
+
+                    if (data.status === 'success') {
+                        mensaje.style.color = 'green';
+                        mensaje.innerHTML = '<strong>✓ ' + data.mensaje + '</strong>';
+
+                        // Si hay advertencia sobre restricciones, mostrarla
+                        if (data.advertencia) {
+                            mensaje.innerHTML += '<br><small style="color: orange; font-weight: bold;">⚠️ ' + data.advertencia + '</small>';
+                        }
+
+                        // Recargar página para mostrar el descuento aplicado
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        mensaje.style.color = 'red';
+                        mensaje.innerHTML = '<strong>✗ ' + data.mensaje + '</strong>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('mensaje-cupon').innerHTML = '<span style="color: red;"><strong>✗ Error al aplicar cupón</strong></span>';
+                });
+        }
+
+        // Función para remover cupón
+        function removerCupon() {
+            fetch('<?= url("cupon/remover") ?>', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    }
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        location.reload();
+                    } else {
+                        alert('Error al remover cupón');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al remover cupón');
+                });
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const btnAplicar = document.getElementById('btn-aplicar-cupon');
+            const btnRemover = document.getElementById('btn-remover-cupon');
+
+            if (btnAplicar) {
+                btnAplicar.addEventListener('click', aplicarCupon);
+            }
+
+            if (btnRemover) {
+                btnRemover.addEventListener('click', function() {
+                    if (confirm('¿Estás seguro de que quieres remover el cupón?')) {
+                        removerCupon();
+                    }
+                });
+            }
+
+            // Permitir aplicar cupón con Enter
+            document.getElementById('codigo-cupon').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && btnAplicar) {
+                    aplicarCupon();
+                }
+            });
         });
-    });
     </script>
 </body>
+
 </html>

@@ -6,6 +6,7 @@ use Models\Pedido;
 use Models\Cliente;
 use Models\DetallePedido;
 use Core\Helpers\PromocionHelper;
+use Core\Helpers\CuponHelper;
 use Models\Cupon;
 
 class PedidoController
@@ -70,12 +71,22 @@ class PedidoController
                 exit;
             }
 
-            // Crear cliente
-            $cliente_id = $this->clienteModel->crear($nombre, $direccion, $telefono, $correo);
-            if (!$cliente_id) {
-                $_SESSION['errores_checkout'] = ['No se pudo registrar el cliente.'];
-                header('Location: ' . url('pedido/checkout'));
-                exit;
+            // Verificar si el cliente ya existe o crear uno nuevo
+            $clienteExistente = null;
+            if (!empty($correo)) {
+                $clienteExistente = $this->clienteModel->obtenerPorCorreo($correo);
+            }
+            
+            if ($clienteExistente) {
+                $cliente_id = $clienteExistente['id'];
+            } else {
+                // Crear cliente nuevo
+                $cliente_id = $this->clienteModel->crear($nombre, $direccion, $telefono, $correo);
+                if (!$cliente_id) {
+                    $_SESSION['errores_checkout'] = ['No se pudo registrar el cliente.'];
+                    header('Location: ' . url('pedido/checkout'));
+                    exit;
+                }
             }
 
             // Calcular subtotal y aplicar promociones
@@ -83,17 +94,64 @@ class PedidoController
             $promociones = PromocionHelper::evaluar($carrito, $usuario);
             $totales = PromocionHelper::calcularTotales($carrito, $promociones);
 
-            // Aplicar cupón si existe
-            $cupon_aplicado = $_SESSION['cupon_aplicado'] ?? null;
+            // Aplicar cupón si existe en la sesión
+            $cupon_aplicado = CuponHelper::obtenerCuponAplicado();
+            $descuento_cupon = 0;
+            $cupon_id = null;
+            
             if ($cupon_aplicado) {
-                if ($cupon_aplicado['tipo'] === 'descuento_porcentaje') {
-                    $totales['descuento'] += $totales['subtotal'] * ($cupon_aplicado['valor'] / 100);
-                } elseif ($cupon_aplicado['tipo'] === 'descuento_fijo') {
-                    $totales['descuento'] += $cupon_aplicado['valor'];
-                } elseif ($cupon_aplicado['tipo'] === 'envio_gratis') {
-                    $totales['envio_gratis'] = true;
+                // Verificar si hay restricciones por cliente específico
+                if (!empty($cupon_aplicado['usuarios_autorizados'])) {
+                    // Si hay restricciones, verificar si el cliente existe y está autorizado
+                    if ($clienteExistente) {
+                        // Cliente existe, verificar si está autorizado
+                        $autorizados = json_decode($cupon_aplicado['usuarios_autorizados'], true);
+                        
+                        // Validar que el json_decode fue exitoso y devolvió un array
+                        if (!is_array($autorizados)) {
+                            CuponHelper::limpiarCuponSesion();
+                            $_SESSION['errores_checkout'] = ['Error en la configuración del cupón.'];
+                            header('Location: ' . url('pedido/checkout'));
+                            exit;
+                        }
+                        
+                        $autorizados = array_map('intval', $autorizados);
+                        
+                        if (!in_array((int)$cliente_id, $autorizados)) {
+                            // Cliente existe pero no está autorizado
+                            CuponHelper::limpiarCuponSesion();
+                            $_SESSION['errores_checkout'] = ['Este cupón no está disponible para tu cuenta.'];
+                            header('Location: ' . url('pedido/checkout'));
+                            exit;
+                        }
+                        // Cliente autorizado, continuar con la aplicación del cupón
+                        $cliente_id_para_cupon = $cliente_id;
+                    } else {
+                        // Cliente nuevo (no existe), no puede usar cupón restringido
+                        CuponHelper::limpiarCuponSesion();
+                        $_SESSION['errores_checkout'] = ['Este cupón es solo para clientes específicos. Tu correo no está en la lista de clientes autorizados.'];
+                        header('Location: ' . url('pedido/checkout'));
+                        exit;
+                    }
+                } else {
+                    // Cupón sin restricciones, usar el cliente_id final
+                    $cliente_id_para_cupon = $cliente_id;
                 }
-                $totales['total'] = max($totales['subtotal'] - $totales['descuento'], 0);
+                
+                // Aplicar el cupón
+                $aplicacion = CuponHelper::aplicarCupon($cupon_aplicado['codigo'], $cliente_id_para_cupon, $carrito);
+                if ($aplicacion['exito']) {
+                    $descuento_cupon = $aplicacion['descuento'];
+                    $cupon_id = $aplicacion['cupon']['id'];
+                    $totales['descuento'] += $descuento_cupon;
+                    $totales['total'] = max($totales['subtotal'] - $totales['descuento'], 0);
+                } else {
+                    // Si el cupón ya no es válido para este cliente, limpiar sesión y mostrar error
+                    CuponHelper::limpiarCuponSesion();
+                    $_SESSION['errores_checkout'] = [$aplicacion['mensaje']];
+                    header('Location: ' . url('pedido/checkout'));
+                    exit;
+                }
             }
 
             // Crear pedido usando el total calculado
@@ -122,11 +180,10 @@ class PedidoController
                 exit;
             }
 
-            // Registrar uso del cupón (si existe)
-            if ($cupon_aplicado) {
-                $cuponModel = new Cupon();
-                $cuponModel->registrarUso($cupon_aplicado['id'], $usuario['id'] ?? null, $pedido_id);
-                unset($_SESSION['cupon_aplicado']); // limpiar sesión del cupón
+            // Registrar uso del cupón si se aplicó alguno
+            if ($cupon_id) {
+                CuponHelper::registrarUso($cupon_id, $cliente_id, $pedido_id);
+                CuponHelper::limpiarCuponSesion(); // limpiar sesión del cupón
             }
 
             // Vaciar carrito y redirigir a confirmación
@@ -149,6 +206,57 @@ class PedidoController
     {
         $pedidos = $this->pedidoModel->obtenerTodos();
         require __DIR__ . '/../views/pedido/listar.php';
+    }
+
+    // Aplicar cupón via AJAX
+    public function aplicarCupon()
+    {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['exito' => false, 'mensaje' => 'Método no permitido']);
+            exit;
+        }
+
+        $codigo = trim($_POST['codigo'] ?? '');
+        $carrito = $_SESSION['carrito'] ?? [];
+        
+        if (empty($codigo)) {
+            echo json_encode(['exito' => false, 'mensaje' => 'Código de cupón requerido']);
+            exit;
+        }
+
+        if (empty($carrito)) {
+            echo json_encode(['exito' => false, 'mensaje' => 'El carrito está vacío']);
+            exit;
+        }
+
+        // Por ahora usamos cliente_id = 1 como ejemplo
+        // En un sistema real, esto vendría del login del cliente
+        $cliente_id = $_SESSION['cliente_id'] ?? 1;
+        
+        $resultado = CuponHelper::aplicarCupon($codigo, $cliente_id, $carrito);
+        
+        if ($resultado['exito']) {
+            $_SESSION['cupon_aplicado'] = $resultado['cupon'];
+        }
+        
+        echo json_encode($resultado);
+        exit;
+    }
+
+    // Quitar cupón aplicado
+    public function quitarCupon()
+    {
+        CuponHelper::limpiarCuponSesion();
+        
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+            header('Content-Type: application/json');
+            echo json_encode(['exito' => true, 'mensaje' => 'Cupón removido']);
+        } else {
+            header('Location: ' . url('carrito/ver'));
+        }
+        exit;
     }
 
     // Cambia el estado del pedido

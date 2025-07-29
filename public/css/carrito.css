@@ -360,3 +360,23 @@ tr:hover {
         font-size: 3rem;
     }
 }
+
+/* Estilos para cupón aplicado */
+.cupon-aplicado {
+    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+    border: 1px solid #c3e6cb;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin: 5px 0;
+    color: #155724;
+    font-weight: 500;
+}
+
+.cupon-restringido {
+    background: #fff3cd;
+    color: #856404;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    margin-left: 5px;
+}

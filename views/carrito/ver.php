@@ -51,6 +51,14 @@
         <div class="resumen-totales">
             <p>🧾 Subtotal: S/ <?= number_format($totales['subtotal'] ?? 0, 2) ?></p>
             <p>🎁 Descuento: S/ <?= number_format($totales['descuento'] ?? 0, 2) ?></p>
+            <?php if (isset($totales['cupon_aplicado'])): ?>
+                <p class="cupon-aplicado">
+                    🎫 Cupón aplicado: <strong><?= htmlspecialchars($totales['cupon_aplicado']['codigo']) ?></strong>
+                    <?php if (!empty($totales['cupon_aplicado']['usuarios_autorizados'])): ?>
+                        <span class="cupon-restringido">(⚠️ Restringido)</span>
+                    <?php endif; ?>
+                </p>
+            <?php endif; ?>
             <p><strong>💰 Total: S/ <?= number_format($totales['total'] ?? 0, 2) ?></strong></p>
         </div>
         <?php if (!empty($promocionesAplicadas)): ?>

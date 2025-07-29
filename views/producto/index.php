@@ -76,7 +76,7 @@ if (isset($_SESSION['carrito'])) {
         </span>
     <?php endif; ?>
     </a>
-    <a href="<?= url('pedido/listar') ?>" class="boton-carrito" style="background:#007cba;float:right;right:180px;">📦 Listado de Pedidos</a>
+    <a href="<?= url('pedido/listar') ?>" class="boton-carrito" style="background:#007cba;float:right;right:180px;">📦 Listado de Pedidos (Vista Admin a prox implementación)</a>
 
     <form action="<?= url('cargaMasiva/procesarCSV') ?>" method="POST" enctype="multipart/form-data">
         <input type="file" name="archivo_csv" accept=".csv" required>

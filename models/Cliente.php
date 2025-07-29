@@ -38,4 +38,22 @@ class Cliente {
         $stmt = $this->db->prepare("DELETE FROM clientes WHERE id = ?");
         return $stmt->execute([$id]);
     }
+
+    public function existePorCorreo($correo) {
+        if (empty($correo)) {
+            return false;
+        }
+        $stmt = $this->db->prepare("SELECT id FROM clientes WHERE correo = ?");
+        $stmt->execute([$correo]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) !== false;
+    }
+
+    public function obtenerPorCorreo($correo) {
+        if (empty($correo)) {
+            return null;
+        }
+        $stmt = $this->db->prepare("SELECT * FROM clientes WHERE correo = ?");
+        $stmt->execute([$correo]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 }

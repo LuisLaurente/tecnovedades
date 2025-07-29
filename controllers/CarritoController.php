@@ -71,6 +71,20 @@ class CarritoController
         // Evaluar promociones siempre que se cargue el carrito
         $promociones = PromocionHelper::evaluar($carrito, $usuario);
         $totales = PromocionHelper::calcularTotales($carrito, $promociones);
+        
+        // Verificar si hay un cupón aplicado y agregarlo al descuento
+        $cupon_aplicado = \Core\Helpers\CuponHelper::obtenerCuponAplicado();
+        if ($cupon_aplicado) {
+            $descuento_cupon = 0;
+            if ($cupon_aplicado['tipo'] === 'porcentaje') {
+                $descuento_cupon = $totales['subtotal'] * ($cupon_aplicado['valor'] / 100);
+            } else {
+                $descuento_cupon = min($cupon_aplicado['valor'], $totales['subtotal']);
+            }
+            $totales['descuento'] += $descuento_cupon;
+            $totales['total'] = max($totales['subtotal'] - $totales['descuento'], 0);
+            $totales['cupon_aplicado'] = $cupon_aplicado;
+        }
 
         if (!empty($carrito)) {
             $productoModel = new Producto();
