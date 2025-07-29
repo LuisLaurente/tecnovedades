@@ -88,7 +88,10 @@ class CarritoController
             }
         }
 
+        // Hacemos disponibles las variables en la vista
+        $promocionesAplicadas = $promociones;
         require __DIR__ . '/../views/carrito/ver.php';
+
     }
 
     public function aumentar($clave)

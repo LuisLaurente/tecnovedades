@@ -36,7 +36,7 @@ if (!empty($carrito)) {
 }
 
 // Calcular promociones y totales
-$usuario = $_SESSION['usuario'] ?? null;
+$usuario = $_SESSION['usuario'] ?? ['tipo' => 'nuevo']; //se agrega temporalmente ['tipo' => 'nuevo']; para aplicar promo de usuario nuevo
 $promociones = PromocionHelper::evaluar($carrito, $usuario);
 $totales = PromocionHelper::calcularTotales($carrito, $promociones);
 
@@ -125,6 +125,20 @@ if ($cupon_aplicado) {
                                 <td colspan="5" style="text-align: right;"><strong>Total a pagar:</strong></td>
                                 <td><strong>S/ <?= number_format($totales['total'], 2) ?></strong></td>
                             </tr>
+                            <?php if (!empty($promociones)): ?>
+                            <tr>
+                                <td colspan="6">
+                                    <div class="promociones-aplicadas">
+                                        <h4>🎉 Promociones aplicada por temporada:</h4>
+                                        <ul>
+                                            <?php foreach ($promociones as $promo): ?>
+                                                <li><?= htmlspecialchars($promo['promocion']['nombre']) ?> (<?= $promo['accion']['tipo'] ?>)</li>
+                                            <?php endforeach; ?>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 <?php else: ?>

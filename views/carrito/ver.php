@@ -53,16 +53,15 @@
             <p>🎁 Descuento: S/ <?= number_format($totales['descuento'] ?? 0, 2) ?></p>
             <p><strong>💰 Total: S/ <?= number_format($totales['total'] ?? 0, 2) ?></strong></p>
         </div>
-
-        <?php if (!empty($promociones)): ?>
-            <div class="promociones-aplicadas">
-                <h4>Promociones aplicadas:</h4>
-                <ul>
-                    <?php foreach ($promociones as $promo): ?>
-                        <li><?= htmlspecialchars($promo['promocion']['nombre']) ?> (<?= $promo['accion']['tipo'] ?>)</li>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
+        <?php if (!empty($promocionesAplicadas)): ?>
+        <div class="promociones-aplicadas">
+            <h4>Promociones aplicadas:</h4>
+            <ul>
+                <?php foreach ($promocionesAplicadas as $promo): ?>
+                    <li><?= htmlspecialchars($promo['promocion']['nombre']) ?> (<?= $promo['accion']['tipo'] ?>)</li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
         <?php endif; ?>
     </div>
 <?php else: ?>

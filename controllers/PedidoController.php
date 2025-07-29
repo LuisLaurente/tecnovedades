@@ -24,6 +24,13 @@ class PedidoController
     // Muestra formulario de checkout
     public function checkout()
     {
+        $carrito = $_SESSION['carrito'] ?? [];
+        $usuario = $_SESSION['usuario'] ?? null;
+
+        // Evaluar promociones nuevamente antes de procesar pedido
+        $promociones = PromocionHelper::evaluar($carrito, $usuario);
+        $totales = PromocionHelper::calcularTotales($carrito, $promociones);
+
         require __DIR__ . '/../views/pedido/checkout.php';
     }
 
