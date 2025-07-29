@@ -9,11 +9,16 @@
 <body>
     <div class="cupon-admin">
         <!-- Header -->
-        <div class="cupon-header">
+        <div class="cupon-header" style="text-align: center;">
             <h1>Administración de Cupones</h1>
+            <div style="margin-top: 20px; display: flex; justify-content: center; gap: 20px;">
             <a href="<?= url('cupon/crear') ?>" class="btn-nuevo-cupon">
                 <span>+</span> Nuevo Cupón
             </a>
+            <a href="<?= url('pedido/listar') ?>" class="btn-volver-cupones">
+                Volver 
+            </a>
+            </div>
         </div>
 
         <!-- Alertas -->

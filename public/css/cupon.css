@@ -41,6 +41,27 @@
     text-decoration: none;
 }
 
+
+.btn-volver-cupones {
+    background: linear-gradient(135deg, #5e2323 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-volver-cupones:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    color: white;
+    text-decoration: none;
+}
 /* Estadísticas */
 .estadisticas-cupones {
     display: grid;
