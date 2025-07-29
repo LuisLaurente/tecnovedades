@@ -98,7 +98,7 @@ if ($cupon_aplicado) {
                                 </tr>
                             <?php endforeach; ?>
 
-                            <!-- Sección de cupon -->
+                            <!-- Sección de cupones -->
                             <tr>
                                 <td colspan="6">
                                     <h4>¿Tienes un cupón?</h4>
