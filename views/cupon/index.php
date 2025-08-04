@@ -1,23 +1,26 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Administración de Cupones - TecnoVedades</title>
     <link rel="stylesheet" href="<?= url('css/cupon.css') ?>">
+
 </head>
+
 <body>
     <div class="cupon-admin">
         <!-- Header -->
         <div class="cupon-header" style="text-align: center;">
             <h1>Administración de Cupones</h1>
             <div style="margin-top: 20px; display: flex; justify-content: center; gap: 20px;">
-            <a href="<?= url('cupon/crear') ?>" class="btn-nuevo-cupon">
-                <span>+</span> Nuevo Cupón
-            </a>
-            <a href="<?= url('pedido/listar') ?>" class="btn-volver-cupones">
-                Volver 
-            </a>
+                <a href="<?= url('cupon/crear') ?>" class="btn-nuevo-cupon">
+                    <span>+</span> Nuevo Cupón
+                </a>
+                <a href="<?= url('pedido/listar') ?>" class="btn-volver-cupones">
+                    Volver
+                </a>
             </div>
         </div>
 
@@ -165,8 +168,8 @@
                                 </td>
                                 <td>
                                     <div class="acciones">
-                                        <a href="<?= url('cupon/historial?id=' . $cupon001['id']) ?>" class="btn-accion btn-ver" 
-                                           title="Ver historial de uso">
+                                        <a href="<?= url('cupon/historial?id=' . $cupon001['id']) ?>" class="btn-accion btn-ver"
+                                            title="Ver historial de uso">
                                             Historial
                                         </a>
                                         <a href="<?= url('cupon/editar/' . $cupon001['id']) ?>" class="btn-accion btn-editar">
@@ -203,4 +206,5 @@
         }, 5000);
     </script>
 </body>
+
 </html>

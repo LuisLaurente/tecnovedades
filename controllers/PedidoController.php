@@ -7,7 +7,6 @@ use Models\Cliente;
 use Models\DetallePedido;
 use Core\Helpers\PromocionHelper;
 use Core\Helpers\CuponHelper;
-use Models\Cupon;
 
 class PedidoController
 {

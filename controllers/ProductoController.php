@@ -158,7 +158,7 @@ class ProductoController
             }
         }
 
-        header("Location: /producto");
+        header("Location: " . url("producto/index"));
         exit;
     }
 
