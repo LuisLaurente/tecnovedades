@@ -2,26 +2,27 @@
    VER PEDIDO - DETALLES Y GESTIÓN
    ======================================== */
 
-* {
+/* Estilos globales - Solo dentro del contenedor de ver pedido */
+.ver-pedido-page * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-body {
+.ver-pedido-page body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: #f5f6fa;
   min-height: 100vh;
   padding: 20px;
 }
 
-.order-container {
+.ver-pedido-page .order-container {
   max-width: 1200px;
   margin: 0 auto;
 }
 
-/* Header del pedido */
-.order-header {
+/* Header del pedido - Solo dentro del contenedor de ver pedido */
+.ver-pedido-page .order-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   padding: 30px;
@@ -31,7 +32,7 @@ body {
   overflow: hidden;
 }
 
-.order-header::before {
+.ver-pedido-page .order-header::before {
   content: '';
   position: absolute;
   top: -50%;
@@ -53,7 +54,7 @@ body {
   100% { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
-.order-title {
+.ver-pedido-page .order-title {
   font-size: 2.5rem;
   font-weight: 300;
   margin-bottom: 10px;
@@ -61,44 +62,44 @@ body {
   z-index: 1;
 }
 
-.order-subtitle {
+.ver-pedido-page .order-subtitle {
   opacity: 0.9;
   font-size: 1.1rem;
   position: relative;
   z-index: 1;
 }
 
-/* Contenido principal */
-.order-content {
+/* Contenido principal - Solo dentro del contenedor de ver pedido */
+.ver-pedido-page .order-content {
   background: white;
   border-radius: 0 0 15px 15px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.1);
   overflow: hidden;
 }
 
-/* Grid layout principal */
-.order-grid {
+/* Grid layout principal - Solo dentro del contenedor de ver pedido */
+.ver-pedido-page .order-grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 0;
   min-height: 600px;
 }
 
-/* Panel de información */
-.info-panel {
+/* Panel de información - Solo dentro del contenedor de ver pedido */
+.ver-pedido-page .info-panel {
   padding: 30px;
   border-right: 1px solid #ecf0f1;
 }
 
-.section {
+.ver-pedido-page .section {
   margin-bottom: 30px;
 }
 
-.section:last-child {
+.ver-pedido-page .section:last-child {
   margin-bottom: 0;
 }
 
-.section-title {
+.ver-pedido-page .section-title {
   color: #2c3e50;
   font-size: 1.3rem;
   margin-bottom: 20px;
@@ -108,52 +109,52 @@ body {
   border-bottom: 2px solid #ecf0f1;
 }
 
-.section-title::before {
+.ver-pedido-page .section-title::before {
   margin-right: 10px;
   font-size: 1.2rem;
 }
 
-.section-title.client-info::before { content: "👤"; }
-.section-title.order-details::before { content: "📋"; }
-.section-title.products::before { content: "📦"; }
+.ver-pedido-page .section-title.client-info::before { content: "👤"; }
+.ver-pedido-page .section-title.order-details::before { content: "📋"; }
+.ver-pedido-page .section-title.products::before { content: "📦"; }
 
-/* Información del cliente */
-.client-card {
+/* Información del cliente - Solo dentro del contenedor de ver pedido */
+.ver-pedido-page .client-card {
   background: #f8f9fa;
   padding: 20px;
   border-radius: 10px;
   border-left: 4px solid #3498db;
 }
 
-.client-row {
+.ver-pedido-page .client-row {
   display: flex;
   justify-content: space-between;
   margin-bottom: 10px;
   padding: 8px 0;
 }
 
-.client-row:last-child {
+.ver-pedido-page .client-row:last-child {
   margin-bottom: 0;
 }
 
-.client-label {
+.ver-pedido-page .client-label {
   font-weight: 500;
   color: #34495e;
 }
 
-.client-value {
+.ver-pedido-page .client-value {
   color: #2c3e50;
   font-weight: 600;
 }
 
-/* Detalles del pedido */
-.order-details-grid {
+/* Detalles del pedido - Solo dentro del contenedor de ver pedido */
+.ver-pedido-page .order-details-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 15px;
 }
 
-.detail-item {
+.ver-pedido-page .detail-item {
   background: #f8f9fa;
   padding: 15px;
   border-radius: 8px;
@@ -161,7 +162,7 @@ body {
   border: 1px solid #ecf0f1;
 }
 
-.detail-label {
+.ver-pedido-page .detail-label {
   font-size: 0.85rem;
   color: #7f8c8d;
   text-transform: uppercase;
@@ -169,25 +170,25 @@ body {
   margin-bottom: 5px;
 }
 
-.detail-value {
+.ver-pedido-page .detail-value {
   font-size: 1.1rem;
   font-weight: 600;
   color: #2c3e50;
 }
 
-.detail-value.total {
+.ver-pedido-page .detail-value.total {
   color: #27ae60;
   font-size: 1.3rem;
 }
 
-/* Tabla de productos */
-.products-table {
+/* Tabla de productos - Solo dentro del contenedor de ver pedido */
+.ver-pedido-page .products-table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 15px;
 }
 
-.products-table th {
+.ver-pedido-page .products-table th {
   background: #34495e;
   color: white;
   padding: 12px 15px;
@@ -196,46 +197,46 @@ body {
   font-size: 0.9rem;
 }
 
-.products-table td {
+.ver-pedido-page .products-table td {
   padding: 15px;
   border-bottom: 1px solid #ecf0f1;
   vertical-align: middle;
 }
 
-.products-table tr:hover {
+.ver-pedido-page .products-table tr:hover {
   background: #f8f9fa;
 }
 
-.product-name {
+.ver-pedido-page .product-name {
   font-weight: 500;
   color: #2c3e50;
 }
 
-.product-variant {
+.ver-pedido-page .product-variant {
   font-size: 0.85rem;
   color: #7f8c8d;
   margin-top: 5px;
 }
 
-.product-price {
+.ver-pedido-page .product-price {
   font-weight: 600;
   color: #27ae60;
 }
 
-.product-total {
+.ver-pedido-page .product-total {
   font-weight: 600;
   color: #2c3e50;
   font-size: 1.1rem;
 }
 
-/* Panel de gestión */
-.management-panel {
+/* Panel de gestión - Solo dentro del contenedor de ver pedido */
+.ver-pedido-page .management-panel {
   background: #f8f9fa;
   padding: 30px;
   border-left: 1px solid #ecf0f1;
 }
 
-.management-title {
+.ver-pedido-page .management-title {
   color: #2c3e50;
   font-size: 1.3rem;
   margin-bottom: 25px;
@@ -243,13 +244,13 @@ body {
   align-items: center;
 }
 
-.management-title::before {
+.ver-pedido-page .management-title::before {
   content: "⚙️";
   margin-right: 10px;
 }
 
-/* Badge de estado */
-.status-badge {
+/* Badge de estado - Solo dentro del contenedor de ver pedido */
+.ver-pedido-page .status-badge {
   display: inline-block;
   padding: 10px 20px;
   border-radius: 25px;
@@ -262,38 +263,38 @@ body {
   font-size: 0.9rem;
 }
 
-.status-pendiente {
+.ver-pedido-page .status-pendiente {
   background: linear-gradient(135deg, #f39c12, #d68910);
   color: white;
 }
 
-.status-procesando {
+.ver-pedido-page .status-procesando {
   background: linear-gradient(135deg, #3498db, #2980b9);
   color: white;
 }
 
-.status-enviado {
+.ver-pedido-page .status-enviado {
   background: linear-gradient(135deg, #9b59b6, #8e44ad);
   color: white;
 }
 
-.status-entregado {
+.ver-pedido-page .status-entregado {
   background: linear-gradient(135deg, #27ae60, #229954);
   color: white;
 }
 
-.status-completado {
+.ver-pedido-page .status-completado {
   background: linear-gradient(135deg, #27ae60, #229954);
   color: white;
 }
 
-.status-cancelado {
+.ver-pedido-page .status-cancelado {
   background: linear-gradient(135deg, #e74c3c, #c0392b);
   color: white;
 }
 
-/* Formularios de gestión */
-.management-form {
+/* Formularios de gestión - Solo dentro del contenedor de ver pedido */
+.ver-pedido-page .management-form {
   background: white;
   padding: 20px;
   border-radius: 10px;
@@ -301,18 +302,18 @@ body {
   box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
 
-.form-title {
+.ver-pedido-page .form-title {
   color: #34495e;
   margin-bottom: 15px;
   font-size: 1rem;
   font-weight: 600;
 }
 
-.form-group {
+.ver-pedido-page .form-group {
   margin-bottom: 15px;
 }
 
-.form-label {
+.ver-pedido-page .form-label {
   display: block;
   margin-bottom: 5px;
   font-weight: 500;
@@ -320,7 +321,7 @@ body {
   font-size: 0.9rem;
 }
 
-.form-select, .form-textarea {
+.ver-pedido-page .form-select, .ver-pedido-page .form-textarea {
   width: 100%;
   padding: 12px;
   border: 2px solid #ecf0f1;
@@ -330,18 +331,18 @@ body {
   font-family: inherit;
 }
 
-.form-select:focus, .form-textarea:focus {
+.ver-pedido-page .form-select:focus, .ver-pedido-page .form-textarea:focus {
   outline: none;
   border-color: #3498db;
   box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
 }
 
-.form-textarea {
+.ver-pedido-page .form-textarea {
   resize: vertical;
   min-height: 80px;
 }
 
-.btn-submit {
+.ver-pedido-page .btn-submit {
   background: linear-gradient(135deg, #3498db, #2980b9);
   color: white;
   border: none;
@@ -354,13 +355,13 @@ body {
   width: 100%;
 }
 
-.btn-submit:hover {
+.ver-pedido-page .btn-submit:hover {
   background: linear-gradient(135deg, #2980b9, #1f5fb8);
   transform: translateY(-1px);
 }
 
-/* Historial de observaciones */
-.observations-history {
+/* Historial de observaciones - Solo dentro del contenedor de ver pedido */
+.ver-pedido-page .observations-history {
   background: white;
   border-radius: 10px;
   padding: 20px;
@@ -369,7 +370,7 @@ body {
   box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
 
-.observation-item {
+.ver-pedido-page .observation-item {
   padding: 15px;
   border-left: 3px solid #3498db;
   background: #f8f9fa;
@@ -377,23 +378,23 @@ body {
   border-radius: 0 6px 6px 0;
 }
 
-.observation-item:last-child {
+.ver-pedido-page .observation-item:last-child {
   margin-bottom: 0;
 }
 
-.observation-date {
+.ver-pedido-page .observation-date {
   font-size: 0.8rem;
   color: #7f8c8d;
   margin-bottom: 5px;
 }
 
-.observation-text {
+.ver-pedido-page .observation-text {
   color: #2c3e50;
   line-height: 1.4;
 }
 
-/* Botón de regreso */
-.back-button {
+/* Botón de regreso - Solo dentro del contenedor de ver pedido */
+.ver-pedido-page .back-button {
   background: linear-gradient(135deg, #95a5a6, #7f8c8d);
   color: white;
   text-decoration: none;
@@ -406,96 +407,96 @@ body {
   margin-bottom: 20px;
 }
 
-.back-button:hover {
+.ver-pedido-page .back-button:hover {
   background: linear-gradient(135deg, #7f8c8d, #6c7b7d);
   transform: translateY(-1px);
   text-decoration: none;
   color: white;
 }
 
-.back-button::before {
+.ver-pedido-page .back-button::before {
   content: "←";
   margin-right: 8px;
   font-size: 1.2rem;
 }
 
-/* Responsive Design */
+/* Responsive Design - Solo dentro del contenedor de ver pedido */
 @media (max-width: 768px) {
-  .order-container {
+  .ver-pedido-page .order-container {
     margin: 0;
     padding: 0;
   }
   
-  .order-header {
+  .ver-pedido-page .order-header {
     border-radius: 0;
     padding: 20px;
   }
   
-  .order-title {
+  .ver-pedido-page .order-title {
     font-size: 2rem;
   }
   
-  .order-content {
+  .ver-pedido-page .order-content {
     border-radius: 0;
   }
   
-  .order-grid {
+  .ver-pedido-page .order-grid {
     grid-template-columns: 1fr;
   }
   
-  .info-panel {
+  .ver-pedido-page .info-panel {
     border-right: none;
     border-bottom: 1px solid #ecf0f1;
   }
   
-  .order-details-grid {
+  .ver-pedido-page .order-details-grid {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   }
   
-  .products-table {
+  .ver-pedido-page .products-table {
     font-size: 0.9rem;
   }
   
-  .products-table th,
-  .products-table td {
+  .ver-pedido-page .products-table th,
+  .ver-pedido-page .products-table td {
     padding: 10px 8px;
   }
 }
 
 @media (max-width: 480px) {
-  body {
+  .ver-pedido-page body {
     padding: 10px;
   }
   
-  .order-header {
+  .ver-pedido-page .order-header {
     padding: 15px;
   }
   
-  .order-title {
+  .ver-pedido-page .order-title {
     font-size: 1.8rem;
   }
   
-  .info-panel,
-  .management-panel {
+  .ver-pedido-page .info-panel,
+  .ver-pedido-page .management-panel {
     padding: 20px;
   }
   
-  .order-details-grid {
+  .ver-pedido-page .order-details-grid {
     grid-template-columns: 1fr;
   }
   
-  .products-table th,
-  .products-table td {
+  .ver-pedido-page .products-table th,
+  .ver-pedido-page .products-table td {
     padding: 8px 5px;
     font-size: 0.8rem;
   }
   
-  .client-row {
+  .ver-pedido-page .client-row {
     flex-direction: column;
     align-items: flex-start;
   }
   
-  .client-label {
+  .ver-pedido-page .client-label {
     margin-bottom: 2px;
   }
 }

@@ -18,7 +18,7 @@ if ($isProduction) {
         'host' => '127.0.0.1',    // 'host' => '127.0.0.1',
         'dbname' => 'tecnovedades', // 'dbname' => 'tecnovedades',
         'username' => 'root',   // 'username' => 'root
-        'password' => '', // 'password' => '',
+        'password' => 'root', // 'password' => '',
         'port' => 3306
     ];
 }
