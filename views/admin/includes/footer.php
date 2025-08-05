@@ -1,3 +1,5 @@
+<?php require_once __DIR__ . '/../componentes/popup.php'; ?>
+
 <!-- Footer simplificado -->
 <footer class="bg-white border-t border-gray-200 mt-10">
     <div class="py-8 px-4">

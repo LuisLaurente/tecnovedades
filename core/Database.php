@@ -44,6 +44,11 @@ class Database
     {
         return $this->connection;
     }
+        public static function getConexion()
+    {
+        return self::getInstance()->getConnection();
+    }
+    
 
     
 }
