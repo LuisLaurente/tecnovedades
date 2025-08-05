@@ -2,7 +2,7 @@
 
 <!-- Estilos y botón de volver -->
 <link rel="stylesheet" href="<?= url('css/carrito.css') ?>">
-<a href="<?= url('producto/index') ?>" class="boton-volver">🛒 Volverrrr</a>
+<a href="<?= url('/') ?>" class="boton-volver">🛒 Volverrrr</a>
 <a href="<?= url('pedido/checkout') ?>" class="boton-checkout">Finalizar compra</a>
 
 
@@ -23,8 +23,8 @@
             <?php foreach ($productosDetallados as $item): ?>
                 <tr>
                     <td class="producto-nombre"><?= htmlspecialchars($item['nombre']) ?></td>
-                    <td class="producto-talla"><?= htmlspecialchars($item['talla']) ?></td>
-                    <td class="producto-color"><?= htmlspecialchars($item['color']) ?></td>
+                    <td class="producto-talla"><?= htmlspecialchars($item['talla']?? '') ?></td>
+                    <td class="producto-color"><?= htmlspecialchars($item['color']?? '') ?></td>
                     <td class="producto-precio">S/ <?= number_format($item['precio'], 2) ?></td>
                     <td>
                         <div class="cantidad-container">

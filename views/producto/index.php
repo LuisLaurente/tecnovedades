@@ -183,65 +183,110 @@ if (isset($_SESSION['carrito'])) {
                         </div>
 
                         <!-- Productos -->
-                        <div id="productosContainer">
-                            <?php if (!empty($productos)): ?>
-                                <?php foreach ($productos as $producto): ?>
-                                    <div class="producto-card">
-                                        <div class="producto-info">
-                                            <div class="producto-titulo"><?= htmlspecialchars($producto['nombre']) ?></div>
-                                            <div class="producto-descripcion"><?= htmlspecialchars($producto['descripcion']) ?></div>
-                                            <div class="producto-precio">S/ <?= number_format($producto['precio'], 2) ?></div>
-                                            <div class="producto-visible <?= $producto['visible'] ? 'disponible' : 'no-disponible' ?>">
-                                                Visible: <?= $producto['visible'] ? 'Sí' : 'No' ?>
-                                            </div>
-
-                                            <?php if (!empty($producto['categorias'])): ?>
-                                                <div class="categoria-lista">
-                                                    Categorías: <?= implode(', ', array_map('htmlspecialchars', $producto['categorias'])) ?>
-                                                </div>
-                                            <?php else: ?>
-                                                <div class="categoria-lista">Sin categoría</div>
-                                            <?php endif; ?>
-                                        </div>
-
-                                        <div class="acciones">
-                                            <a href="<?= url('producto/editar/' . $producto['id']) ?>">✏️ Editar</a>
-                                            <a href="<?= url('producto/eliminar/' . $producto['id']) ?>"
-                                                class="eliminar"
-                                                onclick="return confirm('¿Estás seguro de eliminar este producto?')">🗑️ Eliminar</a>
-                                        </div>
-
-                                        <form method="POST" action="<?= url('carrito/agregar') ?>" class="carrito-form">
-                                            <input type="hidden" name="producto_id" value="<?= $producto['id'] ?>">
-
-                                            <div class="carrito-form-row">
-                                                <div class="carrito-form-group">
-                                                    <label>Talla:</label>
-                                                    <input type="text" name="talla">
-                                                </div>
-                                                <div class="carrito-form-group">
-                                                    <label>Color:</label>
-                                                    <input type="text" name="color">
-                                                </div>
-                                            </div>
-
-                                            <div class="carrito-form-group">
-                                                <label>Cantidad:</label>
-                                                <input type="number" name="cantidad" value="1" min="1">
-                                            </div>
-
-                                            <button type="submit">🛒 Agregar al Carrito</button>
-                                        </form>
-                                    </div>
+                        <!-- Productos (Vista Administrador) -->
+<div id="productosContainer">
+    <?php if (!empty($productos)): ?>
+        <table class="admin-productos-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Precio</th>
+                    <th>Visible</th>
+                    <th>Categorías</th>
+                    <th>Imágenes</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($productos as $producto): ?>
+                    <tr>
+                        <td><?= $producto['id'] ?></td>
+                        <td><?= htmlspecialchars($producto['nombre']) ?></td>
+                        <td><?= htmlspecialchars($producto['descripcion']) ?></td>
+                        <td>S/ <?= number_format($producto['precio'], 2) ?></td>
+                        <td class="<?= $producto['visible'] ? 'disponible' : 'no-disponible' ?>">
+                            <?= $producto['visible'] ? 'Sí' : 'No' ?>
+                        </td>
+                        <td>
+                            <?php if (!empty($producto['categorias'])): ?>
+                                <?= implode(', ', array_map('htmlspecialchars', $producto['categorias'])) ?>
+                            <?php else: ?>
+                                <span class="sin-categoria">Sin categoría</span>
+                            <?php endif; ?>
+                        </td>
+                        <td class="imagenes-columna">
+                            <?php if (!empty($producto['imagenes'])): ?>
+                                <?php foreach ($producto['imagenes'] as $imagen): ?>
+                                    <img src="<?= url('uploads/' . $imagen['nombre_imagen']) ?>" 
+                                         alt="Imagen de <?= htmlspecialchars($producto['nombre']) ?>" 
+                                         class="imagen-miniatura">
                                 <?php endforeach; ?>
                             <?php else: ?>
-                                <div class="bg-white rounded-lg shadow-md p-8 text-center">
-                                    <div class="text-gray-400 text-6xl mb-4">📦</div>
-                                    <h3 class="text-xl font-semibold text-gray-600 mb-2">No hay productos disponibles</h3>
-                                    <p class="text-gray-500">Aún no se han agregado productos al catálogo</p>
-                                </div>
+                                <span class="sin-imagen">Sin imágenes</span>
                             <?php endif; ?>
-                        </div>
+                        </td>
+                        <td class="acciones">
+                            <a href="<?= url('producto/editar/' . $producto['id']) ?>">✏️ Editar</a>
+                            <a href="<?= url('producto/eliminar/' . $producto['id']) ?>"
+                               class="eliminar"
+                               onclick="return confirm('¿Estás seguro de eliminar este producto?')">🗑️ Eliminar</a>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    <?php else: ?>
+        <div class="bg-white rounded-lg shadow-md p-8 text-center">
+            <div class="text-gray-400 text-6xl mb-4">📦</div>
+            <h3 class="text-xl font-semibold text-gray-600 mb-2">No hay productos disponibles</h3>
+            <p class="text-gray-500">Aún no se han agregado productos al catálogo</p>
+        </div>
+    <?php endif; ?>
+</div>
+
+<!-- CSS para tabla de administración -->
+<style>
+    .admin-productos-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        background: #fff;
+        border: 1px solid #ddd;
+    }
+    .admin-productos-table th, .admin-productos-table td {
+        border: 1px solid #ddd;
+        padding: 8px 12px;
+        text-align: left;
+    }
+    .admin-productos-table th {
+        background: #f4f4f4;
+        font-weight: bold;
+    }
+    .disponible { color: green; font-weight: bold; }
+    .no-disponible { color: red; font-weight: bold; }
+    .imagenes-columna img.imagen-miniatura {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        margin-right: 5px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    .acciones a {
+        display: inline-block;
+        margin-right: 8px;
+        color: #007bff;
+        text-decoration: none;
+    }
+    .acciones a.eliminar { color: #d9534f; }
+    .sin-categoria, .sin-imagen {
+        color: #888;
+        font-style: italic;
+    }
+</style>
+
                 </div>
 
                 <!-- Footer -->

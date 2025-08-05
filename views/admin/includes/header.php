@@ -1,141 +1,116 @@
-
-<!-- Header moderno con diseño pastel y funcionalidades avanzadas -->
-<header class="w-full bg-gradient-to-r from-white via-blue-50 to-purple-50 shadow-lg border-b border-blue-100 px-6 py-4 backdrop-blur-sm bg-white/80">
-    <div class="flex items-center justify-between">
+<link rel="stylesheet" href="<?= url('css/header.css') ?>">
+<!-- Header moderno -->
+<header class="main-header">
+    <div class="header-content">
         <!-- Lado izquierdo: Título dinámico y breadcrumb -->
-        <div class="flex items-center space-x-4">
-            <!-- Botón hamburguesa para móviles (oculto en desktop) -->
-            <button id="mobile-header-menu" class="lg:hidden p-2 rounded-xl bg-gradient-to-br from-blue-100 to-purple-100 hover:from-blue-200 hover:to-purple-200 transition-all duration-300 shadow-sm">
-                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="header-left">
+            <!-- Botón hamburguesa para móviles -->
+            <button id="mobile-header-menu" class="mobile-menu-button">
+                <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                 </svg>
             </button>
 
             <!-- Información de la página actual -->
-            <div class="flex flex-col">
-                <div class="flex items-center text-sm text-gray-500">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="page-info">
+                <div class="time-status">
+                    <svg class="clock-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
-                    <span id="current-time"></span>
-                    <span class="mx-2">•</span>
-                    <span class="text-green-600 font-medium">En línea</span>
+                    <span id="current-time" class="current-time"></span>
+                    <span class="separator">•</span>
+                    <span class="online-status">En línea</span>
                 </div>
             </div>
         </div>
 
+                <!-- Menú de navegación -->
+        <nav class="main-nav">
+            <ul class="nav-links">
+                <li><a href="<?= url('info/nosotros') ?>">Nosotros</a></li>
+                <li><a href="<?= url('info/contacto') ?>">Contacto</a></li>
+                <li><a href="<?= url('info/terminos') ?>">Términos</a></li>
+                <li><a href="<?= url('info/privacidad') ?>">Privacidad</a></li>
+            </ul>
+        </nav>
+
         <!-- Lado derecho: Notificaciones y perfil de usuario -->
-        <div class="flex items-center space-x-3">
-            <!-- Notificaciones -->
-
+        <div class="header-right">
             <!-- Separador visual -->
-            <div class="h-8 w-px bg-gradient-to-b from-transparent via-gray-300 to-transparent"></div>
+            <div class="visual-separator"></div>
 
-            <!-- Perfil de usuario mejorado -->
-            <div class="relative group">
-                <button class="flex items-center space-x-3 p-2 rounded-xl bg-gradient-to-br from-white/60 to-gray-50/60 hover:from-white/80 hover:to-gray-50/80 backdrop-blur-sm border border-gray-200/50 transition-all duration-300 shadow-sm hover:shadow-md transform hover:scale-105">
+            <!-- Perfil de usuario -->
+            <div class="user-profile-container">
+                <button class="user-profile-button">
                     <!-- Avatar con gradiente -->
-                    <div class="relative">
-                        <div class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 p-0.5 shadow-lg">
-                            <img src="https://ui-avatars.com/api/?name=<?= urlencode($_SESSION['user_name'] ?? 'Usuario') ?>&background=f8fafc&color=374151&size=128" alt="Avatar" class="w-full h-full rounded-full bg-white object-cover">
+                    <div class="avatar-container">
+                        <div class="avatar-wrapper">
+                            <img src="https://ui-avatars.com/api/?name=<?= urlencode($_SESSION['user_name'] ?? 'Usuario') ?>&background=f8fafc&color=374151&size=128"
+                                alt="Avatar" class="avatar-image">
                         </div>
                         <!-- Indicador de estado en línea -->
-                        <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full border-2 border-white shadow-sm"></div>
+                        <div class="online-indicator"></div>
                     </div>
 
                     <!-- Información del usuario -->
-                    <div class="hidden sm:block text-left">
-                        <p class="text-sm font-semibold text-gray-800">
+                    <div class="user-info">
+                        <p class="user-name">
                             <?= htmlspecialchars($_SESSION['user_name'] ?? 'Invitado') ?>
                         </p>
-                        <p class="text-xs text-gray-500">
+                        <p class="user-role">
                             <?= htmlspecialchars($_SESSION['user_role_name'] ?? 'Sin rol') ?>
                         </p>
                     </div>
 
-
                     <!-- Icono de dropdown -->
-                    <svg class="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="dropdown-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
                 </button>
 
-                <!-- Dropdown del perfil (oculto por defecto) -->
-                <div class="absolute right-0 top-full mt-2 w-64 bg-white/90 backdrop-blur-md rounded-xl shadow-xl border border-gray-200/50 overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-50">
-                    <!-- Header del dropdown -->
-                    <div class="p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-gray-100">
-                        <div class="flex items-center space-x-3">
-                            
-                            <div>
-                                <p class="font-semibold text-gray-800">
+                <!-- Dropdown del perfil -->
+                <div class="profile-dropdown">
+                    <div class="dropdown-header">
+                        <div class="dropdown-user-info">
+                            <div class="dropdown-user-details">
+                                <p class="dropdown-user-name">
                                     <?= htmlspecialchars($_SESSION['user_name'] ?? 'Invitado') ?>
                                 </p>
-                                <p class="text-sm text-gray-500">
+                                <p class="dropdown-user-email">
                                     <?= htmlspecialchars($_SESSION['user_email'] ?? 'Sin email') ?>
                                 </p>
-                                <?php 
-                                // Determinar el nivel de acceso para mostrar la etiqueta correcta
-                                $roleBadgeClass = 'bg-gray-100 text-gray-700';
-                                $roleName = $_SESSION['usuario_rol'] ?? 'Sin rol';
-                                
-                                // Incluir helper de auth si no está ya incluido
-                               /* if (!isset($auth)) {
-                                    require_once __DIR__ . '/auth_helper.php';
-                                    global $pdo;
-                                    $auth = new AuthHelper($pdo);
-                                }*/
-                                /*
-                                if ($auth->isAdmin()) {
-                                    $roleBadgeClass = 'bg-red-100 text-red-700';
-                                    $roleDisplay = 'Administrador';
-                                } else {
-                                    $roleDisplay = $roleName;
-                                    
-                                    // Asignar color según el nombre del rol
-                                    if (stripos($roleName, 'admin') !== false) {
-                                        $roleBadgeClass = 'bg-red-100 text-red-700';
-                                    } elseif (stripos($roleName, 'editor') !== false || stripos($roleName, 'gestor') !== false) {
-                                        $roleBadgeClass = 'bg-orange-100 text-orange-700';
-                                    } elseif (stripos($roleName, 'venta') !== false || stripos($roleName, 'ventas') !== false) {
-                                        $roleBadgeClass = 'bg-purple-100 text-purple-700';
-                                    } elseif (stripos($roleName, 'cliente') !== false) {
-                                        $roleBadgeClass = 'bg-teal-100 text-teal-700';
-                                    } elseif (stripos($roleName, 'observador') !== false || stripos($roleName, 'lector') !== false) {
-                                        $roleBadgeClass = 'bg-blue-100 text-blue-700';
-                                    }
-                                }
-                                    */
-                                ?>
-                               <!-- <span class="inline-block px-2 py-1 text-xs <?= $roleBadgeClass ?> rounded-full mt-1"><?= $roleDisplay ?></span> -->
                             </div>
                         </div>
                     </div>
 
-                    <!-- Opciones del dropdown -->
-                    <div class="p-2">
-                        <a href="<?= url('/auth/profile') ?>" class="flex items-center px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200">
-                            <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                            </svg>
-                            Mi Perfil
-                        </a>
-
-                        <a href="#" class="flex items-center px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200">
-                            <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            </svg>
-                            Preferencias
-                        </a>
-                        <div class="border-t border-gray-100 my-2"></div>
-                        <a href="<?= url('/auth/logout') ?>" class="flex items-center px-3 py-2 text-sm text-red-600 rounded-lg hover:bg-red-50 transition-all duration-200">
-                            <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                            </svg>
-                            Cerrar Sesión
-                        </a>
+                    <div class="dropdown-options">
+                        <?php if (isset($_SESSION['user_id'])): ?>
+                            <!-- Si está logueado -->
+                            <a href="<?= url('/auth/profile') ?>" class="dropdown-item">
+                                <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                                <span class="dropdown-item-text">Mi Perfil</span>
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="<?= url('/auth/logout') ?>" class="dropdown-item logout-item">
+                                <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                </svg>
+                                <span class="dropdown-item-text">Cerrar Sesión</span>
+                            </a>
+                        <?php else: ?>
+                            <!-- Si NO está logueado -->
+                            <a href="<?= url('/auth/login') ?>" class="dropdown-item login-item">
+                                <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"></path>
+                                </svg>
+                                <span class="dropdown-item-text">Iniciar Sesión</span>
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
@@ -168,52 +143,20 @@
 
     // Animación de los badges de notificaciones
     function animateNotificationBadge() {
-        const badges = document.querySelectorAll('span[class*="bg-gradient-to-br"]');
+        const badges = document.querySelectorAll('.notification-badge');
         badges.forEach(badge => {
             if (badge.textContent && parseInt(badge.textContent) > 0) {
-                badge.style.animation = 'pulse 2s infinite';
+                badge.classList.add('pulse-animation');
             }
         });
     }
 
     // Inicializar animaciones
     animateNotificationBadge();
+
+    // Toggle del menú móvil
+    document.getElementById('mobile-header-menu')?.addEventListener('click', function() {
+        // Agregar lógica para mostrar/ocultar menú móvil
+        console.log('Toggle mobile menu');
+    });
 </script>
-
-<!-- Estilos adicionales para animaciones -->
-<style>
-    @keyframes pulse {
-
-        0%,
-        100% {
-            transform: scale(1);
-        }
-
-        50% {
-            transform: scale(1.1);
-        }
-    }
-
-    /* Efecto glassmorphism para el header */
-    header {
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-    }
-
-    /* Animación suave para el dropdown */
-    .group:hover .group-hover\:opacity-100 {
-        animation: slideDown 0.3s ease-out;
-    }
-
-    @keyframes slideDown {
-        from {
-            opacity: 0;
-            transform: translateY(-10px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-</style>

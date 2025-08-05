@@ -102,8 +102,8 @@ $totales['total'] = max($totales['subtotal'] - $total_descuentos, 0);
                             <?php foreach ($productosDetallados as $item): ?>
                                 <tr>
                                     <td class="product-name"><?= htmlspecialchars($item['nombre']) ?></td>
-                                    <td><?= htmlspecialchars($item['talla']) ?></td>
-                                    <td><?= htmlspecialchars($item['color']) ?></td>
+                                    <td><?= htmlspecialchars($item['talla']?? '') ?></td>
+                                    <td><?= htmlspecialchars($item['color']?? '') ?></td>
                                     <td class="price">S/ <?= number_format($item['precio'], 2) ?></td>
                                     <td><span style="background: #3498db; color: white; padding: 5px 10px; border-radius: 15px; font-size: 0.8rem;"><?= $item['cantidad'] ?></span></td>
                                     <td class="price">S/ <?= number_format($item['subtotal'], 2) ?></td>

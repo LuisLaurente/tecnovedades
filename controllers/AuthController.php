@@ -146,7 +146,7 @@ class AuthController extends BaseController
             setcookie('remember_token', '', time() - 3600, '/');
         }
 
-        header('Location: ' . url('/auth/login'));
+        header('Location: ' . url('/'));
         exit;
     }
 

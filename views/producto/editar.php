@@ -1,147 +1,149 @@
 <?php require_once __DIR__ . '/../../Core/helpers/urlHelper.php'; ?>
-<h1>Editar Producto</h1>
+<link rel="stylesheet" href="<?= url('/css/editar-producto.css') ?>">
 
-<form action="<?= url('producto/actualizar') ?>" method="POST">
-    <input type="hidden" name="id" value="<?= $producto['id'] ?>">
+<div class="form-container">
+    <h2>✏️ Editar Producto</h2>
 
-    <label>Nombre:</label>
-    <input type="text" name="nombre" value="<?= htmlspecialchars($producto['nombre']) ?>" required><br>
+    <form action="<?= url('producto/actualizar/' . $producto['id']) ?>" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="id" value="<?= $producto['id'] ?>">
 
-    <label>SKU:</label>
-    <input type="text" name="sku" value="<?= htmlspecialchars($producto['sku']) ?>" readonly><br>
+        <!-- Nombre -->
+        <div class="form-group">
+            <label for="nombre">Nombre del Producto</label>
+            <input type="text" name="nombre" id="nombre" value="<?= htmlspecialchars($producto['nombre']) ?>" required>
+        </div>
 
-    <label>Descripción:</label>
-    <textarea name="descripcion"><?= htmlspecialchars($producto['descripcion']) ?></textarea><br>
+        <!-- Descripción -->
+        <div class="form-group">
+            <label for="descripcion">Descripción</label>
+            <textarea name="descripcion" id="descripcion" required><?= htmlspecialchars($producto['descripcion']) ?></textarea>
+        </div>
 
-    <label>Precio:</label>
-    <input type="number" step="0.01" name="precio" value="<?= htmlspecialchars($producto['precio']) ?>" required><br>
+        <!-- Precio -->
+        <div class="form-group">
+            <label for="precio">Precio (S/.)</label>
+            <input type="number" step="0.01" name="precio" id="precio" value="<?= htmlspecialchars($producto['precio']) ?>" required>
+        </div>
 
-    <label>Stock:</label>
-    <input type="number" name="stock" value="<?= htmlspecialchars($producto['stock']) ?>" required><br>
+        <!-- Stock -->
+        <div class="form-group">
+            <label for="stock">Stock</label>
+            <input type="number" name="stock" id="stock" value="<?= htmlspecialchars($producto['stock']) ?>" required>
+        </div>
 
-    <label>Visible:</label>
-    <select name="visible">
-        <option value="1" <?= $producto['visible'] ? 'selected' : '' ?>>Sí</option>
-        <option value="0" <?= !$producto['visible'] ? 'selected' : '' ?>>No</option>
-    </select><br><br>
+        <!-- Visible -->
+        <div class="form-group">
+            <div class="visible-checkbox">
+                <input type="checkbox" name="visible" id="visible" value="1" <?= $producto['visible'] ? 'checked' : '' ?>>
+                <label for="visible">Producto visible en la tienda</label>
+            </div>
+        </div>
 
+        <!-- Imágenes -->
+        <div class="form-group">
+            <label>📷 Imágenes del Producto</label>
+            <div class="imagenes-actuales">
+                <?php if (!empty($imagenes)): ?>
+                    <?php foreach ($imagenes as $img): ?>
+                        <div class="imagen-item">
+                            <img src="<?= url('uploads/' . $img['nombre_imagen']) ?>" alt="Imagen" width="120">
+                            <a href="<?= url('imagen/eliminar/' . $img['id']) ?>" onclick="return confirm('¿Eliminar esta imagen?')">❌ Eliminar</a>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <p>No hay imágenes cargadas.</p>
+                <?php endif; ?>
+            </div>
+            <input type="file" name="imagenes[]" multiple accept="image/*">
+        </div>
 
-    <!-- Categorías con checkboxes -->
-    <h3>Categorías</h3>
-    <div style="margin-bottom: 20px;">
-        <?php
-        function renderCheckboxCategoriasEdit($categorias, $seleccionadas, $padre = null, $nivel = 0)
-        {
-            foreach ($categorias as $cat) {
-                if ($cat['id_padre'] == $padre) {
-                    $margen = $nivel * 20;
-                    $checked = in_array($cat['id'], $seleccionadas) ? 'checked' : '';
-                    echo "<div style='margin-left: {$margen}px'>";
-                    echo "<label>";
-                    echo "<input type='checkbox' name='categorias[]' value='{$cat['id']}' $checked> ";
-                    echo htmlspecialchars($cat['nombre']);
-                    echo "</label>";
-                    echo "</div>";
-                    renderCheckboxCategoriasEdit($categorias, $seleccionadas, $cat['id'], $nivel + 1);
+        <!-- Etiquetas -->
+        <div class="form-group">
+            <label for="etiquetas">🏷️ Etiquetas</label>
+            <select name="etiquetas[]" id="etiquetas" multiple>
+                <?php foreach ($etiquetas as $et): ?>
+                    <option value="<?= $et['id'] ?>" <?= in_array($et['id'], $etiquetasAsignadas ?? []) ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($et['nombre']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+
+        <!-- Categorías -->
+        <h3>📋 Categorías</h3>
+        <div class="checkbox-container">
+            <?php
+            function renderCheckboxCategoriasEdit($categorias, $seleccionadas, $padre = null, $nivel = 0) {
+                foreach ($categorias as $cat) {
+                    if ($cat['id_padre'] == $padre) {
+                        $checked = in_array($cat['id'], $seleccionadas) ? 'checked' : '';
+                        $margen = $nivel * 20;
+                        echo "<div style='margin-left: {$margen}px'>";
+                        echo "<label><input type='checkbox' name='categorias[]' value='{$cat['id']}' $checked> " . htmlspecialchars($cat['nombre']) . "</label>";
+                        echo "</div>";
+                        renderCheckboxCategoriasEdit($categorias, $seleccionadas, $cat['id'], $nivel + 1);
+                    }
                 }
             }
-        }
-
-        renderCheckboxCategoriasEdit($categorias, $categoriasAsignadas);
-        ?>
-    </div>
-
-    <h3>Gestión de Etiquetas</h3>
-    <form action="<?= url('producto/actualizar/' . $producto['id']) ?>" method="POST">
-        <!-- tus campos existentes -->
-        <h4>Cambiar etiqueta:</h4>
-        <select name="etiquetas[]" multiple>
-            <?php foreach ($etiquetas as $et): ?>
-                <option value="<?= $et['id'] ?>" <?= in_array($et['id'], $etiquetasAsignadas ?? []) ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($et['nombre']) ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
-
-        <button type="submit">Actualizar</button>
-    </form>
-
-    <!-- 🟡 Gestión completa de etiquetas (crear, editar, eliminar) -->
-
-
-
-    <table border="1" style="margin-top: 10px;">
-        <tr>
-            <th>Nombre</th>
-            <th>Acción</th>
-        </tr>
-        <?php foreach ($etiquetas as $et): ?>
-            <tr>
-                <form method="POST" action="<?= url('etiqueta/actualizar') ?>">
-                    <td>
-                        <input type="text" name="nombre" value="<?= htmlspecialchars($et['nombre']) ?>">
-                    </td>
-                    <td>
-                        <input type="hidden" name="id" value="<?= $et['id'] ?>">
-                        <a href="<?= url('etiqueta/eliminar/' . $et['id']) ?>?redirect=<?= urlencode(url('producto/editar/' . $producto['id'])) ?>" onclick="return confirm('¿Eliminar esta etiqueta?')">❌ Eliminar</a>
-                    </td>
-                </form>
-            </tr>
-        <?php endforeach; ?>
-    </table>
-
-    <!-- ➕ Formulario para nueva etiqueta -->
-    <form method="POST" action="<?= url('etiqueta/guardar') ?>" style="margin-top: 10px;">
-        <input type="text" name="nombre" placeholder="Nueva etiqueta" required>
-        <button type="submit">➕ Agregar</button>
-    </form>
-
-
-</form>
-
-
-<hr>
-
-
-<hr>
-
-<h2>Variantes del Producto</h2>
-
-<?php if (!empty($variantes)): ?>
-    <?php foreach ($variantes as $variante): ?>
-        <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
-            <form action="<?= url('variante/actualizar/' . $variante['id']) ?>" method="POST" enctype="multipart/form-data">
-                <input type="hidden" name="producto_id" value="<?= $producto['id'] ?>">
-
-                <label>Talla:</label>
-                <input type="text" name="talla" value="<?= htmlspecialchars($variante['talla']) ?>" required>
-
-                <label>Color:</label>
-                <input type="text" name="color" value="<?= htmlspecialchars($variante['color']) ?>" required>
-
-                <label>Stock:</label>
-                <input type="number" name="stock" value="<?= htmlspecialchars($variante['stock']) ?>" required>
-
-                <button type="submit">Actualizar Variante</button>
-                <a href="<?= url('variante/eliminar/' . $variante['id'] . '?producto_id=' . $producto['id']) ?>" onclick="return confirm('¿Estás seguro de eliminar esta variante?')">❌ Eliminar</a>
-            </form>
-            <!-- 🧩 Formulario SEPARADO para subir imagen -->
-            <form action="<?= url('imagen/subir') ?>" method="POST" enctype="multipart/form-data" style="margin-top: 10px;">
-                <input type="hidden" name="producto_id" value="<?= $producto['id'] ?>">
-                <label>Imágenes del producto:</label>
-                <input type="file" name="imagen" required>
-                <button type="submit">📤 Subir Imagen</button>
-            </form>
-
-            <h2>Imágenes del Producto</h2>
-            <?php foreach ($imagenes as $img): ?>
-                <div style="margin-bottom: 10px;">
-                    <img src="<?= url('uploads/' . htmlspecialchars($img['nombre_imagen'])) ?>" alt="Imagen" width="120">
-                    <a href="<?= url('imagen/eliminar/' . $img['id']) ?>" onclick="return confirm('¿Eliminar esta imagen?')">❌ Eliminar</a>
-                </div>
-            <?php endforeach; ?>
+            renderCheckboxCategoriasEdit($categorias, $categoriasAsignadas);
+            ?>
         </div>
-    <?php endforeach; ?>
-<?php else: ?>
-    <p>No hay variantes registradas.</p>
-<?php endif; ?>
+
+        <!-- Variantes -->
+        <h3>🎨 Variantes del Producto</h3>
+        <div id="variantes-container">
+            <?php if (!empty($variantes)): ?>
+                <?php foreach ($variantes as $var): ?>
+                    <div class="variante">
+                        <input type="hidden" name="variantes[id][]" value="<?= $var['id'] ?>">
+                        <div>
+                            <label>Talla</label>
+                            <input type="text" name="variantes[talla][]" value="<?= htmlspecialchars($var['talla']) ?>">
+                        </div>
+                        <div>
+                            <label>Color</label>
+                            <input type="text" name="variantes[color][]" value="<?= htmlspecialchars($var['color']) ?>">
+                        </div>
+                        <div>
+                            <label>Stock</label>
+                            <input type="number" name="variantes[stock][]" value="<?= htmlspecialchars($var['stock']) ?>">
+                        </div>
+                        <a href="<?= url('variante/eliminar/' . $var['id'] . '?producto_id=' . $producto['id']) ?>" onclick="return confirm('¿Eliminar esta variante?')">❌ Eliminar</a>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <p>No hay variantes registradas.</p>
+            <?php endif; ?>
+        </div>
+        <button type="button" class="btn btn-add" onclick="agregarVariante()">+ Agregar Variante</button>
+
+        <!-- Botones de acción -->
+        <div class="form-actions">
+            <button type="submit" class="btn btn-success">💾 Guardar Cambios</button>
+            <a href="<?= url('producto') ?>" class="btn btn-secondary">← Atrás</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    function agregarVariante() {
+        const container = document.getElementById('variantes-container');
+        const html = `
+            <div class="variante">
+                <input type="hidden" name="variantes[id][]" value="">
+                <div>
+                    <label>Talla</label>
+                    <input type="text" name="variantes[talla][]" placeholder="Ej: S, M, L, XL">
+                </div>
+                <div>
+                    <label>Color</label>
+                    <input type="text" name="variantes[color][]" placeholder="Ej: Rojo, Azul">
+                </div>
+                <div>
+                    <label>Stock</label>
+                    <input type="number" name="variantes[stock][]" placeholder="Cantidad">
+                </div>
+            </div>`;
+        container.insertAdjacentHTML('beforeend', html);
+    }
+</script>

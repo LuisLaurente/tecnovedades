@@ -6,7 +6,6 @@ use Controllers\BaseController;
 use \Models\Etiqueta;
 use Core\Helpers\Validator;
 
-
 class EtiquetaController extends BaseController
 {
     private $modelo;
@@ -18,12 +17,14 @@ class EtiquetaController extends BaseController
 
     public function index()
     {
+        require_once __DIR__ . '/../Core/helpers/urlHelper.php';
         $etiquetas = $this->modelo->obtenerTodas();
         $this->render('etiquetas/index', ['etiquetas' => $etiquetas]);
     }
 
     public function crear()
     {
+        require_once __DIR__ . '/../Core/helpers/urlHelper.php';
         $errores = [];
         $nombre = '';
 
@@ -32,8 +33,8 @@ class EtiquetaController extends BaseController
                 $nombre = Validator::validarTexto($_POST['nombre'], 'Nombre');
                 $slug = Validator::generarSlug($nombre);
                 $this->modelo->crear($nombre, $slug);
-                header("Location: /etiqueta/index");
-exit;
+                header('Location: ' . url('etiqueta/index'));
+                exit;
             } catch (\Exception $e) {
                 $errores[] = $e->getMessage();
             }
@@ -45,9 +46,9 @@ exit;
         ]);
     }
 
-
     public function editar($id)
     {
+        require_once __DIR__ . '/../Core/helpers/urlHelper.php';
         $errores = [];
         $etiqueta = $this->modelo->obtenerPorId($id);
         $nombre = $etiqueta['nombre'] ?? '';
@@ -58,7 +59,7 @@ exit;
                 $slug = \Core\Helpers\Validator::generarSlug($nombre);
 
                 $this->modelo->actualizar($id, $nombre, $slug);
-                header("Location: /etiqueta/index");
+                header('Location: ' . url('etiqueta/index'));
                 exit;
             } catch (\Exception $e) {
                 $errores[] = $e->getMessage();
@@ -70,40 +71,39 @@ exit;
             'errores' => $errores
         ]);
     }
+
     public function guardar()
-{
-    $nombre = $_POST['nombre'] ?? '';
-    if (!$nombre) {
-        echo "❌ Nombre vacío";
-        return;
+    {
+        require_once __DIR__ . '/../Core/helpers/urlHelper.php';
+        $nombre = $_POST['nombre'] ?? '';
+        if (!$nombre) {
+            echo "❌ Nombre vacío";
+            return;
+        }
+
+        $slug = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', $nombre), '-'));
+
+        $db = \Core\Database::getInstance()->getConnection();
+        $stmt = $db->prepare("INSERT INTO etiquetas (nombre, slug) VALUES (?, ?)");
+        $stmt->execute([$nombre, $slug]);
+
+        // Redirige de vuelta a donde venías (por ejemplo, producto/editar)
+        header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? url('etiqueta/index')));
+        exit;
     }
-
-    $slug = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', $nombre), '-'));
-
-    $db = \Core\Database::getInstance()->getConnection();
-    $stmt = $db->prepare("INSERT INTO etiquetas (nombre, slug) VALUES (?, ?)");
-    $stmt->execute([$nombre, $slug]);
-
-    // Redirige de vuelta a donde venías (por ejemplo, producto/editar)
-    header("Location: " . $_SERVER['HTTP_REFERER']);
-    exit;
-}
-
-
-
 
     public function eliminar($id)
     {
+        require_once __DIR__ . '/../Core/helpers/urlHelper.php';
         $this->modelo->eliminar($id);
-
 
         $db = \Core\Database::getInstance()->getConnection();
         $stmt = $db->prepare("DELETE FROM etiquetas WHERE id = ?");
         $stmt->execute([$id]);
 
         // Redirigir al lugar indicado o a /etiqueta/index
-        $redirect = $_GET['redirect'] ?? '/etiqueta/index';
-        header("Location: " . $redirect);
+        $redirect = $_GET['redirect'] ?? url('etiqueta/index');
+        header('Location: ' . $redirect);
         exit;
     }
 }

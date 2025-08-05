@@ -31,9 +31,10 @@ class ProductoController
         $productos = $productoModel->obtenerFiltrados($minPrice, $maxPrice, $categoriaId, $etiquetasSeleccionadas, $soloDisponibles, $orden);
         $totalFiltrados = $productoModel->contarFiltrados($minPrice, $maxPrice, $categoriaId, $etiquetasSeleccionadas);
 
-        // Asociar categorías a cada producto
+        // Asociar categorías e imágenes a cada producto
         foreach ($productos as &$producto) {
             $producto['categorias'] = Producto::obtenerCategoriasPorProducto($producto['id']);
+            $producto['imagenes'] = \Models\ImagenProducto::obtenerPorProducto($producto['id']); // 🔑 Aquí añadimos todas las imágenes
         }
         unset($producto);
 
@@ -47,7 +48,7 @@ class ProductoController
             header('Access-Control-Allow-Origin: *');
             header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
             header('Access-Control-Allow-Headers: X-Requested-With, Content-Type');
-            
+
             echo json_encode([
                 'success' => empty($validacionFiltros['errores']),
                 'productos' => $productos,
@@ -140,7 +141,7 @@ class ProductoController
         // Etiquetas
         foreach ($_POST['etiquetas'] ?? [] as $etiqueta_id) {
             $db->prepare("INSERT INTO producto_etiqueta (producto_id, etiqueta_id) VALUES (?, ?)")
-               ->execute([$producto_id, $etiqueta_id]);
+                ->execute([$producto_id, $etiqueta_id]);
         }
 
         // Variantes
@@ -166,7 +167,8 @@ class ProductoController
     {
         $producto = Producto::obtenerPorId($id);
         if (!$producto) {
-            echo "Producto no encontrado."; return;
+            echo "Producto no encontrado.";
+            return;
         }
 
         $variantes = VarianteProducto::obtenerPorProductoId($id);
@@ -200,17 +202,17 @@ class ProductoController
         $db->prepare("DELETE FROM producto_categoria WHERE id_producto = ?")->execute([$id]);
         foreach ($_POST['categorias'] ?? [] as $cat_id) {
             $db->prepare("INSERT INTO producto_categoria (id_producto, id_categoria) VALUES (?, ?)")
-               ->execute([$id, $cat_id]);
+                ->execute([$id, $cat_id]);
         }
 
         // Etiquetas
         $db->prepare("DELETE FROM producto_etiqueta WHERE producto_id = ?")->execute([$id]);
         foreach ($_POST['etiquetas'] ?? [] as $etiqueta_id) {
             $db->prepare("INSERT INTO producto_etiqueta (producto_id, etiqueta_id) VALUES (?, ?)")
-               ->execute([$id, $etiqueta_id]);
+                ->execute([$id, $etiqueta_id]);
         }
 
-        header("Location: /producto/editar/$id");
+        header("Location: " . url("producto/editar/$id"));
         exit;
     }
 
@@ -219,5 +221,21 @@ class ProductoController
         Producto::eliminar($id);
         header('Location: ' . url('carrito/ver'));
         exit;
+    }
+    public function listarPublico()
+    {
+        $productoModel = new Producto();
+
+        // ✅ Solo obtener productos visibles
+        $productos = $productoModel->obtenerVisibles();
+
+        // Asociar categorías a cada producto (opcional)
+        foreach ($productos as &$producto) {
+            $producto['categorias'] = Producto::obtenerCategoriasPorProducto($producto['id']);
+        }
+        unset($producto);
+
+        // Mostrar la vista pública (home)
+        require_once __DIR__ . '/../public/home.php';
     }
 }
