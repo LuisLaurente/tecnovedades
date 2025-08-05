@@ -37,7 +37,7 @@
                     <!-- Avatar con gradiente -->
                     <div class="relative">
                         <div class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 p-0.5 shadow-lg">
-                            <img src="https://ui-avatars.com/api/?name=Carlos+Sipan&background=f8fafc&color=374151&size=128" alt="Avatar" class="w-full h-full rounded-full bg-white object-cover">
+                            <img src="https://ui-avatars.com/api/?name=<?= urlencode($_SESSION['user_name'] ?? 'Usuario') ?>&background=f8fafc&color=374151&size=128" alt="Avatar" class="w-full h-full rounded-full bg-white object-cover">
                         </div>
                         <!-- Indicador de estado en línea -->
                         <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full border-2 border-white shadow-sm"></div>
@@ -46,10 +46,10 @@
                     <!-- Información del usuario -->
                     <div class="hidden sm:block text-left">
                         <p class="text-sm font-semibold text-gray-800">
-                            <?= htmlspecialchars($_SESSION['usuario_username'] ?? 'Invitado') ?>
+                            <?= htmlspecialchars($_SESSION['user_name'] ?? 'Invitado') ?>
                         </p>
                         <p class="text-xs text-gray-500">
-                            <?= htmlspecialchars($_SESSION['usuario_rol'] ?? 'Sin rol') ?>
+                            <?= htmlspecialchars($_SESSION['user_role_name'] ?? 'Sin rol') ?>
                         </p>
                     </div>
 
@@ -68,10 +68,10 @@
                             
                             <div>
                                 <p class="font-semibold text-gray-800">
-                                    <?= htmlspecialchars($_SESSION['usuario_nombre'] ?? 'Invitado') ?>
+                                    <?= htmlspecialchars($_SESSION['user_name'] ?? 'Invitado') ?>
                                 </p>
                                 <p class="text-sm text-gray-500">
-                                    <?= htmlspecialchars($_SESSION['usuario_email'] ?? 'Sin email') ?>
+                                    <?= htmlspecialchars($_SESSION['user_email'] ?? 'Sin email') ?>
                                 </p>
                                 <?php 
                                 // Determinar el nivel de acceso para mostrar la etiqueta correcta
@@ -113,7 +113,7 @@
 
                     <!-- Opciones del dropdown -->
                     <div class="p-2">
-                        <a href="#" class="flex items-center px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200">
+                        <a href="<?= url('/auth/profile') ?>" class="flex items-center px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200">
                             <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                             </svg>
@@ -128,7 +128,7 @@
                             Preferencias
                         </a>
                         <div class="border-t border-gray-100 my-2"></div>
-                        <a href="../users/logout.php" class="flex items-center px-3 py-2 text-sm text-red-600 rounded-lg hover:bg-red-50 transition-all duration-200">
+                        <a href="<?= url('/auth/logout') ?>" class="flex items-center px-3 py-2 text-sm text-red-600 rounded-lg hover:bg-red-50 transition-all duration-200">
                             <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
                             </svg>

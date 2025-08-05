@@ -1,192 +1,207 @@
 <!DOCTYPE html>
 <html lang="es">
+<?php include_once __DIR__ . '/../admin/includes/head.php'; ?>
+<link rel="stylesheet" href="<?= url('css/cupon.css') ?>">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administración de Cupones - TecnoVedades</title>
-    <link rel="stylesheet" href="<?= url('css/cupon.css') ?>">
-
-</head>
 
 <body>
-    <div class="cupon-admin">
-        <!-- Header -->
-        <div class="cupon-header" style="text-align: center;">
-            <h1>Administración de Cupones</h1>
-            <div style="margin-top: 20px; display: flex; justify-content: center; gap: 20px;">
-                <a href="<?= url('cupon/crear') ?>" class="btn-nuevo-cupon">
-                    <span>+</span> Nuevo Cupón
-                </a>
-                <a href="<?= url('pedido/listar') ?>" class="btn-volver-cupones">
-                    Volver
-                </a>
-            </div>
+    <div class="flex h-screen">
+        <!-- Incluir navegación lateral fija -->
+        <div class="fixed inset-y-0 left-0 z-50">
+            <?php include_once __DIR__ . '/../admin/includes/navbar.php'; ?>
         </div>
+        <div class="flex-1 ml-64 flex flex-col min-h-screen">
 
-        <!-- Alertas -->
-        <?php if (isset($_GET['success'])): ?>
-            <div class="alert alert-success">
-                <?php
-                switch ($_GET['success']) {
-                    case 'created':
-                        echo 'Cupón creado exitosamente';
-                        break;
-                    case 'updated':
-                        echo 'Cupón actualizado exitosamente';
-                        break;
-                    case 'status_changed':
-                        echo 'Estado del cupón cambiado exitosamente';
-                        break;
-                }
-                ?>
-            </div>
-        <?php endif; ?>
-
-        <?php if (isset($_GET['error'])): ?>
-            <div class="alert alert-error">
-                <?php
-                switch ($_GET['error']) {
-                    case 'not_found':
-                        echo 'Cupón no encontrado';
-                        break;
-                    case 'status_change_failed':
-                        echo 'Error al cambiar el estado del cupón';
-                        break;
-                    default:
-                        echo 'Ha ocurrido un error';
-                }
-                ?>
-            </div>
-        <?php endif; ?>
-
-        <!-- Estadísticas -->
-        <div class="estadisticas-cupones">
-            <div class="stat-card total">
-                <h3>Total de Cupones</h3>
-                <p class="numero"><?= $estadisticas['total'] ?? 0 ?></p>
-            </div>
-            <div class="stat-card activos">
-                <h3>Cupones Activos</h3>
-                <p class="numero"><?= $estadisticas['activos'] ?? 0 ?></p>
-            </div>
-            <div class="stat-card vigentes">
-                <h3>Cupones Vigentes</h3>
-                <p class="numero"><?= $estadisticas['vigentes'] ?? 0 ?></p>
-            </div>
-            <div class="stat-card usados">
-                <h3>Cupones Usados</h3>
-                <p class="numero"><?= $estadisticas['usados'] ?? 0 ?></p>
-            </div>
-        </div>
-
-        <!-- Tabla de cupones -->
-        <div class="cupones-tabla-container">
-            <?php if (empty($cupones)): ?>
-                <div style="padding: 40px; text-align: center; color: #666;">
-                    <h3>No hay cupones registrados</h3>
-                    <p>Comienza creando tu primer cupón</p>
-                    <a href="<?= url('cupon/crear') ?>" class="btn-primary">Crear Cupón</a>
+            <main class="flex-1 p-2 bg-gray-50 overflow-y-auto">
+                <!-- Incluir header superior fijo -->
+                <div class="sticky top-0 z-40">
+                    <?php include_once __DIR__ . '/../admin/includes/header.php'; ?>
                 </div>
-            <?php else: ?>
-                <table class="cupones-tabla">
-                    <thead>
-                        <tr>
-                            <th>Código</th>
-                            <th>Tipo</th>
-                            <th>Valor</th>
-                            <th>Vigencia</th>
-                            <th>Estado</th>
-                            <th>Usos</th>
-                            <th>Límites</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($cupones as $cupon001): ?>
-                            <tr>
-                                <td>
-                                    <strong><?= htmlspecialchars($cupon001['codigo']) ?></strong>
-                                </td>
-                                <td>
-                                    <span class="tipo-cupon <?= $cupon001['tipo'] === 'porcentaje' ? 'tipo-porcentaje' : 'tipo-monto' ?>">
-                                        <?= $cupon001['tipo'] === 'porcentaje' ? 'Porcentaje' : 'Monto fijo' ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <?php if ($cupon001['tipo'] === 'porcentaje'): ?>
-                                        <?= $cupon001['valor'] ?>%
-                                    <?php else: ?>
-                                        S/ <?= number_format($cupon001['valor'], 2) ?>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <div style="font-size: 0.85rem;">
-                                        <div><?= date('d/m/Y', strtotime($cupon001['fecha_inicio'])) ?></div>
-                                        <div style="color: #666;">al <?= date('d/m/Y', strtotime($cupon001['fecha_fin'])) ?></div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="estado-badge estado-<?= $cupon001['estado_vigencia'] ?>">
-                                        <?php
-                                        switch ($cupon001['estado_vigencia']) {
-                                            case 'vigente':
-                                                echo 'Vigente';
-                                                break;
-                                            case 'expirado':
-                                                echo 'Expirado';
-                                                break;
-                                            case 'pendiente':
-                                                echo 'Pendiente';
-                                                break;
-                                            case 'inactivo':
-                                                echo 'Inactivo';
-                                                break;
-                                        }
-                                        ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <div style="text-align: center;">
-                                        <strong><?= $cupon001['usos_totales'] ?></strong>
-                                        <?php if ($cupon001['limite_uso']): ?>
-                                            <div style="font-size: 0.8rem; color: #666;">
-                                                / <?= $cupon001['limite_uso'] ?>
-                                            </div>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div style="font-size: 0.85rem;">
-                                        <?php if ($cupon001['monto_minimo'] > 0): ?>
-                                            <div>Min: S/ <?= number_format($cupon001['monto_minimo'], 2) ?></div>
-                                        <?php endif; ?>
-                                        <?php if ($cupon001['limite_por_usuario']): ?>
-                                            <div>Por usuario: <?= $cupon001['limite_por_usuario'] ?></div>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="acciones">
-                                        <a href="<?= url('cupon/historial?id=' . $cupon001['id']) ?>" class="btn-accion btn-ver"
-                                            title="Ver historial de uso">
-                                            Historial
-                                        </a>
-                                        <a href="<?= url('cupon/editar/' . $cupon001['id']) ?>" class="btn-accion btn-editar">
-                                            Editar
-                                        </a>
-                                        <form method="POST" action="<?= url('cupon/toggleEstado/' . $cupon001['id']) ?>" style="display: inline;">
-                                            <button type="submit" class="btn-accion btn-toggle">
-                                                <?= $cupon001['activo'] ? 'Desactivar' : 'Activar' ?>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php endif; ?>
+
+                <div class="flex-1 p-6 bg-gray-50 overflow-y-auto">
+                    <div class="cupon-admin">
+                        <!-- Header -->
+                        <div class="cupon-header" style="text-align: center;">
+                            <h1>Administración de Cupones</h1>
+                            <div style="margin-top: 20px; display: flex; justify-content: center; gap: 20px;">
+                                <a href="<?= url('cupon/crear') ?>" class="btn-nuevo-cupon">
+                                    <span>+</span> Nuevo Cupón
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Alertas -->
+                        <?php if (isset($_GET['success'])): ?>
+                            <div class="alert alert-success">
+                                <?php
+                                switch ($_GET['success']) {
+                                    case 'created':
+                                        echo 'Cupón creado exitosamente';
+                                        break;
+                                    case 'updated':
+                                        echo 'Cupón actualizado exitosamente';
+                                        break;
+                                    case 'status_changed':
+                                        echo 'Estado del cupón cambiado exitosamente';
+                                        break;
+                                }
+                                ?>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if (isset($_GET['error'])): ?>
+                            <div class="alert alert-error">
+                                <?php
+                                switch ($_GET['error']) {
+                                    case 'not_found':
+                                        echo 'Cupón no encontrado';
+                                        break;
+                                    case 'status_change_failed':
+                                        echo 'Error al cambiar el estado del cupón';
+                                        break;
+                                    default:
+                                        echo 'Ha ocurrido un error';
+                                }
+                                ?>
+                            </div>
+                        <?php endif; ?>
+
+                        <!-- Estadísticas -->
+                        <div class="estadisticas-cupones">
+                            <div class="stat-card total">
+                                <h3>Total de Cupones</h3>
+                                <p class="numero"><?= $estadisticas['total'] ?? 0 ?></p>
+                            </div>
+                            <div class="stat-card activos">
+                                <h3>Cupones Activos</h3>
+                                <p class="numero"><?= $estadisticas['activos'] ?? 0 ?></p>
+                            </div>
+                            <div class="stat-card vigentes">
+                                <h3>Cupones Vigentes</h3>
+                                <p class="numero"><?= $estadisticas['vigentes'] ?? 0 ?></p>
+                            </div>
+                            <div class="stat-card usados">
+                                <h3>Cupones Usados</h3>
+                                <p class="numero"><?= $estadisticas['usados'] ?? 0 ?></p>
+                            </div>
+                        </div>
+
+                        <!-- Tabla de cupones -->
+                        <div class="cupones-tabla-container">
+                            <?php if (empty($cupones)): ?>
+                                <div style="padding: 40px; text-align: center; color: #666;">
+                                    <h3>No hay cupones registrados</h3>
+                                    <p>Comienza creando tu primer cupón</p>
+                                    <a href="<?= url('cupon/crear') ?>" class="btn-primary">Crear Cupón</a>
+                                </div>
+                            <?php else: ?>
+                                <table class="cupones-tabla">
+                                    <thead>
+                                        <tr>
+                                            <th>Código</th>
+                                            <th>Tipo</th>
+                                            <th>Valor</th>
+                                            <th>Vigencia</th>
+                                            <th>Estado</th>
+                                            <th>Usos</th>
+                                            <th>Límites</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($cupones as $cupon001): ?>
+                                            <tr>
+                                                <td>
+                                                    <strong><?= htmlspecialchars($cupon001['codigo']) ?></strong>
+                                                </td>
+                                                <td>
+                                                    <span class="tipo-cupon <?= $cupon001['tipo'] === 'porcentaje' ? 'tipo-porcentaje' : 'tipo-monto' ?>">
+                                                        <?= $cupon001['tipo'] === 'porcentaje' ? 'Porcentaje' : 'Monto fijo' ?>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <?php if ($cupon001['tipo'] === 'porcentaje'): ?>
+                                                        <?= $cupon001['valor'] ?>%
+                                                    <?php else: ?>
+                                                        S/ <?= number_format($cupon001['valor'], 2) ?>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td>
+                                                    <div style="font-size: 0.85rem;">
+                                                        <div><?= date('d/m/Y', strtotime($cupon001['fecha_inicio'])) ?></div>
+                                                        <div style="color: #666;">al <?= date('d/m/Y', strtotime($cupon001['fecha_fin'])) ?></div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="estado-badge estado-<?= $cupon001['estado_vigencia'] ?>">
+                                                        <?php
+                                                        switch ($cupon001['estado_vigencia']) {
+                                                            case 'vigente':
+                                                                echo 'Vigente';
+                                                                break;
+                                                            case 'expirado':
+                                                                echo 'Expirado';
+                                                                break;
+                                                            case 'pendiente':
+                                                                echo 'Pendiente';
+                                                                break;
+                                                            case 'inactivo':
+                                                                echo 'Inactivo';
+                                                                break;
+                                                        }
+                                                        ?>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div style="text-align: center;">
+                                                        <strong><?= $cupon001['usos_totales'] ?></strong>
+                                                        <?php if ($cupon001['limite_uso']): ?>
+                                                            <div style="font-size: 0.8rem; color: #666;">
+                                                                / <?= $cupon001['limite_uso'] ?>
+                                                            </div>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div style="font-size: 0.85rem;">
+                                                        <?php if ($cupon001['monto_minimo'] > 0): ?>
+                                                            <div>Min: S/ <?= number_format($cupon001['monto_minimo'], 2) ?></div>
+                                                        <?php endif; ?>
+                                                        <?php if ($cupon001['limite_por_usuario']): ?>
+                                                            <div>Por usuario: <?= $cupon001['limite_por_usuario'] ?></div>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="acciones">
+                                                        <a href="<?= url('cupon/historial?id=' . $cupon001['id']) ?>" class="btn-accion btn-ver"
+                                                            title="Ver historial de uso">
+                                                            Historial
+                                                        </a>
+                                                        <a href="<?= url('cupon/editar/' . $cupon001['id']) ?>" class="btn-accion btn-editar">
+                                                            Editar
+                                                        </a>
+                                                        <form method="POST" action="<?= url('cupon/toggleEstado/' . $cupon001['id']) ?>" style="display: inline;">
+                                                            <button type="submit" class="btn-accion btn-toggle">
+                                                                <?= $cupon001['activo'] ? 'Desactivar' : 'Activar' ?>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="mt-4">
+                    <?php include_once __DIR__ . '/../admin/includes/footer.php'; ?>
+                </div>
+            </main>
         </div>
     </div>
 
