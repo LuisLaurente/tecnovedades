@@ -60,5 +60,6 @@ class ReclamacionController
         // Si no es POST, redirigir
         header('Location: ' . url('reclamacion/formulario'));
         exit;
+        
     }
 }

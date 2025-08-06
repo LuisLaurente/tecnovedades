@@ -9,6 +9,7 @@ class AdminPopupController
     {
         $popupModel = new Popup();
         $popup = $popupModel->obtener();
+        $imagenes = $popupModel->obtenerImagenes(); // nuevo
 
         require_once __DIR__ . '/../views/admin/popup/index.php';
     }
@@ -17,38 +18,43 @@ class AdminPopupController
     {
         $texto = $_POST['texto'] ?? '';
         $activo = isset($_POST['activo']) ? 1 : 0;
+        $imagenPrincipal = $_POST['imagen_principal'] ?? null;
 
         $popupModel = new Popup();
         $popupActual = $popupModel->obtener();
-        $imagenFinal = $popupActual['imagen'];
 
-        // Eliminar imagen si se seleccionó
-        if (isset($_POST['eliminar_imagen']) && $imagenFinal) {
-            $ruta = __DIR__ . '/../public/images/popup/' . $imagenFinal;
-            if (file_exists($ruta)) {
-                unlink($ruta);
-            }
-            $imagenFinal = null;
-        }
+        // 1. Subir nuevas imágenes
+        if (!empty($_FILES['nuevas_imagenes']['name'][0])) {
+            $total = count($_FILES['nuevas_imagenes']['name']);
+            for ($i = 0; $i < $total; $i++) {
+                $tmpName = $_FILES['nuevas_imagenes']['tmp_name'][$i];
+                $originalName = basename($_FILES['nuevas_imagenes']['name'][$i]);
+                $nombreArchivo = uniqid('popup_') . '_' . $originalName;
+                $destino = __DIR__ . '/../public/images/popup/' . $nombreArchivo;
 
-        // Subir nueva imagen
-        if (!empty($_FILES['nueva_imagen']['name'])) {
-            $nombreTmp = $_FILES['nueva_imagen']['tmp_name'];
-            $nombreArchivo = uniqid('popup_') . '_' . basename($_FILES['nueva_imagen']['name']);
-            $destino = __DIR__ . '/../public/images/popup/' . $nombreArchivo;
-
-            if (move_uploaded_file($nombreTmp, $destino)) {
-                // Si hay imagen anterior y no fue eliminada manualmente, eliminarla
-                if ($imagenFinal && file_exists(__DIR__ . '/../public/images/popup/' . $imagenFinal)) {
-                    unlink(__DIR__ . '/../public/images/popup/' . $imagenFinal);
+                if (move_uploaded_file($tmpName, $destino)) {
+                    $popupModel->agregarImagen($nombreArchivo);
                 }
-                $imagenFinal = $nombreArchivo;
             }
         }
 
-        // Guardar en base de datos
-        $popupModel->actualizar($texto, $imagenFinal, $activo);
+        // 2. Actualizar la imagen principal seleccionada
+        if ($imagenPrincipal) {
+            $popupModel->actualizarImagenPrincipal($imagenPrincipal);
+        }
 
+        // 3. Actualizar texto y estado
+        $popupModel->actualizarTextoYEstado($texto, $activo);
+
+        header("Location: " . url("adminPopup/index"));
+        exit;
+    }
+
+
+    public function eliminarImagen($id)
+    {
+        $popupModel = new Popup();
+        $popupModel->eliminarImagen($id);
         header("Location: " . url("adminPopup/index"));
         exit;
     }

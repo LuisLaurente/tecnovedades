@@ -1,30 +1,84 @@
-<h2>📂 Reclamaciones Recibidas</h2>
+<!DOCTYPE html>
+<html lang="es">
+<?php include_once __DIR__ . '/../includes/head.php'; ?>
 
-<!-- Botón para ir al formulario de reclamos -->
-<a href="<?= url('reclamacion/formulario') ?>" style="display: inline-block; margin-bottom: 15px; padding: 8px 16px; background-color: #3498db; color: white; text-decoration: none; border-radius: 5px;">
-    ➕ Generar nuevo reclamo
-</a>
+<body>
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="fixed inset-y-0 left-0 z-50">
+            <?php include_once __DIR__ . '/../includes/navbar.php'; ?>
+        </div>
 
-<table border="1" cellpadding="8">
-    <tr>
-        <th>Nombre</th>
-        <th>Correo</th>
-        <th>Teléfono</th>
-        <th>Mensaje</th>
-        <th>Fecha</th>
-        <th>Eliminar</th>
-    </tr>
-    <?php foreach ($reclamaciones as $r): ?>
-        <tr>
-            <td><?= htmlspecialchars($r['nombre']) ?></td>
-            <td><?= htmlspecialchars($r['correo']) ?></td>
-            <td><?= htmlspecialchars($r['telefono']) ?></td>
-            <td><?= nl2br(htmlspecialchars($r['mensaje'])) ?></td>
-            <td><?= $r['creado_en'] ?></td>
-            <td>
-                <a href="<?= url('adminReclamacion/eliminar/' . $r['id']) ?>"
-                   onclick="return confirm('¿Estás seguro de eliminar esta reclamación?')">🗑️</a>
-            </td>
-        </tr>
-    <?php endforeach; ?>
-</table>
+        <div class="flex-1 ml-64 flex flex-col min-h-screen">
+            <!-- Main -->
+            <main class="flex-1 p-2 bg-gray-50 overflow-y-auto">
+                <div class="sticky top-0 z-40">
+                    <?php include_once __DIR__ . '/../includes/header.php'; ?>
+                </div>
+
+                <div class="flex-1 p-6 bg-gray-50 overflow-y-auto">
+                    <div class="max-w-6xl mx-auto">
+
+                        <!-- Título -->
+                        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h1 class="text-3xl font-bold text-gray-800 mb-2">📂 Reclamaciones Recibidas</h1>
+                                    <p class="text-gray-600">Visualiza y gestiona los reclamos enviados por los clientes</p>
+                                </div>
+                                <a href="<?= url('reclamacion/formulario') ?>" 
+                                   class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors flex items-center gap-2">
+                                    ➕ Generar nuevo reclamo
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Tabla de reclamaciones -->
+                        <div class="bg-white rounded-lg shadow-md p-6">
+                            <?php if (!empty($reclamaciones)): ?>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full text-sm text-left border border-gray-300">
+                                        <thead class="bg-gray-100 text-gray-700">
+                                            <tr>
+                                                <th class="px-4 py-2 border">👤 Nombre</th>
+                                                <th class="px-4 py-2 border">📧 Correo</th>
+                                                <th class="px-4 py-2 border">📞 Teléfono</th>
+                                                <th class="px-4 py-2 border">📝 Mensaje</th>
+                                                <th class="px-4 py-2 border">🕒 Fecha</th>
+                                                <th class="px-4 py-2 border">🗑️</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($reclamaciones as $r): ?>
+                                                <tr class="border-t hover:bg-gray-50">
+                                                    <td class="px-4 py-2"><?= htmlspecialchars($r['nombre']) ?></td>
+                                                    <td class="px-4 py-2"><?= htmlspecialchars($r['correo']) ?></td>
+                                                    <td class="px-4 py-2"><?= htmlspecialchars($r['telefono']) ?></td>
+                                                    <td class="px-4 py-2 whitespace-pre-line"><?= nl2br(htmlspecialchars($r['mensaje'])) ?></td>
+                                                    <td class="px-4 py-2"><?= htmlspecialchars($r['creado_en']) ?></td>
+                                                    <td class="px-4 py-2 text-center">
+                                                        <a href="<?= url('adminReclamacion/eliminar/' . $r['id']) ?>"
+                                                           onclick="return confirm('¿Estás seguro de eliminar esta reclamación?')"
+                                                           class="text-red-600 hover:text-red-800 text-lg">❌</a>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            <?php else: ?>
+                                <p class="text-gray-600">No hay reclamaciones registradas aún.</p>
+                            <?php endif; ?>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <?php include_once __DIR__ . '/../includes/footer.php'; ?>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+</html>
