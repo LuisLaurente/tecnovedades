@@ -1,4 +1,4 @@
-<?php require_once __DIR__ . '/../../Core/helpers/urlHelper.php'; ?>
+<?php require_once __DIR__ . '/../../Core/Helpers/urlHelper.php'; ?>
 <link rel="stylesheet" href="<?= url('/css/editar-producto.css') ?>">
 
 <div class="form-container">

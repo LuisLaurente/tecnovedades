@@ -9,7 +9,7 @@ class VarianteController
     // 🛠️ Acción para actualizar una variante existente
     public function actualizar($id)
     {
-        require_once __DIR__ . '/../Core/helpers/urlHelper.php'; // Aseguramos el helper disponible
+        require_once __DIR__ . '/../Core/Helpers/urlHelper.php'; // Aseguramos el helper disponible
 
         $producto_id = $_POST['producto_id'] ?? null;
         $talla = $_POST['talla'] ?? '';
@@ -28,7 +28,7 @@ class VarianteController
     // 🗑️ Acción para eliminar una variante
     public function eliminar($id)
     {
-        require_once __DIR__ . '/../Core/helpers/urlHelper.php'; // Aseguramos el helper disponible
+        require_once __DIR__ . '/../Core/Helpers/urlHelper.php'; // Aseguramos el helper disponible
 
         // Llamo al modelo para eliminar la variante por ID
         \Models\VarianteProducto::eliminar($id);

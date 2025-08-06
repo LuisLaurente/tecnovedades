@@ -3,8 +3,8 @@
 namespace Controllers;
 
 use Models\Rol;
-use Core\helpers\Validator;
-use Core\helpers\Sanitizer;
+use Core\Helpers\Validator;
+use Core\Helpers\Sanitizer;
 
 class RolController extends BaseController
 {

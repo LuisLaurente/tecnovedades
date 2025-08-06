@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/../core/Database.php';
-require_once __DIR__ . '/../models/Etiqueta.php';
+require_once __DIR__ . '/../Core/Database.php';
+require_once __DIR__ . '/../Models/Etiqueta.php';
 
 $etiquetaModel = new \Models\Etiqueta();
 

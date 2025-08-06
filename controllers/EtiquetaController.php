@@ -17,14 +17,14 @@ class EtiquetaController extends BaseController
 
     public function index()
     {
-        require_once __DIR__ . '/../Core/helpers/urlHelper.php';
+        require_once __DIR__ . '/../Core/Helpers/urlHelper.php';
         $etiquetas = $this->modelo->obtenerTodas();
         $this->render('etiquetas/index', ['etiquetas' => $etiquetas]);
     }
 
     public function crear()
     {
-        require_once __DIR__ . '/../Core/helpers/urlHelper.php';
+        require_once __DIR__ . '/../Core/Helpers/urlHelper.php';
         $errores = [];
         $nombre = '';
 
@@ -48,7 +48,7 @@ class EtiquetaController extends BaseController
 
     public function editar($id)
     {
-        require_once __DIR__ . '/../Core/helpers/urlHelper.php';
+        require_once __DIR__ . '/../Core/Helpers/urlHelper.php';
         $errores = [];
         $etiqueta = $this->modelo->obtenerPorId($id);
         $nombre = $etiqueta['nombre'] ?? '';
@@ -74,7 +74,7 @@ class EtiquetaController extends BaseController
 
     public function guardar()
     {
-        require_once __DIR__ . '/../Core/helpers/urlHelper.php';
+        require_once __DIR__ . '/../Core/Helpers/urlHelper.php';
         $nombre = $_POST['nombre'] ?? '';
         if (!$nombre) {
             echo "❌ Nombre vacío";
@@ -94,7 +94,7 @@ class EtiquetaController extends BaseController
 
     public function eliminar($id)
     {
-        require_once __DIR__ . '/../Core/helpers/urlHelper.php';
+        require_once __DIR__ . '/../Core/Helpers/urlHelper.php';
         $this->modelo->eliminar($id);
 
         $db = \Core\Database::getInstance()->getConnection();

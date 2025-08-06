@@ -1,6 +1,6 @@
 <?php
 namespace Core;
-
+require_once __DIR__ . '/../controllers/BaseController.php';
 class Router
 {
     public function handleRequest($url)
