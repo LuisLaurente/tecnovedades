@@ -104,7 +104,8 @@ class AuthController extends BaseController
 
             // Crear sesión
             SessionHelper::login($usuario, $rol);
-
+            //Mostrar popup en esta nueva sesión
+            $_SESSION['mostrar_popup'] = true;
             // Si marcó "recordarme", crear cookie
             if ($remember) {
                 $token = bin2hex(random_bytes(32));

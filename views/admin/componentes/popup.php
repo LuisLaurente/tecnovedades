@@ -19,7 +19,7 @@ if ($popup && $popup['activo']) :
     width: 90%;
 ">
     <!-- Botón de cerrar -->
-    <button onclick="document.getElementById('popup-promocional').style.display='none'" style="
+    <button class="cerrar-popup" style="
         position: absolute;
         top: 8px;
         right: 12px;
@@ -42,4 +42,37 @@ if ($popup && $popup['activo']) :
              style="display: block; margin: 15px auto; max-width: 100%; height: auto; border-radius: 10px;">
     <?php endif; ?>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const popup = document.getElementById('popup-promocional');
+        const cerrarBtn = popup.querySelector('.cerrar-popup');
+
+        // Función para comprobar si mostrar el popup
+        function mostrarPopupSiCorresponde() {
+            const ahora = Date.now();
+            const limite = localStorage.getItem('popupCerradoHasta');
+
+            if (!limite || parseInt(limite) < ahora) {
+                popup.style.display = 'block';
+            } else {
+                popup.style.display = 'none';
+            }
+        }
+
+        // Ejecutar al cargar
+        mostrarPopupSiCorresponde();
+
+        // Asignar acción al botón de cerrar
+        cerrarBtn.addEventListener('click', function () {
+            popup.style.display = 'none';
+            const siguienteAparicion = Date.now() + (6 * 60 * 60 * 1000); // ⏱️ 6 horas 6 * 60 * 60 * 1000
+            localStorage.setItem('popupCerradoHasta', siguienteAparicion.toString());
+        });
+
+        // Verificar periódicamente si ya pasó el tiempo
+        setInterval(mostrarPopupSiCorresponde, 1000); // ⏱️ revisa cada segundo
+    });
+</script>
+
 <?php endif; ?>
