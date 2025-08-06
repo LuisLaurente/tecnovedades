@@ -4,8 +4,8 @@ namespace Controllers;
 
 use Models\Usuario;
 use Models\Rol;
-use Core\helpers\Validator;
-use Core\helpers\Sanitizer;
+use Core\Helpers\Validator;
+use Core\Helpers\Sanitizer;
 
 class UsuarioController extends BaseController
 {

@@ -2,65 +2,65 @@
 
 namespace Controllers;
 
-use Core\Database;
-use Core\Helpers\Validator;
-use Core\Helpers\Sanitizer;
-use Core\Helpers\SessionHelper;
-use PDOException;
+use Models\Producto;
+use Models\Etiqueta;
 
 class HomeController
 {
     public function index()
     {
-        
-        try {
-            // ✅ Prueba de conexión a base de datos
-            $db = Database::getInstance()->getConnection();
-            $stmt = $db->query("SELECT NOW()");
-            $fecha = $stmt->fetchColumn();
-            echo "✅ Conexión OK. Hora actual desde MySQL: " . $fecha;
+        $productoModel = new Producto();
 
-            // ==========================
-            // 🧪 PRUEBA 1: Validator.php
-            // ==========================
-            echo "<br><br>🧪 Prueba de Validator:";
-            $email = "ejemplo@correo.com";
-            $vacio = "";
-            $texto = "Hola mundo";
+        // ✅ Filtros comunes (mismos que en ProductoController)
+        $validacionFiltros = \Core\Helpers\Validator::validarFiltrosGET($_GET);
+        $minPrice = $validacionFiltros['filtros_validos']['min_price'] ?? null;
+        $maxPrice = $validacionFiltros['filtros_validos']['max_price'] ?? null;
+        $categoriaId = isset($_GET['categoria']) && is_numeric($_GET['categoria']) ? (int)$_GET['categoria'] : null;
 
-            echo "<br>isEmail: " . (Validator::isEmail($email) ? 'Válido' : 'Inválido');
-            echo "<br>isRequired (vacio): " . (Validator::isRequired($vacio) ? 'Válido' : 'Inválido');
-            echo "<br>isRequired (texto): " . (Validator::isRequired($texto) ? 'Válido' : 'Inválido');
-            echo "<br>minLength (texto, 5): " . (Validator::minLength($texto, 5) ? 'Válido' : 'Inválido');
+        // ✅ Filtros adicionales
+        $etiquetasSeleccionadas = $_GET['etiquetas'] ?? [];
+        $soloDisponibles = isset($_GET['disponibles']) && $_GET['disponibles'] == '1';
+        $orden = $_GET['orden'] ?? '';
 
-            // ==========================
-            // 🧪 PRUEBA 2: Sanitizer.php
-            // ==========================
-            echo "<br><br>🧪 Prueba de Sanitizer:";
-            $sucio = "<script>alert('xss')</script>   Hola <b>Mundo</b> ";
-            echo "<br>Original: $sucio";
-            echo "<br>cleanString: " . Sanitizer::cleanString($sucio);
-            echo "<br>stripTags: " . Sanitizer::stripTags($sucio);
+        // ✅ Obtener datos para filtros y visualización (solo productos visibles)
+        $estadisticasPrecios = $productoModel->obtenerEstadisticasPrecios(true); // ← si tienes soporte para visibles
+        $categoriasDisponibles = Producto::obtenerCategoriasConProductos(true); // ← igual aquí, si hay variante pública
+        $productos = $productoModel->obtenerFiltrados($minPrice, $maxPrice, $categoriaId, $etiquetasSeleccionadas, $soloDisponibles, $orden, true); 
+        $totalFiltrados = $productoModel->contarFiltrados($minPrice, $maxPrice, $categoriaId, $etiquetasSeleccionadas, true);
 
-            // ==========================
-            // 🧪 PRUEBA 3: SessionHelper.php
-            // ==========================
-            echo "<br><br>🧪 Prueba de SessionHelper:";
-            SessionHelper::start();
-            SessionHelper::set('usuario', 'Luis');
-            echo "<br>Valor en sesión: " . SessionHelper::get('usuario');
-            SessionHelper::remove('usuario');
-            echo "<br>Después de eliminar: " . (SessionHelper::get('usuario') ?? 'No existe');
-
-
-            
-
-        } catch (PDOException $e) {
-            echo "❌ Error ejecutando consulta: " . $e->getMessage();
-        } catch (\Throwable $t) {
-            echo "⚠️ Error inesperado: " . $t->getMessage();
+        // ✅ Asociar categorías a cada producto
+        foreach ($productos as &$producto) {
+            $producto['categorias'] = Producto::obtenerCategoriasPorProducto($producto['id']);
+            $imagen = \Models\ImagenProducto::obtenerPrimeraPorProducto($producto['id']);
+            $producto['imagen'] = $imagen['nombre_imagen'] ?? 'placeholder.png';
         }
+        unset($producto);
+
+        // ✅ Obtener etiquetas
+        $etiquetaModel = new Etiqueta();
+        $todasEtiquetas = $etiquetaModel->obtenerTodas();
+
+        // ✅ Si es petición AJAX (filtros dinámicos en Home)
+        if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => empty($validacionFiltros['errores']),
+                'productos' => $productos,
+                'total' => $totalFiltrados,
+                'filtros' => [
+                    'min_price' => $minPrice,
+                    'max_price' => $maxPrice,
+                    'categoria' => $categoriaId,
+                    'etiquetas' => $etiquetasSeleccionadas,
+                    'disponibles' => $soloDisponibles,
+                    'orden' => $orden
+                ],
+                'errores' => $validacionFiltros['errores'] ?? []
+            ]);
+            exit;
+        }
+
+        // ✅ Mostrar vista
+        require_once __DIR__ . '/../views/home/index.php';
     }
 }
-
-

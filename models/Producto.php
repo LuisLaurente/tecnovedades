@@ -302,4 +302,10 @@ class Producto
 
         return $categorias;
     }
+    public function obtenerVisibles()
+    {
+        $db = \Core\Database::getInstance()->getConnection();
+        $stmt = $db->query("SELECT * FROM productos WHERE visible = 1");
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
 }

@@ -45,4 +45,11 @@ class ImagenProducto
             $stmt->execute([$id]);
         }
     }
+    public static function obtenerPrimeraPorProducto($producto_id)
+    {
+        $db = Database::getInstance()->getConnection();
+        $stmt = $db->prepare("SELECT nombre_imagen FROM imagenes_producto WHERE producto_id = ? ORDER BY id ASC LIMIT 1");
+        $stmt->execute([$producto_id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 }

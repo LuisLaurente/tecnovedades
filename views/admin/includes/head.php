@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- CSS personalizado para usuarios -->
-    <link rel="stylesheet" href="<?= url('css/usuario.css') ?>">
+    <link rel="stylesheet" href="<?= url('css/head.css') ?>">
     <!-- CSS personalizado para animaciones de modales -->
     <style>
         @keyframes fadeIn {

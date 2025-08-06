@@ -15,7 +15,7 @@ class ImagenController
         $imagen = $stmt->fetch();
 
         if ($imagen) {
-            //Eliminamos el archivo del servidor desde /uploads/
+            // Eliminamos el archivo del servidor desde /uploads/
             $ruta = __DIR__ . '/../public/uploads/' . $imagen['nombre_imagen'];
             if (file_exists($ruta)) {
                 unlink($ruta);
@@ -25,8 +25,12 @@ class ImagenController
             ImagenProducto::eliminar($id);
         }
 
-        // Redireccionar a la página anterior
-        header('Location: ' . $_SERVER['HTTP_REFERER']);
+        // ✅ Redireccionar de forma segura usando url() si no hay HTTP_REFERER
+        if (!empty($_SERVER['HTTP_REFERER'])) {
+            header('Location: ' . $_SERVER['HTTP_REFERER']);
+        } else {
+            header('Location: ' . url('producto')); // fallback seguro
+        }
         exit;
     }
 
@@ -56,8 +60,8 @@ class ImagenController
         // Guardar en base de datos
         \Models\ImagenProducto::guardar($producto_id, $nombreFinal);
 
-        // Redirigir de nuevo a la edición del producto
-        header("Location: /producto/editar/$producto_id");
+        // ✅ Redirigir correctamente a la edición del producto con url()
+        header("Location: " . url("producto/editar/$producto_id"));
         exit;
     }
 }

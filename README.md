@@ -46,15 +46,15 @@ El proyecto sigue el patrón **MVC (Model-View-Controller)** con una estructura 
 │   ├── 📄 HomeController.php # Controlador de inicio
 │   ├── 📄 ProductoController.php # Controlador de productos
 │   └── 📄 VarianteController.php # Controlador de variantes
-├── 📁 core/                  # Núcleo del sistema
+├── 📁 Core/                  # Núcleo del sistema
 │   ├── 📄 autoload.php      # Carga automática de clases
 │   ├── 📄 Database.php      # Conexión a base de datos (Singleton)
 │   ├── 📄 Router.php        # Sistema de enrutamiento
-│   └── 📁 helpers/          # Clases auxiliares
+│   └── 📁 Helpers/          # Clases auxiliares
 │       ├── 📄 Sanitizer.php # Sanitización de datos
 │       ├── 📄 SessionHelper.php # Manejo de sesiones
 │       └── 📄 Validator.php # Validación de datos
-├── 📁 models/               # Modelos de datos
+├── 📁 Models/               # Modelos de datos
 │   ├── 📄 Producto.php      # Modelo de productos
 │   └── 📄 VarianteProducto.php # Modelo de variantes
 ├── 📁 public/               # Archivos públicos
@@ -178,7 +178,7 @@ fetch('/producto/index?' + params.toString(), {
 ## 📚 Guía de Desarrollo
 
 ### Agregar Nuevas Funcionalidades
-1. **Crear Modelo**: En `models/` para la lógica de datos
+1. **Crear Modelo**: En `Models/` para la lógica de datos
 2. **Crear Controlador**: En `controllers/` para la lógica de negocio
 3. **Crear Vista**: En `views/` para la interfaz
 4. **Registrar Ruta**: En `public/index.php`
