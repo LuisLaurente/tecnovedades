@@ -35,6 +35,12 @@
                         <span id="footer-date" class="date"></span>
                     </div>
                 </div>
+                 <!-- Enlace al Libro de Reclamaciones -->
+                <div class="footer-reclamo mt-3 text-center">
+                    <a href="<?= url('reclamacion/formulario') ?>" style="color: #666; text-decoration: none; font-size: 14px;" onmouseover="this.style.color='#444'" onmouseout="this.style.color='#666'">
+                        📋 Libro de Reclamaciones
+                    </a>
+                </div>
             </div>
         </div>
     </div>

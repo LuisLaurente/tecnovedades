@@ -11,55 +11,52 @@ class ReclamacionController
         require_once __DIR__ . '/../views/reclamacion/formulario.php';
     }
 
-    public function guardar()
-    {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $nombre = trim($_POST['nombre'] ?? '');
-            $correo = trim($_POST['correo'] ?? '');
-            $telefono = trim($_POST['telefono'] ?? '');
-            $mensaje = trim($_POST['mensaje'] ?? '');
-
-            if (!$nombre || !$mensaje) {
-                echo "Nombre y mensaje son obligatorios.";
-                return;
-            }
-
-            $reclamacion = new Reclamacion();
-            $reclamacion->guardar($nombre, $correo, $telefono, $mensaje);
-
-            echo "<p>✅ ¡Gracias por enviar tu reclamación!</p>";
-        }
-    }
     public function enviar()
     {
-        // Validar y procesar el formulario
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $nombre = $_POST['nombre'] ?? '';
             $correo = $_POST['correo'] ?? '';
             $telefono = $_POST['telefono'] ?? '';
             $mensaje = $_POST['mensaje'] ?? '';
+            $pedido_id = !empty($_POST['pedido_id']) ? (int)$_POST['pedido_id'] : null;
 
             $errores = [];
 
-            if (empty($nombre)) $errores[] = "El nombre es obligatorio.";
-            if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) $errores[] = "Correo inválido.";
-            if (empty($mensaje)) $errores[] = "El mensaje no puede estar vacío.";
+            if (empty($nombre)) $errores[] = "El nombre es obligatorio";
+            if (empty($correo)) $errores[] = "El correo es obligatorio";
+            if (empty($mensaje)) $errores[] = "El mensaje es obligatorio";
 
-            if (count($errores) === 0) {
-                $reclamacion = new \Models\Reclamacion();
-                $reclamacion->guardar($nombre, $correo, $telefono, $mensaje);
-                header('Location: ' . url('reclamacion/formulario') . '?exito=1');
-                exit;
-            } else {
-                $_SESSION['errores_reclamo'] = $errores;
-                header('Location: ' . url('reclamacion/formulario'));
-                exit;
+            // Validar si el código de pedido existe (si se ingresó)
+            $advertencia = '';
+            if ($pedido_id !== null) {
+                $detallePedidoModel = new \Models\DetallePedido();
+                $existePedido = $detallePedidoModel->existePedido($pedido_id);
+
+                if (!$existePedido) {
+                    $advertencia = "⚠️ El código de pedido ingresado no existe. De igual forma se ha creado una queja.";
+                }
             }
-        }
 
-        // Si no es POST, redirigir
-        header('Location: ' . url('reclamacion/formulario'));
-        exit;
-        
+            if (!empty($errores)) {
+                require_once __DIR__ . '/../views/reclamacion/formulario.php';
+                return;
+            }
+
+            // Insertar reclamación
+            $reclamacionModel = new \Models\Reclamacion();
+            $reclamacionModel->crear([
+                'nombre' => $nombre,
+                'correo' => $correo,
+                'telefono' => $telefono,
+                'mensaje' => $mensaje,
+                'pedido_id' => $pedido_id
+            ]);
+            $toast_exito = true; // solo para el toast
+            $mensaje_exito = "✅ Se notificará por correo dentro de tres dias hábiles.";
+            require_once __DIR__ . '/../views/reclamacion/formulario.php';
+            exit;
+        }
     }
+
+
 }

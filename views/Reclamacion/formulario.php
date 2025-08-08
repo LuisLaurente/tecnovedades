@@ -5,26 +5,29 @@
 <script src="<?= url('js/reclamForm.js') ?>"></script>
 <body>
     <div class="flex h-screen">
-        <!-- Sidebar -->
-        <div class="fixed inset-y-0 left-0 z-50">
-            <?php include_once __DIR__ . '/../admin/includes/navbar.php'; ?>
-        </div>
+        
 
-        <div class="flex-1 ml-64 flex flex-col min-h-screen">
+        <div class="flex-1 ">
             <!-- Contenido principal -->
             <main class="flex-1 p-2 bg-gray-50 overflow-y-auto">
-                <div class="sticky top-0 z-40">
-                    <?php include_once __DIR__ . '/../admin/includes/header.php'; ?>
-                </div>
+                
 
                 <div class="flex-1 p-6 bg-gray-50 overflow-y-auto">
                     <div class="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-8">
                         <h1 class="text-3xl font-bold text-gray-800 mb-6">📋 Libro de Reclamaciones</h1>
 
-                        <!-- Toast -->
+                        <!-- Toast de éxito (se mostrará con JS si hay mensaje) -->
+                        <?php if (!empty($toast_exito)): ?>
                         <div id="toast" class="bg-green-100 text-green-800 px-4 py-3 rounded mb-4 border border-green-300 toast-exito" style="display: none;">
-                            ✅ Su reclamo se ha enviado con éxito.
+                            ✅ Reclamo enviado con éxito.
                         </div>
+                        <?php endif; ?>
+                       
+
+                        
+                        <?php if (!empty($advertencia)): ?>
+                                <p style="color: orange; font-weight: bold;"><?= htmlspecialchars($advertencia) ?></p>
+                            <?php endif; ?>
 
                         <!-- Mensaje de éxito -->
                         <?php if (!empty($mensaje_exito)): ?>
@@ -60,6 +63,11 @@
                             </div>
 
                             <div>
+                                <label class="block font-semibold text-gray-700 mb-1">Código del Pedido:</label>
+                                <input type="number" name="pedido_id" required class="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+
+                            <div>
                                 <label class="block font-semibold text-gray-700 mb-1">Mensaje: *</label>
                                 <textarea name="mensaje" rows="5" required class="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
                             </div>
@@ -69,8 +77,8 @@
                                     Enviar Reclamación
                                 </button>
 
-                                <a href="<?= url('adminReclamacion/index') ?>" class="text-blue-600 hover:underline text-sm">
-                                    ← Volver a Reclamaciones Recibidas
+                                <a href="javascript:history.back()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded font-semibold">
+                                    ← Volver
                                 </a>
                             </div>
                         </form>
