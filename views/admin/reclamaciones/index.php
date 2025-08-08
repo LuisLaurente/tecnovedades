@@ -26,10 +26,6 @@
                                     <h1 class="text-3xl font-bold text-gray-800 mb-2">📂 Reclamaciones Recibidas</h1>
                                     <p class="text-gray-600">Visualiza y gestiona los reclamos enviados por los clientes</p>
                                 </div>
-                                <a href="<?= url('reclamacion/formulario') ?>" 
-                                   class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors flex items-center gap-2">
-                                    ➕ Generar nuevo reclamo
-                                </a>
                             </div>
                         </div>
 
@@ -40,6 +36,7 @@
                                     <table class="min-w-full text-sm text-left border border-gray-300">
                                         <thead class="bg-gray-100 text-gray-700">
                                             <tr>
+                                                <th class="px-4 py-2 border">📝 Codigo de pedido</th>
                                                 <th class="px-4 py-2 border">👤 Nombre</th>
                                                 <th class="px-4 py-2 border">📧 Correo</th>
                                                 <th class="px-4 py-2 border">📞 Teléfono</th>
@@ -51,6 +48,7 @@
                                         <tbody>
                                             <?php foreach ($reclamaciones as $r): ?>
                                                 <tr class="border-t hover:bg-gray-50">
+                                                    <td class="px-4 py-2"><?= htmlspecialchars($r['pedido_id']) ?></td>
                                                     <td class="px-4 py-2"><?= htmlspecialchars($r['nombre']) ?></td>
                                                     <td class="px-4 py-2"><?= htmlspecialchars($r['correo']) ?></td>
                                                     <td class="px-4 py-2"><?= htmlspecialchars($r['telefono']) ?></td>

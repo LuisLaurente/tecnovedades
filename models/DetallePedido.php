@@ -27,4 +27,12 @@ class DetallePedido {
         $stmt = $this->db->prepare("DELETE FROM detalle_pedido WHERE pedido_id = ?");
         return $stmt->execute([$pedido_id]);
     }
+    public function existePedido($pedido_id)
+    {
+        $sql = "SELECT COUNT(*) FROM detalle_pedido WHERE pedido_id = :pedido_id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':pedido_id', $pedido_id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchColumn() > 0;
+    }
 }
