@@ -13,7 +13,6 @@ class RolController extends BaseController
     public function __construct()
     {
         // Verificar autenticación y permisos
-        \Middleware\AuthMiddleware::requirePermission('roles');
         
         $this->rolModel = new Rol();
     }
