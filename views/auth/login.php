@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar Sesión - TecnoVedades</title>
+    <title>Iniciar Sesión - Bytebox</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .bg-gradient {
@@ -17,7 +17,7 @@
             <!-- Header -->
             <div class="text-center">
                 <h2 class="mt-6 text-3xl font-extrabold text-gray-900">
-                    TecnoVedades
+                    Bytebox
                 </h2>
                 <p class="mt-2 text-sm text-gray-600">
                     Inicia sesión en tu cuenta
@@ -111,7 +111,7 @@
         <!-- Footer -->
         <div class="text-center">
             <p class="text-sm text-white opacity-75">
-                © <?= date('Y') ?> TecnoVedades. Todos los derechos reservados.
+                © <?= date('Y') ?> Bytebox. Todos los derechos reservados.
             </p>
         </div>
     </div>

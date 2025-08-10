@@ -26,22 +26,10 @@ if (isset($_SESSION['carrito'])) {
         <div class="content-wrapper">
             <!-- Título -->
             <div class="welcome-section">
-                <h1 class="main-title">Bienvenido a Tecnovedades</h1>
+                <h1 class="main-title">Bienvenido a Bytebox</h1>
                 <p class="main-subtitle">Explora nuestros productos y encuentra lo que buscas</p>
             </div>
 
-            <!-- Carrito -->
-            <div class="cart-section">
-                <a href="<?= url('carrito/ver') ?>" class="cart-button">
-                    <span class="cart-icon">🛒</span>
-                    <span class="cart-text">Ver Carrito</span>
-                    <?php if ($cantidadEnCarrito > 0): ?>
-                        <span class="cart-badge">
-                            <?= $cantidadEnCarrito ?>
-                        </span>
-                    <?php endif; ?>
-                </a>
-            </div>
 
             <!-- 🔍 Filtros de búsqueda -->
             <div class="filters-section">
@@ -99,8 +87,8 @@ if (isset($_SESSION['carrito'])) {
                     </div>
 
                     <div class="filter-group">
-                        <button type="submit" class="filter-button">🔍 Filtrar</button>
-                        <a href="<?= url('home/index') ?>" class="clear-button">❌ Eliminar Filtros</a>
+                        <button type="submit" class="filter-button">Filtrar</button>
+                        <a href="<?= url('home/index') ?>" class="clear-button">Eliminar Filtros</a>
                     </div>
                 </form>
 
@@ -124,31 +112,33 @@ if (isset($_SESSION['carrito'])) {
                 <?php if (!empty($productos)): ?>
                     <?php foreach ($productos as $producto): ?>
                         <div class="product-card">
-                            <div class="product-image-container">
-                                <img src="<?= url('uploads/' . $producto['imagen']) ?>"
-                                    alt="<?= htmlspecialchars($producto['nombre']) ?>">
-                            </div>
-
-                            <div class="product-info">
-                                <h3 class="product-title"><?= htmlspecialchars($producto['nombre']) ?></h3>
-                                <p class="product-description"><?= htmlspecialchars($producto['descripcion']) ?></p>
-
-                                <div class="product-price">
-                                    S/ <?= number_format($producto['precio'], 2) ?>
+                            <a href="<?= url('producto/ver/' . $producto['id']) ?>" class="product-link">
+                                <div class="product-image-container">
+                                    <img src="<?= url('uploads/' . $producto['imagen']) ?>"
+                                        alt="<?= htmlspecialchars($producto['nombre']) ?>">
                                 </div>
 
-                                <form method="POST" action="<?= url('carrito/agregar') ?>" class="add-to-cart-form">
-                                    <input type="hidden" name="producto_id" value="<?= $producto['id'] ?>">
-                                    <div class="quantity-section">
-                                        <input type="number" name="cantidad" value="1" min="1" class="quantity-input">
-                                        <button type="submit" class="add-button">
-                                            🛒 Agregar
-                                        </button>
+                                <div class="product-info">
+                                    <h3 class="product-title"><?= htmlspecialchars($producto['nombre']) ?></h3>
+                                    <p class="product-description"><?= htmlspecialchars($producto['descripcion']) ?></p>
+                                    <div class="product-price">
+                                        S/ <?= number_format($producto['precio'], 2) ?>
                                     </div>
-                                </form>
-                            </div>
+                                </div>
+                            </a>
+
+                            <form method="POST" action="<?= url('carrito/agregar') ?>" class="add-to-cart-form" onClick="event.stopPropagation();">
+                                <input type="hidden" name="producto_id" value="<?= $producto['id'] ?>">
+                                <div class="quantity-section">
+                                    <input type="number" name="cantidad" value="1" min="1" class="quantity-input">
+                                    <button type="submit" class="add-button">
+                                        🛒 Agregar
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     <?php endforeach; ?>
+
                 <?php else: ?>
                     <div class="empty-state">
                         <div class="empty-icon">📦</div>

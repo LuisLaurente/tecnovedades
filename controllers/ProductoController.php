@@ -238,4 +238,68 @@ class ProductoController
         // Mostrar la vista pública (home)
         require_once __DIR__ . '/../public/home.php';
     }
+    public function autocomplete()
+    {
+        $q = isset($_GET['q']) ? trim($_GET['q']) : '';
+
+        header('Content-Type: application/json');
+
+        if ($q === '') {
+            echo json_encode([]);
+            exit;
+        }
+
+        $productoModel = new \Models\Producto();
+        $resultados = $productoModel->buscarPorNombre($q);
+
+        // Puedes mapear/limpiar campos si quieres reducir tamaño
+        echo json_encode($resultados);
+        exit;
+    }
+
+
+    public function ver($id)
+    {
+        $productoModel = new Producto();
+
+        // Validar que $id sea numérico
+        if (!is_numeric($id)) {
+            // Redirigir o mostrar error
+            header('Location: ' . url('producto'));
+            exit;
+        }
+
+        // Obtener el producto
+        $producto = $productoModel->obtenerPorId((int)$id);
+
+        if (!$producto) {
+            // Producto no encontrado, redirigir o mostrar error
+            header('Location: ' . url('producto'));
+            exit;
+        }
+
+        // Obtener categorías asociadas
+        $producto['categorias'] = Producto::obtenerCategoriasPorProducto($producto['id']);
+        // Obtener imágenes asociadas
+        $producto['imagenes'] = \Models\ImagenProducto::obtenerPorProducto($producto['id']);
+
+        // Cargar la vista descripción
+        require_once __DIR__ . '/../views/producto/descripcion.php';
+    }
+    public function busqueda()
+    {
+        $q = isset($_GET['q']) ? trim($_GET['q']) : '';
+
+        if (empty($q)) {
+            // Si no hay búsqueda, redirigimos al home
+            header('Location: ' . url('home/index'));
+            exit;
+        }
+
+        $productoModel = new \Models\Producto();
+        $resultados = $productoModel->buscarPorNombre($q);
+
+        // Renderizamos la vista de búsqueda
+        include __DIR__ . '/../views/home/busqueda.php';
+    }
 }
