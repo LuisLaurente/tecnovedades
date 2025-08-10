@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Compra Confirmada - TecnoVedades</title>
+    <title>Compra Confirmada - Bytebox</title>
     <link rel="stylesheet" href="<?= url('css/confirmacion.css') ?>">
 </head>
 <body>

@@ -6,7 +6,7 @@
         <div class="footer-content">
             <!-- Información principal -->
             <div class="footer-header">
-                <h5 class="footer-title">Tienda Tecnovedades</h5>
+                <h5 class="footer-title">Tienda Bytebox</h5>
                 <p class="footer-subtitle">Tu tienda online de confianza para productos tecnológicos y novedades</p>
             </div>
 
@@ -18,7 +18,7 @@
                 </div>
                 <div class="footer-info-item">
                     <p class="info-label">Email</p>
-                    <p class="info-value">info@tecnovedades.com</p>
+                    <p class="info-value">info@bytebox.com</p>
                 </div>
                 <div class="footer-info-item">
                     <p class="info-label">Horario</p>
@@ -29,7 +29,7 @@
             <!-- Footer bottom -->
             <div class="footer-bottom">
                 <div class="footer-bottom-content">
-                    <p class="copyright">© 2025 Tecnovedades - Todos los derechos reservados</p>
+                    <p class="copyright">© 2025 Bytebox - Todos los derechos reservados</p>
                     <div class="footer-meta">
                         <span class="version">Versión 2.0</span>
                         <span id="footer-date" class="date"></span>

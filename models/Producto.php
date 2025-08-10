@@ -308,4 +308,24 @@ class Producto
         $stmt = $db->query("SELECT * FROM productos WHERE visible = 1");
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
+    public function buscarPorNombre($q)
+    {
+        $db = \Core\Database::getInstance()->getConnection();
+
+        $sql = "
+        SELECT p.id, p.nombre, p.descripcion, p.precio,
+               (SELECT ip.nombre_imagen 
+                FROM imagenes_producto ip 
+                WHERE ip.producto_id = p.id 
+                LIMIT 1) AS imagen
+        FROM productos p
+        WHERE p.nombre LIKE :q OR p.descripcion LIKE :q
+        LIMIT 20
+    ";
+
+        $stmt = $db->prepare($sql);
+        $like = "%$q%";
+        $stmt->execute([':q' => $like]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
 }

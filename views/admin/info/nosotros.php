@@ -3,7 +3,7 @@
 <div class="info-container">
     <h1>Sobre Nosotros</h1>
     <p>
-        En <strong>TecNovedades</strong>, nos dedicamos a ofrecer productos tecnológicos de última generación
+        En <strong>Bytebox</strong>, nos dedicamos a ofrecer productos tecnológicos de última generación
         para mejorar tu día a día. Nuestro compromiso es brindar calidad, innovación y confianza a nuestros clientes.
     </p>
     <p>

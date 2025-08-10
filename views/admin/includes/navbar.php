@@ -28,7 +28,7 @@
                 -->
             </div>
             <div>
-                <h1 class="text-lg font-bold text-gray-800">Tienda Tecnovedades</h1>
+                <h1 class="text-lg font-bold text-gray-800">Tienda Bytebox</h1>
                 <p class="text-xs text-gray-500">Equipo de Desarrollo</p>
             </div>
         </div>

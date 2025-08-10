@@ -73,7 +73,7 @@ $totales['total'] = max($totales['subtotal'] - $total_descuentos, 0);
     <meta charset="UTF-8">
     <link rel="stylesheet" href="<?= url('css/checkout.css') ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finalizar Compra - TecnoVedades</title>
+    <title>Finalizar Compra - Bytebox</title>
 </head>
 
 <body>
