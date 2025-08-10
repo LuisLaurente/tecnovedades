@@ -30,6 +30,9 @@ if ($url === '' || $url === 'home/index') {
     }
 }
 
+// ✅ APLICAR MIDDLEWARE DE AUTENTICACIÓN ANTES DEL ROUTING
+\Core\Helpers\AuthMiddleware::checkAuth($url);
+
 // Inyectar en $_GET['url'] para compatibilidad con el router
 $_GET['url'] = $url;
 

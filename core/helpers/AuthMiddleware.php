@@ -7,10 +7,35 @@ class AuthMiddleware
      * Rutas públicas que no requieren autenticación
      */
     private static $publicRoutes = [
+        'home/index',
+        'home/buscar',
+        'home/detalleproducto',
         'auth/login',
         'auth/authenticate',
         'error/notFound',
-        'error/forbidden'
+        'error/forbidden',
+        'carrito/agregar',
+        'carrito/ver',
+        'carrito/actualizar',
+        'carrito/eliminar'
+    ];
+
+    /**
+     * Mapeo específico de controladores/acciones a permisos requeridos
+     */
+    private static $permissionMap = [
+        'usuario' => 'usuarios',
+        'rol' => 'usuarios', // Los roles están dentro de gestión de usuarios
+        'categoria' => 'categorias',
+        'producto' => 'productos',
+        'etiqueta' => 'productos', // Las etiquetas están relacionadas con productos
+        'pedido' => 'pedidos',
+        'cupon' => 'cupones',
+        'promocion' => 'promociones',
+        'cargamasiva' => 'productos', // Carga masiva es para productos
+        'adminreclamacion' => 'reportes',
+        'estadisticas' => 'reportes',
+        'adminpopup' => 'promociones' // Popup promocional
     ];
 
     /**
@@ -18,12 +43,10 @@ class AuthMiddleware
      */
     public static function requiresAuth($url)
     {
-        // Si la URL está vacía, requiere autenticación para redirigir al perfil
         if (empty($url)) {
             return true;
         }
 
-        // Normalizar la URL
         $url = trim($url, '/');
         
         // Verificar si es una ruta pública
@@ -33,7 +56,6 @@ class AuthMiddleware
             }
         }
 
-        // Por defecto, todas las demás rutas requieren autenticación
         return true;
     }
 
@@ -49,12 +71,11 @@ class AuthMiddleware
 
         // Verificar si el usuario está autenticado
         if (!SessionHelper::isAuthenticated()) {
-            // Redirigir al login
             header('Location: ' . url('/auth/login'));
             exit;
         }
 
-        // Verificar permisos específicos si es necesario
+        // Verificar permisos específicos
         return self::checkPermissions($url);
     }
 
@@ -64,32 +85,27 @@ class AuthMiddleware
     private static function checkPermissions($url)
     {
         $segments = explode('/', trim($url, '/'));
-        $controller = $segments[0] ?? '';
-        $action = $segments[1] ?? 'index';
+        $controller = strtolower($segments[0] ?? '');
+        
+        // Rutas que solo requieren autenticación (sin permisos específicos)
+        $authOnlyRoutes = ['auth', 'home'];
+        if (in_array($controller, $authOnlyRoutes)) {
+            return true;
+        }
 
-        // Definir permisos requeridos por controlador
-        $requiredPermissions = [
-            'usuario' => 'gestionar_usuarios',
-            'rol' => 'gestionar_roles',
-            'categoria' => 'gestionar_categorias',
-            'producto' => 'gestionar_productos',
-            'pedido' => 'gestionar_pedidos',
-            'cupon' => 'gestionar_cupones',
-            'promocion' => 'gestionar_promociones',
-            'etiqueta' => 'gestionar_etiquetas',
-            'carga' => 'carga_masiva',
-            'carrito' => 'gestionar_carrito'
-        ];
-
-        // Verificar si el controlador requiere permisos específicos
-        if (isset($requiredPermissions[$controller])) {
-            $permission = $requiredPermissions[$controller];
+        // Verificar permisos específicos según el mapeo
+        if (isset(self::$permissionMap[$controller])) {
+            $requiredPermission = self::$permissionMap[$controller];
             
-            if (!SessionHelper::hasPermission($permission)) {
-                // Redirigir a página de error de permisos
+            // Verificar si el usuario tiene el permiso requerido
+            if (!SessionHelper::hasPermission($requiredPermission)) {
+                error_log("❌ Usuario sin permiso '$requiredPermission' para acceder a '$controller'");
                 header('Location: ' . url('/error/forbidden'));
                 exit;
             }
+        } else {
+            // Para controladores no mapeados explícitamente, registrar una advertencia
+            error_log("⚠️ Controlador no mapeado en permisos: '$controller'");
         }
 
         return true;

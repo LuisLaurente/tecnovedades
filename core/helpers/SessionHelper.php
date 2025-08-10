@@ -48,11 +48,17 @@ class SessionHelper
         $_SESSION['user_role_id'] = $usuario['rol_id'];
         $_SESSION['user_role_name'] = $rol['nombre'];
         $_SESSION['user_role_description'] = $rol['descripcion'];
-        $_SESSION['user_permissions'] = json_decode($rol['permisos'], true) ?: [];
+        
+        // Decodificar permisos desde JSON
+        $permisos = json_decode($rol['permisos'], true);
+        $_SESSION['user_permissions'] = is_array($permisos) ? $permisos : [];
+        
         $_SESSION['user_active'] = $usuario['activo'];
         $_SESSION['login_time'] = time();
         $_SESSION['last_activity'] = time();
         $_SESSION['authenticated'] = true;
+        
+        error_log("✅ Usuario {$usuario['email']} logueado con rol {$rol['nombre']} y permisos: " . implode(', ', $_SESSION['user_permissions']));
     }
 
     /**
@@ -154,8 +160,16 @@ class SessionHelper
      */
     public static function hasPermission($permiso)
     {
+        if (!self::isAuthenticated()) {
+            return false;
+        }
+
         $permisos = self::getPermissions();
-        return in_array($permiso, $permisos);
+        $hasPermission = in_array($permiso, $permisos);
+        
+        error_log("🔍 Verificando permiso '$permiso' para usuario: " . ($hasPermission ? 'SÍ' : 'NO'));
+        
+        return $hasPermission;
     }
 
     /**
@@ -163,7 +177,14 @@ class SessionHelper
      */
     public static function isAdmin()
     {
-        return self::hasPermission('admin') || $_SESSION['user_role_name'] === 'admin';
+        if (!self::isAuthenticated()) {
+            return false;
+        }
+        
+        // Verificar si es admin por nombre de rol o tiene permiso de admin
+        return $_SESSION['user_role_name'] === 'admin' || 
+               self::hasPermission('admin') || 
+               self::hasPermission('usuarios');  // Los usuarios con permiso de gestión de usuarios se consideran admin
     }
 
     /**
@@ -182,6 +203,31 @@ class SessionHelper
     {
         $user = self::getUser();
         return $user['nombre'] ?? null;
+    }
+
+    /**
+     * Obtener email del usuario actual
+     */
+    public static function getUserEmail()
+    {
+        $user = self::getUser();
+        return $user['email'] ?? null;
+    }
+
+    /**
+     * Obtener ID del rol actual
+     */
+    public static function getRoleId()
+    {
+        return $_SESSION['user_role_id'] ?? null;
+    }
+
+    /**
+     * Obtener nombre del rol actual
+     */
+    public static function getRoleName()
+    {
+        return $_SESSION['user_role_name'] ?? null;
     }
 
     /**
@@ -216,5 +262,23 @@ class SessionHelper
 
         // Verificar permisos específicos
         return self::hasPermission($seccion);
+    }
+
+    /**
+     * Obtener información completa de la sesión
+     */
+    public static function getSessionInfo()
+    {
+        return [
+            'user_id' => self::getUserId(),
+            'user_name' => self::getUserName(),
+            'user_email' => self::getUserEmail(),
+            'role_id' => self::getRoleId(),
+            'role_name' => self::getRoleName(),
+            'permissions' => self::getPermissions(),
+            'is_authenticated' => self::isAuthenticated(),
+            'login_time' => $_SESSION['login_time'] ?? null,
+            'last_activity' => $_SESSION['last_activity'] ?? null
+        ];
     }
 }

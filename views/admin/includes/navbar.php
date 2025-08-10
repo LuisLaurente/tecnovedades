@@ -1,219 +1,210 @@
 <!-- Sidebar moderno con diseño claro y pastel -->
 <?php
+// Función helper para verificar permisos
+function hasPermission($permission) {
+    return \Core\Helpers\SessionHelper::hasPermission($permission);
+}
 
-
-// Incluir el helper de autenticación
-//require_once __DIR__ . '/auth_helper.php';
-
-//$nombre = $_SESSION['usuario_nombre'] ?? 'Invitado';
-//$email = $_SESSION['usuario_email'] ?? 'correo@ejemplo.com';
-//$roleId = $_SESSION['usuario_role_id'] ?? null;
-//$roleName = $_SESSION['usuario_rol'] ?? 'Sin rol';
-
-// Instanciar el helper de autenticación
-//$auth = new AuthHelper($pdo);
+// Obtener información del usuario
+$userName = \Core\Helpers\SessionHelper::getUserName();
+$userEmail = \Core\Helpers\SessionHelper::getUserEmail();
+$userRole = \Core\Helpers\SessionHelper::getRole();
 ?>
 <aside class="w-64 h-screen bg-gradient-to-b from-slate-50 to-blue-50 border-r border-blue-100 shadow-lg hidden lg:flex lg:flex-col">
     <!-- Header del sidebar con logo y nombre -->
     <div class="p-6 border-b border-blue-100 bg-white/50 backdrop-blur-sm flex-shrink-0">
         <div class="flex items-center space-x-3">
-            <!-- Imagen de logo personalizada -->
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg overflow-hidden bg-gradient-to-br from-blue-400 to-purple-500">
-                <!-- <img src="../../img/tienda.png" alt="Logo Moda Salud" class="w-full h-full object-cover" /> -->
-                <!-- Si no hay imagen, se muestra el SVG por defecto -->
-                <!--
+            <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                 </svg>
-                -->
             </div>
             <div>
-                <h1 class="text-lg font-bold text-gray-800">Tienda Bytebox</h1>
-                <p class="text-xs text-gray-500">Equipo de Desarrollo</p>
+                <h1 class="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    TecnoVedades
+                </h1>
+                <p class="text-xs text-gray-500">Panel de Control</p>
             </div>
         </div>
     </div>
 
-    <!-- Navegación principal con scroll -->
-    <nav class="mt-6 px-4 space-y-2 flex-1 overflow-y-auto pb-4">
-        <!-- Productos -->
-        <a href="<?= url('producto/index'); ?>" class="group flex items-center px-4 py-3 text-gray-700 rounded-xl hover:bg-gradient-to-r hover:from-green-100 hover:to-emerald-100 hover:shadow-md transition-all duration-300 ease-in-out transform hover:scale-105">
-            <div class="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-500 rounded-lg flex items-center justify-center mr-3 shadow-sm group-hover:shadow-md transition-shadow">
-                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+    <!-- Navegación principal - scrolleable -->
+    <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+        
+        <!-- Mi Perfil (siempre visible para usuarios autenticados) -->
+        <a href="<?= url('/auth/profile') ?>" class="nav-link group flex items-center p-3 text-gray-700 hover:bg-white/60 rounded-xl transition-all duration-200 backdrop-blur-sm border border-transparent hover:border-blue-200">
+            <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                 </svg>
             </div>
-            <span class="font-medium">Productos</span>
-            <div class="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-            </div>
+            <span class="font-medium">Mi Perfil</span>
         </a>
 
-        <!-- Categorías -->
-        <a href="<?= url('categoria/index'); ?>" class="group flex items-center px-4 py-3 text-gray-700 rounded-xl hover:bg-gradient-to-r hover:from-blue-100 hover:to-indigo-100 hover:shadow-md transition-all duration-300 ease-in-out transform hover:scale-105">
-            <div class="w-8 h-8 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-lg flex items-center justify-center mr-3 shadow-sm group-hover:shadow-md transition-shadow">
-                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                </svg>
-            </div>
-            <span class="font-medium">Categorías</span>
-            <div class="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-            </div>
-        </a>
-
-        <!-- Usuarios -->
-        <a href="<?= url('usuario/index'); ?>" class="group flex items-center px-4 py-3 text-gray-700 rounded-xl hover:bg-gradient-to-r hover:from-orange-100 hover:to-yellow-100 hover:shadow-md transition-all duration-300 ease-in-out transform hover:scale-105">
-            <div class="w-8 h-8 bg-gradient-to-br from-orange-400 to-yellow-500 rounded-lg flex items-center justify-center mr-3 shadow-sm group-hover:shadow-md transition-shadow">
-                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-.5a2.121 2.121 0 11-3 3m3-3a2.121 2.121 0 01-3 3m3-3v6"></path>
+        <!-- Gestión de Usuarios (solo admin) -->
+        <?php if (hasPermission('usuarios')): ?>
+        <a href="<?= url('/usuario') ?>" class="nav-link group flex items-center p-3 text-gray-700 hover:bg-white/60 rounded-xl transition-all duration-200 backdrop-blur-sm border border-transparent hover:border-blue-200">
+            <div class="w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-2.239"></path>
                 </svg>
             </div>
             <span class="font-medium">Usuarios</span>
-            <div class="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-            </div>
         </a>
+        <?php endif; ?>
 
         <!-- Roles -->
-        <a href="<?= url('rol/index'); ?>" class="group flex items-center px-4 py-3 text-gray-700 rounded-xl hover:bg-gradient-to-r hover:from-indigo-100 hover:to-purple-100 hover:shadow-md transition-all duration-300 ease-in-out transform hover:scale-105">
-            <div class="w-8 h-8 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-lg flex items-center justify-center mr-3 shadow-sm group-hover:shadow-md transition-shadow">
-                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <?php if (hasPermission('usuarios')): ?>
+        <a href="<?= url('/rol') ?>" class="nav-link group flex items-center p-3 text-gray-700 hover:bg-white/60 rounded-xl transition-all duration-200 backdrop-blur-sm border border-transparent hover:border-blue-200">
+            <div class="w-10 h-10 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
                 </svg>
             </div>
             <span class="font-medium">Roles</span>
-            <div class="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        </a>
+        <?php endif; ?>
+
+        <!-- Productos -->
+        <?php if (hasPermission('productos')): ?>
+        <a href="<?= url('/producto') ?>" class="nav-link group flex items-center p-3 text-gray-700 hover:bg-white/60 rounded-xl transition-all duration-200 backdrop-blur-sm border border-transparent hover:border-blue-200">
+            <div class="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
                 </svg>
             </div>
+            <span class="font-medium">Productos</span>
         </a>
+        <?php endif; ?>
+
+        <!-- Categorías -->
+        <?php if (hasPermission('categorias')): ?>
+        <a href="<?= url('/categoria') ?>" class="nav-link group flex items-center p-3 text-gray-700 hover:bg-white/60 rounded-xl transition-all duration-200 backdrop-blur-sm border border-transparent hover:border-blue-200">
+            <div class="w-10 h-10 bg-gradient-to-br from-pink-400 to-pink-600 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                </svg>
+            </div>
+            <span class="font-medium">Categorías</span>
+        </a>
+        <?php endif; ?>
+
+        <!-- Etiquetas -->
+        <?php if (hasPermission('productos')): ?>
+        <a href="<?= url('/etiqueta') ?>" class="nav-link group flex items-center p-3 text-gray-700 hover:bg-white/60 rounded-xl transition-all duration-200 backdrop-blur-sm border border-transparent hover:border-blue-200">
+            <div class="w-10 h-10 bg-gradient-to-br from-cyan-400 to-cyan-600 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                </svg>
+            </div>
+            <span class="font-medium">Etiquetas</span>
+        </a>
+        <?php endif; ?>
 
         <!-- Pedidos -->
-        <a href="<?= url('pedido/listar'); ?>" class="group flex items-center px-4 py-3 text-gray-700 rounded-xl hover:bg-gradient-to-r hover:from-purple-100 hover:to-pink-100 hover:shadow-md transition-all duration-300 ease-in-out transform hover:scale-105">
-            <div class="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-500 rounded-lg flex items-center justify-center mr-3 shadow-sm group-hover:shadow-md transition-shadow">
-                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+        <?php if (hasPermission('pedidos')): ?>
+        <a href="<?= url('/pedido/listar') ?>" class="nav-link group flex items-center p-3 text-gray-700 hover:bg-white/60 rounded-xl transition-all duration-200 backdrop-blur-sm border border-transparent hover:border-blue-200">
+            <div class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
                 </svg>
             </div>
             <span class="font-medium">Pedidos</span>
-            <div class="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-            </div>
         </a>
-
-        <!-- Promociones -->
-        <a href="<?= url('promocion/index'); ?>" class="group flex items-center px-4 py-3 text-gray-700 rounded-xl hover:bg-gradient-to-r hover:from-red-100 hover:to-rose-100 hover:shadow-md transition-all duration-300 ease-in-out transform hover:scale-105">
-            <div class="w-8 h-8 bg-gradient-to-br from-red-400 to-rose-500 rounded-lg flex items-center justify-center mr-3 shadow-sm group-hover:shadow-md transition-shadow">
-                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-            </div>
-            <span class="font-medium">Promociones</span>
-            <div class="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-            </div>
-        </a>
+        <?php endif; ?>
 
         <!-- Cupones -->
-        <a href="<?= url('cupon/index'); ?>" class="group flex items-center px-4 py-3 text-gray-700 rounded-xl hover:bg-gradient-to-r hover:from-teal-100 hover:to-cyan-100 hover:shadow-md transition-all duration-300 ease-in-out transform hover:scale-105">
-            <div class="w-8 h-8 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-lg flex items-center justify-center mr-3 shadow-sm group-hover:shadow-md transition-shadow">
-                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <?php if (hasPermission('cupones')): ?>
+        <a href="<?= url('/cupon') ?>" class="nav-link group flex items-center p-3 text-gray-700 hover:bg-white/60 rounded-xl transition-all duration-200 backdrop-blur-sm border border-transparent hover:border-blue-200">
+            <div class="w-10 h-10 bg-gradient-to-br from-red-400 to-red-600 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
                 </svg>
             </div>
             <span class="font-medium">Cupones</span>
-            <div class="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        </a>
+        <?php endif; ?>
+
+        <!-- Promociones -->
+        <?php if (hasPermission('promociones')): ?>
+        <a href="<?= url('/promocion') ?>" class="nav-link group flex items-center p-3 text-gray-700 hover:bg-white/60 rounded-xl transition-all duration-200 backdrop-blur-sm border border-transparent hover:border-blue-200">
+            <div class="w-10 h-10 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
                 </svg>
             </div>
+            <span class="font-medium">Promociones</span>
         </a>
+        <?php endif; ?>
 
-        <!-- Reportes -->
-        <a href="<?= url('reporte/resumen'); ?>" class="group flex items-center px-4 py-3 text-gray-700 rounded-xl hover:bg-gradient-to-r hover:from-yellow-100 hover:to-orange-100 hover:shadow-md transition-all duration-300 ease-in-out transform hover:scale-105">
-            <div class="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center mr-3 shadow-sm group-hover:shadow-md transition-shadow">
-                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 014-4h4M9 17H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v4"></path>
+        <!-- Popup Promocional -->
+        <?php if (hasPermission('promociones')): ?>
+        <a href="<?= url('/adminpopup') ?>" class="nav-link group flex items-center p-3 text-gray-700 hover:bg-white/60 rounded-xl transition-all duration-200 backdrop-blur-sm border border-transparent hover:border-blue-200">
+            <div class="w-10 h-10 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2h4a1 1 0 011 1v1a1 1 0 01-1 1v9a3 3 0 01-3 3H6a3 3 0 01-3-3V7a1 1 0 01-1-1V5a1 1 0 011-1h4z"></path>
+                </svg>
+            </div>
+            <span class="font-medium">Popup</span>
+        </a>
+        <?php endif; ?>
+
+        <!-- Carga Masiva -->
+        <?php if (hasPermission('productos')): ?>
+        <a href="<?= url('/cargamasiva') ?>" class="nav-link group flex items-center p-3 text-gray-700 hover:bg-white/60 rounded-xl transition-all duration-200 backdrop-blur-sm border border-transparent hover:border-blue-200">
+            <div class="w-10 h-10 bg-gradient-to-br from-teal-400 to-teal-600 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+            </div>
+            <span class="font-medium">Carga Masiva</span>
+        </a>
+        <?php endif; ?>
+
+        <!-- Reportes/Estadísticas -->
+        <?php if (hasPermission('reportes')): ?>
+        <a href="<?= url('/adminreclamacion') ?>" class="nav-link group flex items-center p-3 text-gray-700 hover:bg-white/60 rounded-xl transition-all duration-200 backdrop-blur-sm border border-transparent hover:border-blue-200">
+            <div class="w-10 h-10 bg-gradient-to-br from-gray-400 to-gray-600 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                 </svg>
             </div>
             <span class="font-medium">Reportes</span>
-            <div class="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-            </div>
         </a>
+        <?php endif; ?>
 
-        <!-- Reclamos -->
-        <a href="<?= url('adminReclamacion/index'); ?>" class="group flex items-center px-4 py-3 text-gray-700 rounded-xl hover:bg-gradient-to-r hover:from-blue-100 hover:to-indigo-100 hover:shadow-md transition-all duration-300 ease-in-out transform hover:scale-105">
-            <div class="w-8 h-8 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-lg flex items-center justify-center mr-3 shadow-sm group-hover:shadow-md transition-shadow">
-                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
-                </svg>
-            </div>
-            <span class="font-medium">Reclamos Admin</span>
-            <div class="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-            </div>
-        </a>
-
-        <!-- Pop-up -->
-        <a href="<?= url('adminPopup/index'); ?>" class="group flex items-center px-4 py-3 text-gray-700 rounded-xl hover:bg-gradient-to-r hover:from-orange-100 hover:to-yellow-100 hover:shadow-md transition-all duration-300 ease-in-out transform hover:scale-105">
-            <div class="w-8 h-8 bg-gradient-to-br from-orange-400 to-yellow-500 rounded-lg flex items-center justify-center mr-3 shadow-sm group-hover:shadow-md transition-shadow">
-                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-.5a2.121 2.121 0 11-3 3m3-3a2.121 2.121 0 01-3 3m3-3v6"></path>
-                </svg>
-            </div>
-            <span class="font-medium">Pop-up admin</span>
-            <div class="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-            </div>
-        </a>
     </nav>
-    
 
-    <!-- Sección de configuración (parte inferior) - fija -->
+    <!-- Sección de información del usuario -->
     <div class="p-4 border-t border-blue-100 bg-white/30 backdrop-blur-sm flex-shrink-0">
-        <!-- Perfil del usuario -->
         <div class="flex items-center p-3 bg-white/60 rounded-xl shadow-sm mb-3 backdrop-blur-sm">
             <div class="w-10 h-10 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full flex items-center justify-center mr-3">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                </svg>
+                <span class="text-sm font-bold text-white">
+                    <?= strtoupper(substr($userName ?? 'U', 0, 1)) ?>
+                </span>
             </div>
-            <div class="flex-1">
-              <!--  <p class="text-sm font-medium text-gray-800"><?= htmlspecialchars($nombre) ?></p>
-                <p class="text-xs text-gray-500"><?= htmlspecialchars($email) ?></p> -->
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-900 truncate">
+                    <?= htmlspecialchars($userName ?? 'Usuario') ?>
+                </p>
+                <p class="text-xs text-gray-500 truncate">
+                    <?= htmlspecialchars($userRole['nombre'] ?? 'Sin rol') ?>
+                </p>
             </div>
         </div>
 
-        <!-- Configuración -->
-        <a href="../config/config.php" class="group flex items-center px-4 py-3 text-gray-600 rounded-xl hover:bg-gradient-to-r hover:from-gray-100 hover:to-slate-100 hover:shadow-md transition-all duration-300">
-            <div class="w-8 h-8 bg-gradient-to-br from-gray-400 to-slate-500 rounded-lg flex items-center justify-center mr-3 shadow-sm">
-                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                </svg>
-            </div>
-            <span class="font-medium text-sm">Configuración</span>
-        </a>
+        <!-- Debug de permisos (solo en desarrollo) -->
+        <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs">
+            <p class="font-semibold text-yellow-800 mb-1">🔍 Debug Permisos</p>
+            <p><strong>Permisos:</strong></p>
+            <ul class="list-disc list-inside ml-2">
+                <?php foreach (\Core\Helpers\SessionHelper::getPermissions() as $permission): ?>
+                    <li><?= htmlspecialchars($permission) ?></li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+        <?php endif; ?>
     </div>
 </aside>
 
