@@ -26,7 +26,9 @@ if (isset($_SESSION['carrito'])) {
             <!-- Título de resultados -->
             <div class="welcome-section">
                 <h1 class="main-title">Resultados de búsqueda</h1>
-                <p class="main-subtitle">Buscaste: <strong><?= htmlspecialchars($termino) ?></strong></p>
+                <p class="main-subtitle">
+                    Buscaste: <strong><?= htmlspecialchars($termino ?? '', ENT_QUOTES, 'UTF-8') ?></strong>
+                </p>
             </div>
 
             <!-- Productos -->
@@ -72,4 +74,5 @@ if (isset($_SESSION['carrito'])) {
 
     <?php include_once __DIR__ . '/../admin/includes/footer.php'; ?>
 </body>
+
 </html>

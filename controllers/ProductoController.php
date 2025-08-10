@@ -299,6 +299,9 @@ class ProductoController
         $productoModel = new \Models\Producto();
         $resultados = $productoModel->buscarPorNombre($q);
 
+        // Definir $termino para que exista en la vista
+        $termino = $q;
+
         // Renderizamos la vista de búsqueda
         include __DIR__ . '/../views/home/busqueda.php';
     }
