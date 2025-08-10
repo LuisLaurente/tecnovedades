@@ -1,0 +1,38 @@
+# Configuraciones de seguridad para PHP
+<IfModule mod_php7.c>
+    php_flag session.use_strict_mode On
+    php_flag session.use_only_cookies On
+    php_flag session.cookie_httponly On
+    php_value session.cookie_samesite "Lax"
+    php_flag session.cookie_secure Off
+</IfModule>
+
+<IfModule mod_php.c>
+    php_flag session.use_strict_mode On
+    php_flag session.use_only_cookies On
+    php_flag session.cookie_httponly On
+    php_value session.cookie_samesite "Lax"
+    php_flag session.cookie_secure Off
+</IfModule>
+
+# Forzar HTTPS (descomenta estas líneas cuando tengas SSL habilitado)
+# <IfModule mod_rewrite.c>
+#    RewriteEngine On
+#    RewriteCond %{HTTPS} off
+#    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+# </IfModule>
+
+# Evitar listado de directorios
+Options -Indexes
+
+# Proteger el archivo .htaccess
+<Files .htaccess>
+    Order Allow,Deny
+    Deny from all
+</Files>
+
+# Proteger archivos sensibles
+<FilesMatch "^(\.env|.*\.log|composer\.json|composer\.lock)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>

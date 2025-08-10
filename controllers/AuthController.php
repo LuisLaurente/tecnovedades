@@ -6,6 +6,9 @@ use Models\Usuario;
 use Models\Rol;
 use Core\Helpers\SessionHelper;
 use Core\Helpers\Validator;
+use Core\Helpers\CsrfHelper;
+use Core\Helpers\LoginRateHelper;
+use Core\Helpers\SecurityLogger;
 
 class AuthController extends BaseController
 {
@@ -34,7 +37,18 @@ class AuthController extends BaseController
             exit;
         }
 
+        // Limpiar intentos antiguos para mantener la sesión ligera
+        LoginRateHelper::cleanOldAttempts();
+        
         $error = $_GET['error'] ?? '';
+        
+        // Verificar si hay una IP bloqueada
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $blockInfo = LoginRateHelper::isBlocked($ip);
+        if ($blockInfo) {
+            $error = $blockInfo['message'];
+        }
+        
         require_once __DIR__ . '/../views/auth/login.php';
     }
 
@@ -48,10 +62,35 @@ class AuthController extends BaseController
                 header('Location: ' . url('/auth/login'));
                 exit;
             }
+            
+            // Verificar token CSRF
+            $csrfToken = $_POST['csrf_token'] ?? '';
+            if (empty($csrfToken) || !CsrfHelper::validateToken($csrfToken, 'login_form')) {
+                SecurityLogger::log(SecurityLogger::CSRF_ERROR, 'Token CSRF inválido en intento de login', [
+                    'email' => $email ?? 'no proporcionado'
+                ]);
+                $error = urlencode('Error de seguridad: Token inválido o expirado. Por favor, intente nuevamente.');
+                header('Location: ' . url("/auth/login?error=$error"));
+                exit;
+            }
 
             $email = $_POST['email'] ?? '';
             $password = $_POST['password'] ?? '';
             $remember = isset($_POST['remember']);
+            
+            // Verificar bloqueo por intentos fallidos (usando IP si el email no existe)
+            $identifier = $email ?: $_SERVER['REMOTE_ADDR']; 
+            $blockInfo = LoginRateHelper::isBlocked($identifier);
+            
+            if ($blockInfo) {
+                SecurityLogger::log(SecurityLogger::ACCOUNT_LOCKED, 'Intento de acceso a cuenta bloqueada', [
+                    'email' => $email,
+                    'remaining_time' => $blockInfo['remaining_seconds']
+                ]);
+                $error = urlencode($blockInfo['message']);
+                header('Location: ' . url("/auth/login?error=$error"));
+                exit;
+            }
 
             // Validar datos
             $errores = [];
@@ -75,6 +114,14 @@ class AuthController extends BaseController
             $usuario = $this->usuarioModel->obtenerPorEmail($email);
             
             if (!$usuario) {
+                // Registrar intento fallido
+                $attempts = LoginRateHelper::recordFailedAttempt($identifier);
+                
+                SecurityLogger::log(SecurityLogger::LOGIN_FAIL, 'Intento de login con email inexistente', [
+                    'email' => $email,
+                    'attempt_count' => $attempts['count']
+                ]);
+                
                 $error = urlencode('Credenciales incorrectas');
                 header('Location: ' . url("/auth/login?error=$error"));
                 exit;
@@ -82,6 +129,11 @@ class AuthController extends BaseController
 
             // Verificar si el usuario está activo
             if (!$usuario['activo']) {
+                SecurityLogger::log(SecurityLogger::LOGIN_FAIL, 'Intento de login con cuenta desactivada', [
+                    'email' => $email,
+                    'user_id' => $usuario['id']
+                ]);
+                
                 $error = urlencode('Tu cuenta está desactivada. Contacta al administrador.');
                 header('Location: ' . url("/auth/login?error=$error"));
                 exit;
@@ -89,10 +141,22 @@ class AuthController extends BaseController
 
             // Verificar contraseña
             if (!password_verify($password, $usuario['password'])) {
+                // Registrar intento fallido
+                $attempts = LoginRateHelper::recordFailedAttempt($email);
+                
+                SecurityLogger::log(SecurityLogger::LOGIN_FAIL, 'Contraseña incorrecta', [
+                    'email' => $email,
+                    'user_id' => $usuario['id'],
+                    'attempt_count' => $attempts['count']
+                ]);
+                
                 $error = urlencode('Credenciales incorrectas');
                 header('Location: ' . url("/auth/login?error=$error"));
                 exit;
             }
+            
+            // Éxito: resetear intentos fallidos
+            LoginRateHelper::resetAttempts($email);
 
             // Obtener información del rol
             $rol = $this->rolModel->obtenerPorId($usuario['rol_id']);
@@ -106,6 +170,14 @@ class AuthController extends BaseController
             SessionHelper::login($usuario, $rol);
             //Mostrar popup en esta nueva sesión
             $_SESSION['mostrar_popup'] = true;
+            
+            // Registrar login exitoso
+            SecurityLogger::log(SecurityLogger::LOGIN_SUCCESS, 'Login exitoso', [
+                'user_id' => $usuario['id'],
+                'email' => $usuario['email'],
+                'rol' => $rol['nombre'],
+                'remember_me' => $remember ? 'sí' : 'no'
+            ]);
             // Si marcó "recordarme", crear cookie
             if ($remember) {
                 $token = bin2hex(random_bytes(32));
@@ -140,6 +212,15 @@ class AuthController extends BaseController
      */
     public function logout()
     {
+        // Registrar logout antes de destruir la sesión para tener la información del usuario
+        if (SessionHelper::isAuthenticated()) {
+            $usuario = SessionHelper::getUser();
+            SecurityLogger::log(SecurityLogger::LOGOUT, 'Cierre de sesión', [
+                'user_id' => $usuario['id'] ?? 'desconocido',
+                'email' => $usuario['email'] ?? 'desconocido'
+            ]);
+        }
+        
         SessionHelper::logout();
         
         // Eliminar cookie de "recordarme" si existe
