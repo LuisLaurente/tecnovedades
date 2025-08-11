@@ -317,4 +317,22 @@ class AuthController extends BaseController
             exit;
         }
     }
+
+    /**
+     * Redirigir a Google (login social)
+     */
+    public function loginGoogle()
+    {
+        $google = new \Controllers\GoogleAuthController();
+        $google->login();
+    }
+
+    /**
+     * Callback de Google
+     */
+    public function googleCallback()
+    {
+        $google = new \Controllers\GoogleAuthController();
+        $google->callback();
+    }
 }
