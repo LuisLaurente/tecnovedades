@@ -2,6 +2,8 @@
 
 namespace Core\Helpers;
 
+use Core\Helpers\SecurityLogger;
+
 class SessionHelper
 {
     public static function start()
@@ -58,6 +60,12 @@ class SessionHelper
         $_SESSION['last_activity'] = time();
         $_SESSION['authenticated'] = true;
         
+        // Almacenar la IP del usuario para detectar secuestros de sesión
+        $_SESSION['user_ip'] = $_SERVER['REMOTE_ADDR'];
+        
+        // Almacenar el user-agent para detectar sesiones robadas
+        $_SESSION['user_agent'] = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        
         error_log("✅ Usuario {$usuario['email']} logueado con rol {$rol['nombre']} y permisos: " . implode(', ', $_SESSION['user_permissions']));
     }
 
@@ -94,10 +102,42 @@ class SessionHelper
         if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
             return false;
         }
+        
+        // Verificar si la IP ha cambiado (posible secuestro de sesión)
+        if (isset($_SESSION['user_ip']) && $_SESSION['user_ip'] !== $_SERVER['REMOTE_ADDR']) {
+            SecurityLogger::log(SecurityLogger::AUTH_ERROR, 'Posible secuestro de sesión - IP cambiada', [
+                'user_id' => $_SESSION['user_id'] ?? 'desconocido',
+                'user_email' => $_SESSION['user_email'] ?? 'desconocido',
+                'original_ip' => $_SESSION['user_ip'],
+                'current_ip' => $_SERVER['REMOTE_ADDR']
+            ]);
+            
+            self::logout();
+            return false;
+        }
+        
+        // Verificar si el User-Agent ha cambiado (posible robo de sesión)
+        if (isset($_SESSION['user_agent']) && $_SESSION['user_agent'] !== ($_SERVER['HTTP_USER_AGENT'] ?? '')) {
+            SecurityLogger::log(SecurityLogger::AUTH_ERROR, 'Posible secuestro de sesión - User-Agent cambiado', [
+                'user_id' => $_SESSION['user_id'] ?? 'desconocido',
+                'user_email' => $_SESSION['user_email'] ?? 'desconocido',
+                'original_agent' => $_SESSION['user_agent'],
+                'current_agent' => $_SERVER['HTTP_USER_AGENT'] ?? ''
+            ]);
+            
+            self::logout();
+            return false;
+        }
 
         // Verificar timeout de sesión (opcional - 2 horas)
         $timeout = 2 * 60 * 60; // 2 horas en segundos
         if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity']) > $timeout) {
+            SecurityLogger::log(SecurityLogger::SESSION_EXPIRED, 'Sesión expirada por inactividad', [
+                'user_id' => $_SESSION['user_id'] ?? 'desconocido',
+                'user_email' => $_SESSION['user_email'] ?? 'desconocido',
+                'elapsed_time' => time() - $_SESSION['last_activity']
+            ]);
+            
             self::logout();
             return false;
         }

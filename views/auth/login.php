@@ -33,6 +33,8 @@
 
             <!-- Formulario de login -->
             <form class="mt-8 space-y-6" method="POST" action="<?= url('/auth/authenticate') ?>">
+                <!-- Token CSRF para seguridad -->
+                <?= \Core\Helpers\CsrfHelper::tokenField('login_form') ?>
                 <div class="space-y-4">
                     <!-- Email -->
                     <div>

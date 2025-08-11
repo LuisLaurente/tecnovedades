@@ -1,6 +1,8 @@
 <?php
 namespace Core\Helpers;
 
+use Core\Helpers\SecurityLogger;
+
 class AuthMiddleware
 {
     /**
@@ -99,6 +101,18 @@ class AuthMiddleware
             
             // Verificar si el usuario tiene el permiso requerido
             if (!SessionHelper::hasPermission($requiredPermission)) {
+                $usuario = SessionHelper::getUser();
+                $rol = SessionHelper::getRole();
+                
+                // Registrar intento de acceso denegado
+                SecurityLogger::log(SecurityLogger::ACCESS_DENIED, "Acceso denegado a '{$controller}'", [
+                    'user_id' => $usuario['id'] ?? 'desconocido',
+                    'email' => $usuario['email'] ?? 'desconocido',
+                    'rol' => $rol['nombre'] ?? 'desconocido',
+                    'permission_required' => $requiredPermission,
+                    'url' => $url
+                ]);
+                
                 error_log("❌ Usuario sin permiso '$requiredPermission' para acceder a '$controller'");
                 header('Location: ' . url('/error/forbidden'));
                 exit;
@@ -169,6 +183,14 @@ class AuthMiddleware
     public static function requireAdmin()
     {
         if (!self::isAdmin()) {
+            $usuario = SessionHelper::getUser();
+            
+            SecurityLogger::log(SecurityLogger::ACCESS_DENIED, "Intento de acceso a área de administrador", [
+                'user_id' => $usuario['id'] ?? 'desconocido',
+                'email' => $usuario['email'] ?? 'desconocido',
+                'url' => $_SERVER['REQUEST_URI'] ?? 'desconocida'
+            ]);
+            
             header('Location: ' . url('/error/forbidden'));
             exit;
         }
