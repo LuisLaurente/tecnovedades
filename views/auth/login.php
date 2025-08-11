@@ -31,6 +31,9 @@
                 </div>
             <?php endif; ?>
 
+            <!-- Botones de login social -->
+            <?php require_once __DIR__ . '/login_social.php'; ?>
+
             <!-- Formulario de login -->
             <form class="mt-8 space-y-6" method="POST" action="<?= url('/auth/authenticate') ?>">
                 <!-- Token CSRF para seguridad -->
@@ -99,14 +102,9 @@
                 </div>
             </form>
 
-            <!-- Links adicionales -->
+            <!-- Botón para regresar a la tienda -->
             <div class="mt-6 text-center">
-                <p class="text-sm text-gray-600">
-                    ¿No tienes una cuenta? 
-                    <a href="#" class="font-medium text-blue-600 hover:text-blue-500">
-                        Contacta al administrador
-                    </a>
-                </p>
+                <a href="<?= url('home/index') ?>" class="inline-block px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded font-medium transition">&larr; Regresar a la tienda</a>
             </div>
         </div>
 

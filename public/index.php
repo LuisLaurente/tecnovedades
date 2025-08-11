@@ -18,7 +18,10 @@ if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
 // Asegurarnos de que las configuraciones se apliquen
 session_start(); 
 
-// Autocarga de clases
+// Autocarga de Composer (¡IMPORTANTE!)
+require_once __DIR__ . '/../vendor/autoload.php';
+
+// Autocarga de clases propias
 require_once __DIR__ . '/../Core/autoload.php';
 
 // Incluir Helpers manuales

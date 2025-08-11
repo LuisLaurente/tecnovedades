@@ -9,6 +9,8 @@ class Router
 
         $controllerName = ucfirst($segments[0] ?? 'home') . 'Controller';
         $methodName = $segments[1] ?? 'index';
+        // Convertir google-callback a googleCallback
+        $methodName = lcfirst(str_replace(' ', '', ucwords(str_replace('-', ' ', $methodName))));
         $params = array_slice($segments, 2);
 
         $controllerClass = 'Controllers\\' . $controllerName;

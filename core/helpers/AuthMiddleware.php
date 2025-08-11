@@ -1,4 +1,5 @@
 <?php
+
 namespace Core\Helpers;
 
 use Core\Helpers\SecurityLogger;
@@ -19,7 +20,13 @@ class AuthMiddleware
         'carrito/agregar',
         'carrito/ver',
         'carrito/actualizar',
-        'carrito/eliminar'
+        'carrito/eliminar',
+        // Rutas públicas para OAuth
+        'googleauth/login',
+        'auth/google-callback',
+        // Buscador de productos público
+        'producto/autocomplete',
+        'producto/busqueda',
     ];
 
     /**
@@ -50,7 +57,7 @@ class AuthMiddleware
         }
 
         $url = trim($url, '/');
-        
+
         // Verificar si es una ruta pública
         foreach (self::$publicRoutes as $publicRoute) {
             if ($url === $publicRoute || strpos($url, $publicRoute) === 0) {
@@ -88,7 +95,7 @@ class AuthMiddleware
     {
         $segments = explode('/', trim($url, '/'));
         $controller = strtolower($segments[0] ?? '');
-        
+
         // Rutas que solo requieren autenticación (sin permisos específicos)
         $authOnlyRoutes = ['auth', 'home'];
         if (in_array($controller, $authOnlyRoutes)) {
@@ -98,12 +105,12 @@ class AuthMiddleware
         // Verificar permisos específicos según el mapeo
         if (isset(self::$permissionMap[$controller])) {
             $requiredPermission = self::$permissionMap[$controller];
-            
+
             // Verificar si el usuario tiene el permiso requerido
             if (!SessionHelper::hasPermission($requiredPermission)) {
                 $usuario = SessionHelper::getUser();
                 $rol = SessionHelper::getRole();
-                
+
                 // Registrar intento de acceso denegado
                 SecurityLogger::log(SecurityLogger::ACCESS_DENIED, "Acceso denegado a '{$controller}'", [
                     'user_id' => $usuario['id'] ?? 'desconocido',
@@ -112,7 +119,7 @@ class AuthMiddleware
                     'permission_required' => $requiredPermission,
                     'url' => $url
                 ]);
-                
+
                 error_log("❌ Usuario sin permiso '$requiredPermission' para acceder a '$controller'");
                 header('Location: ' . url('/error/forbidden'));
                 exit;
@@ -149,7 +156,7 @@ class AuthMiddleware
         ];
 
         $permission = $resourcePermissions[$resource] ?? null;
-        
+
         if ($permission) {
             return SessionHelper::hasPermission($permission);
         }
@@ -169,9 +176,9 @@ class AuthMiddleware
 
         $user = SessionHelper::getUser();
         $rol = SessionHelper::getRole();
-        
+
         return $rol && (
-            $rol['nombre'] === 'admin' || 
+            $rol['nombre'] === 'admin' ||
             $rol['nombre'] === 'administrador' ||
             SessionHelper::hasPermission('administrar_sistema')
         );
@@ -184,13 +191,13 @@ class AuthMiddleware
     {
         if (!self::isAdmin()) {
             $usuario = SessionHelper::getUser();
-            
+
             SecurityLogger::log(SecurityLogger::ACCESS_DENIED, "Intento de acceso a área de administrador", [
                 'user_id' => $usuario['id'] ?? 'desconocido',
                 'email' => $usuario['email'] ?? 'desconocido',
                 'url' => $_SERVER['REQUEST_URI'] ?? 'desconocida'
             ]);
-            
+
             header('Location: ' . url('/error/forbidden'));
             exit;
         }
