@@ -154,19 +154,8 @@ if (isset($_SESSION['carrito'])) {
     <?php
     $mostrarBannerCookies = true;
 
-    // Si cliente está logueado, revisa BD
-    if (isset($_SESSION['cliente_id'])) {
-        $db = \Core\Database::getInstance()->getConnection();
-        $stmt = $db->prepare("SELECT cookies_consent FROM clientes WHERE id = ?");
-        $stmt->execute([$_SESSION['cliente_id']]);
-        $consent = $stmt->fetchColumn();
-
-        if ($consent !== null) {
-            $mostrarBannerCookies = false;
-        }
-    }
-    // Si no está logueado, revisa cookie local
-    elseif (isset($_COOKIE['cookies_consent'])) {
+    // Si usuario está logueado, revisa cookie local o BD si implementas campo cookies_consent
+    if (isset($_COOKIE['cookies_consent'])) {
         $mostrarBannerCookies = false;
     }
     ?>
@@ -182,15 +171,10 @@ if (isset($_SESSION['carrito'])) {
             document.getElementById('reject-cookies').addEventListener('click', () => enviarConsent(0));
 
             function enviarConsent(valor) {
-                fetch("<?= url('clientes/guardarConsentimientoCookies') ?>", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/x-www-form-urlencoded"
-                    },
-                    body: "consent=" + valor
-                }).then(() => {
-                    document.getElementById('cookie-banner').style.display = 'none';
-                });
+                // Guardar consent en cookie local
+                document.cookie = 'cookies_consent=' + valor + '; expires=' + 
+                    new Date(Date.now() + 365*24*60*60*1000).toUTCString() + '; path=/';
+                document.getElementById('cookie-banner').style.display = 'none';
             }
         </script>
     <?php endif; ?>

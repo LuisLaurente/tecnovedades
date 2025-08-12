@@ -296,7 +296,7 @@ class Rol
             'pedidos' => 'Gestión de pedidos',
             'promociones' => 'Gestión de promociones',
             'cupones' => 'Gestión de cupones',
-            'clientes' => 'Gestión de clientes',
+            'usuarios' => 'Gestión de usuarios',
             'reportes' => 'Acceso a reportes',
             'configuracion' => 'Configuración del sistema',
             'carga_masiva' => 'Carga masiva de productos',

@@ -48,7 +48,7 @@
                                         <tbody>
                                             <?php foreach ($reclamaciones as $r): ?>
                                                 <tr class="border-t hover:bg-gray-50">
-                                                    <td class="px-4 py-2"><?= htmlspecialchars($r['pedido_id']) ?></td>
+                                                    <td class="px-4 py-2"><?= htmlspecialchars($r['pedido_id'] ?? 'N/A') ?></td>
                                                     <td class="px-4 py-2"><?= htmlspecialchars($r['nombre']) ?></td>
                                                     <td class="px-4 py-2"><?= htmlspecialchars($r['correo']) ?></td>
                                                     <td class="px-4 py-2"><?= htmlspecialchars($r['telefono']) ?></td>

@@ -43,7 +43,7 @@ class SessionHelper
         // Regenerar ID de sesión por seguridad
         session_regenerate_id(true);
 
-        // Guardar datos del usuario en la sesión
+        // Guardar datos del usuario en la sesión (formato individual)
         $_SESSION['user_id'] = $usuario['id'];
         $_SESSION['user_name'] = $usuario['nombre'];
         $_SESSION['user_email'] = $usuario['email'];
@@ -65,6 +65,10 @@ class SessionHelper
         
         // Almacenar el user-agent para detectar sesiones robadas
         $_SESSION['user_agent'] = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        
+        // AGREGADO: Guardar también el usuario completo para compatibilidad
+        $_SESSION['usuario'] = $usuario;
+        $_SESSION['rol'] = $rol;
         
         error_log("✅ Usuario {$usuario['email']} logueado con rol {$rol['nombre']} y permisos: " . implode(', ', $_SESSION['user_permissions']));
     }
@@ -157,6 +161,12 @@ class SessionHelper
             return null;
         }
 
+        // Primero intentar obtener el usuario completo
+        if (isset($_SESSION['usuario'])) {
+            return $_SESSION['usuario'];
+        }
+
+        // Fallback: construir desde datos individuales (para compatibilidad)
         return [
             'id' => $_SESSION['user_id'] ?? null,
             'nombre' => $_SESSION['user_name'] ?? null,
@@ -175,6 +185,19 @@ class SessionHelper
             return null;
         }
 
+        // Primero intentar obtener el rol completo
+        if (isset($_SESSION['rol'])) {
+            $rol = $_SESSION['rol'];
+            
+            // Asegurar que los permisos estén decodificados
+            if (isset($rol['permisos']) && is_string($rol['permisos'])) {
+                $rol['permisos'] = json_decode($rol['permisos'], true) ?: [];
+            }
+            
+            return $rol;
+        }
+
+        // Fallback: construir desde datos individuales (para compatibilidad)
         return [
             'id' => $_SESSION['user_role_id'] ?? null,
             'nombre' => $_SESSION['user_role_name'] ?? null,

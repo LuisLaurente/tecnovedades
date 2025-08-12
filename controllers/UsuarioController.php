@@ -342,4 +342,226 @@ class UsuarioController extends BaseController
 
         return $errores;
     }
+
+    /**
+     * Ver pedidos del usuario actual
+     */
+    public function pedidos()
+    {
+        if (!\Core\Helpers\SessionHelper::isAuthenticated()) {
+            header('Location: ' . url('/auth/login'));
+            exit;
+        }
+
+        // Verificación adicional de seguridad
+        $userRole = \Core\Helpers\SessionHelper::getRole();
+        $userPermissions = \Core\Helpers\SessionHelper::getPermissions();
+        
+        // Solo permitir acceso a admins o usuarios con rol 'usuario'
+        $isAdmin = in_array('usuarios', $userPermissions ?: []);
+        $isCliente = false;
+        
+        if (is_array($userRole) && isset($userRole['nombre'])) {
+            $isCliente = ($userRole['nombre'] === 'usuario');
+        } elseif (is_string($userRole)) {
+            $isCliente = ($userRole === 'usuario');
+        } else {
+            // Verificar por permisos - clientes típicamente solo tienen 'perfil'
+            $isCliente = in_array('perfil', $userPermissions ?: []) && 
+                        !in_array('productos', $userPermissions ?: []);
+        }
+        
+        if (!$isAdmin && !$isCliente) {
+            error_log("❌ Acceso denegado a pedidos: usuario no es admin ni cliente");
+            header('Location: ' . url('/error/forbidden'));
+            exit;
+        }
+
+        try {
+            $usuario = \Core\Helpers\SessionHelper::getUser();
+            
+            // Obtener pedidos del usuario
+            $pedidoModel = new \Models\Pedido();
+            $pedidos = [];
+            
+            if ($isAdmin) {
+                // Los admins pueden ver todos los pedidos (opcional: cambiar esta lógica si solo quieres que vean los suyos)
+                try {
+                    $pedidos = $pedidoModel->obtenerTodosConDirecciones();
+                } catch (\Exception $e) {
+                    $db = \Core\Database::getConexion();
+                    $stmt = $db->query("SELECT * FROM pedidos ORDER BY creado_en DESC");
+                    $pedidos = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+                }
+            } else {
+                // Los clientes solo pueden ver sus propios pedidos
+                try {
+                    $todosLosPedidos = $pedidoModel->obtenerTodosConDirecciones();
+                    // Filtrar solo los pedidos del usuario actual
+                    foreach ($todosLosPedidos as $pedido) {
+                        if ($pedido['cliente_id'] == $usuario['id']) {
+                            $pedidos[] = $pedido;
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // Fallback: obtener pedidos básicos
+                    $db = \Core\Database::getConexion();
+                    $stmt = $db->prepare("SELECT * FROM pedidos WHERE cliente_id = ? ORDER BY creado_en DESC");
+                    $stmt->execute([$usuario['id']]);
+                    $pedidos = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+                }
+            }
+
+            // Obtener detalles de cada pedido
+            $detalleModel = new \Models\DetallePedido();
+            $pedidoDireccionModel = new \Models\PedidoDireccion();
+            
+            foreach ($pedidos as &$pedido) {
+                // Obtener detalles del pedido
+                try {
+                    $pedido['detalles'] = $detalleModel->obtenerPorPedido($pedido['id']);
+                } catch (\Exception $e) {
+                    $pedido['detalles'] = [];
+                }
+                
+                // Calcular total si no está presente o es 0
+                if (!isset($pedido['total']) || $pedido['total'] == 0) {
+                    $total = 0;
+                    if (isset($pedido['detalles']) && is_array($pedido['detalles'])) {
+                        foreach ($pedido['detalles'] as $detalle) {
+                            $precio = floatval($detalle['precio_unitario'] ?? 0);
+                            $cantidad = intval($detalle['cantidad'] ?? 0);
+                            $total += $precio * $cantidad;
+                        }
+                    }
+                    $pedido['total'] = $total;
+                }
+                
+                // Obtener dirección del pedido
+                try {
+                    $pedido['direccion_envio'] = $pedidoDireccionModel->obtenerDireccionCompleta($pedido['id']);
+                } catch (\Exception $e) {
+                    $pedido['direccion_envio'] = 'Dirección no disponible';
+                }
+            }
+
+            require_once __DIR__ . '/../views/usuario/pedidos.php';
+            
+        } catch (\Exception $e) {
+            error_log("Error en UsuarioController::pedidos: " . $e->getMessage());
+            header('Location: ' . url('/error'));
+            exit;
+        }
+    }
+
+    /**
+     * Obtener detalles de un pedido específico (AJAX)
+     */
+    public function detallePedido($pedidoId = null)
+    {
+        // Asegurar que sea una petición AJAX
+        if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || $_SERVER['HTTP_X_REQUESTED_WITH'] !== 'XMLHttpRequest') {
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Acceso no autorizado']);
+            exit;
+        }
+
+        if (!\Core\Helpers\SessionHelper::isAuthenticated()) {
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'No autenticado']);
+            exit;
+        }
+
+        if (!$pedidoId) {
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'ID de pedido requerido']);
+            exit;
+        }
+
+        try {
+            $usuario = \Core\Helpers\SessionHelper::getUser();
+            $userRole = \Core\Helpers\SessionHelper::getRole();
+            $userPermissions = \Core\Helpers\SessionHelper::getPermissions();
+            
+            // Verificar permisos
+            $isAdmin = in_array('usuarios', $userPermissions ?: []);
+            $isCliente = false;
+            
+            if (is_array($userRole) && isset($userRole['nombre'])) {
+                $isCliente = ($userRole['nombre'] === 'usuario');
+            } elseif (is_string($userRole)) {
+                $isCliente = ($userRole === 'usuario');
+            } else {
+                $isCliente = in_array('perfil', $userPermissions ?: []) && 
+                            !in_array('productos', $userPermissions ?: []);
+            }
+            
+            if (!$isAdmin && !$isCliente) {
+                header('Content-Type: application/json');
+                echo json_encode(['error' => 'Sin permisos']);
+                exit;
+            }
+
+            // Obtener el pedido
+            $db = \Core\Database::getConexion();
+            
+            if ($isAdmin) {
+                // Admin puede ver cualquier pedido
+                $stmt = $db->prepare("SELECT * FROM pedidos WHERE id = ?");
+                $stmt->execute([$pedidoId]);
+            } else {
+                // Cliente solo puede ver sus propios pedidos
+                $stmt = $db->prepare("SELECT * FROM pedidos WHERE id = ? AND cliente_id = ?");
+                $stmt->execute([$pedidoId, $usuario['id']]);
+            }
+            
+            $pedido = $stmt->fetch(\PDO::FETCH_ASSOC);
+            
+            if (!$pedido) {
+                header('Content-Type: application/json');
+                echo json_encode(['error' => 'Pedido no encontrado']);
+                exit;
+            }
+
+            // Obtener detalles del pedido
+            $detalleModel = new \Models\DetallePedido();
+            $pedidoDireccionModel = new \Models\PedidoDireccion();
+            
+            try {
+                $pedido['detalles'] = $detalleModel->obtenerPorPedido($pedido['id']);
+            } catch (\Exception $e) {
+                $pedido['detalles'] = [];
+            }
+            
+            // Calcular total si no está presente o es 0
+            if (!isset($pedido['total']) || $pedido['total'] == 0) {
+                $total = 0;
+                if (isset($pedido['detalles']) && is_array($pedido['detalles'])) {
+                    foreach ($pedido['detalles'] as $detalle) {
+                        $precio = floatval($detalle['precio_unitario'] ?? 0);
+                        $cantidad = intval($detalle['cantidad'] ?? 0);
+                        $total += $precio * $cantidad;
+                    }
+                }
+                $pedido['total'] = $total;
+            }
+            
+            try {
+                $pedido['direccion_envio'] = $pedidoDireccionModel->obtenerDireccionCompleta($pedido['id']);
+            } catch (\Exception $e) {
+                $pedido['direccion_envio'] = 'Dirección no disponible';
+            }
+
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'pedido' => $pedido
+            ]);
+            
+        } catch (\Exception $e) {
+            error_log("Error en UsuarioController::detallePedido: " . $e->getMessage());
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Error interno del servidor']);
+        }
+    }
 }
