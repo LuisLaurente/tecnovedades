@@ -129,6 +129,44 @@
 /* Header right */
 .header-right{ display:flex; align-items:center; gap:12px; }
 
+/* Shop button */
+.shop-button-container { display: inline-block; }
+.shop-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent), #3b82f6);
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+.shop-button:hover {
+  background: linear-gradient(135deg, #1d4ed8, var(--accent));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.25);
+  color: white;
+  text-decoration: none;
+}
+.shop-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.shop-text {
+  font-weight: 500;
+}
+
+/* Responsive: hide text on small screens */
+@media (max-width: 768px) {
+  .shop-text { display: none; }
+  .shop-button { padding: 8px; }
+}
+
 /* Profile container (wrap button + dropdown) */
 .user-profile-container{ position: relative; display:inline-block; }
 .user-profile-button{

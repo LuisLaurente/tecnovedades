@@ -196,13 +196,13 @@ class Cupon
     }
 
     /**
-     * Obtener historial de uso de un cupón con información de clientes
+     * Obtener historial de uso de un cupón con información de usuarios
      */
     public function obtenerHistorialUso($cupon_id)
     {
-        $sql = "SELECT cu.*, c.nombre_completo, c.correo, p.monto_total
+        $sql = "SELECT cu.*, u.nombre, u.email, p.monto_total
                 FROM cupon_usado cu
-                LEFT JOIN clientes c ON cu.cliente_id = c.id
+                LEFT JOIN usuarios u ON cu.cliente_id = u.id
                 LEFT JOIN pedidos p ON cu.pedido_id = p.id
                 WHERE cu.cupon_id = :cupon_id
                 ORDER BY cu.fecha_uso DESC";
@@ -238,7 +238,7 @@ class Cupon
             return ['valido' => false, 'mensaje' => 'Cupón agotado'];
         }
 
-        // Verificar límite por cliente (solo si ya es un cliente registrado)
+        // Verificar límite por usuario (solo si ya es un usuario registrado)
         if ($cliente_id && $cupon['limite_por_usuario'] && $this->contarUsos($cupon_id, $cliente_id) >= $cupon['limite_por_usuario']) {
             return ['valido' => false, 'mensaje' => 'Ya has usado este cupón el máximo de veces permitidas'];
         }

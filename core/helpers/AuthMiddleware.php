@@ -15,24 +15,28 @@ class AuthMiddleware
         'home/detalleproducto',
         'auth/login',
         'auth/authenticate',
+        'auth/registro',
+        'auth/registrar',
         'error/notFound',
         'error/forbidden',
         'carrito/agregar',
         'carrito/ver',
         'carrito/actualizar',
         'carrito/eliminar',
+        'carrito/aumentar',
+        'carrito/disminuir',
         // Rutas públicas para OAuth
         'googleauth/login',
         'auth/google-callback',
-
-    // Buscador de productos público
-    'producto/autocomplete',
-    'producto/busqueda',
-    // Permitir finalizar compra sin login
-    'pedido/checkout',
-    // Permitir ver productos sin login
-    'producto/ver',
-
+        // Buscador de productos público
+        'producto/autocomplete',
+        'producto/busqueda',
+        // Rutas de pedidos públicas
+        'pedido/precheckout',
+        'pedido/aplicarCupon',
+        'pedido/quitarCupon',
+        // Permitir ver productos sin login
+        'producto/ver',
     ];
 
     /**
@@ -101,11 +105,60 @@ class AuthMiddleware
     {
         $segments = explode('/', trim($url, '/'));
         $controller = strtolower($segments[0] ?? '');
+        $action = strtolower($segments[1] ?? '');
 
         // Rutas que solo requieren autenticación (sin permisos específicos)
         $authOnlyRoutes = ['auth', 'home'];
         if (in_array($controller, $authOnlyRoutes)) {
             return true;
+        }
+
+        // Rutas de pedido que solo requieren autenticación (no permisos administrativos)
+        if ($controller === 'pedido') {
+            $userActions = ['precheckout', 'checkout', 'registrar', 'confirmacion', 'aplicarcupon', 'quitarcupon'];
+            if (in_array($action, $userActions)) {
+                return true; // Solo requiere estar logueado, no permisos especiales
+            }
+            // Las demás acciones de pedido (listar, cambiarestado, etc.) sí requieren permisos
+        }
+
+        // Rutas de usuario específicas que solo requieren autenticación
+        if ($controller === 'usuario') {
+            $userActions = ['pedidos', 'detallepedido']; // Los usuarios pueden ver sus propios pedidos y detalles
+            if (in_array($action, $userActions)) {
+                // Verificación adicional: solo usuarios con rol 'usuario' o admins pueden ver pedidos
+                $userRole = SessionHelper::getRole();
+                $userPermissions = SessionHelper::getPermissions();
+                
+                // Permitir si es admin (tiene permiso usuarios) o si es cliente (rol usuario)
+                $isAdmin = in_array('usuarios', $userPermissions ?: []);
+                $isCliente = false;
+                
+                if (is_array($userRole) && isset($userRole['nombre'])) {
+                    $isCliente = ($userRole['nombre'] === 'usuario');
+                } elseif (is_string($userRole)) {
+                    $isCliente = ($userRole === 'usuario');
+                } else {
+                    // Verificar por permisos - clientes típicamente solo tienen 'perfil'
+                    $isCliente = in_array('perfil', $userPermissions ?: []) && 
+                                !in_array('productos', $userPermissions ?: []);
+                }
+                
+                if ($isAdmin || $isCliente) {
+                    return true; // Admin puede ver todos los pedidos, cliente solo los suyos
+                } else {
+                    // Usuario staff sin permisos de usuarios no puede ver pedidos
+                    SecurityLogger::log(SecurityLogger::ACCESS_DENIED, "Acceso denegado a pedidos para usuario staff", [
+                        'user_id' => SessionHelper::getUser()['id'] ?? 'desconocido',
+                        'rol' => $userRole,
+                        'permissions' => $userPermissions,
+                        'url' => $url
+                    ]);
+                    header('Location: ' . url('/error/forbidden'));
+                    exit;
+                }
+            }
+            // Las demás acciones de usuario (index, crear, editar, etc.) sí requieren permisos
         }
 
         // Verificar permisos específicos según el mapeo

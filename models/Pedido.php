@@ -11,13 +11,13 @@ class Pedido
 
     public function __construct()
     {
-        $this->db = Database::getInstance()->getConnection();
+        $this->db = \Core\Database::getConexion();
     }
 
-    public function crear($cliente_id, $monto_total, $estado = 'pendiente')
+    public function crear($usuario_id, $monto_total, $estado = 'pendiente')
     {
         $stmt = $this->db->prepare("INSERT INTO pedidos (cliente_id, monto_total, estado) VALUES (?, ?, ?)");
-        $stmt->execute([$cliente_id, $monto_total, $estado]);
+        $stmt->execute([$usuario_id, $monto_total, $estado]);
         return $this->db->lastInsertId();
     }
 
@@ -30,8 +30,41 @@ class Pedido
 
     public function obtenerTodos()
     {
-        $sql = "SELECT * FROM pedidos";
+        $sql = "SELECT * FROM pedidos ORDER BY creado_en DESC";
         return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function obtenerTodosConDirecciones()
+    {
+        try {
+            $sql = "
+                SELECT p.*, 
+                       COALESCE(
+                           pd.direccion_temporal,
+                           CONCAT(
+                               d.direccion,
+                               CASE 
+                                   WHEN d.distrito IS NOT NULL OR d.provincia IS NOT NULL OR d.departamento IS NOT NULL 
+                                   THEN CONCAT(', ', 
+                                       COALESCE(CONCAT(d.distrito, CASE WHEN d.provincia IS NOT NULL OR d.departamento IS NOT NULL THEN ', ' ELSE '' END), ''),
+                                       COALESCE(CONCAT(d.provincia, CASE WHEN d.departamento IS NOT NULL THEN ', ' ELSE '' END), ''),
+                                       COALESCE(d.departamento, '')
+                                   )
+                                   ELSE ''
+                               END,
+                               CASE WHEN d.referencia IS NOT NULL THEN CONCAT(' - ', d.referencia) ELSE '' END
+                           )
+                       ) as direccion_envio
+                FROM pedidos p
+                LEFT JOIN pedido_direcciones pd ON p.id = pd.pedido_id
+                LEFT JOIN direcciones d ON pd.direccion_id = d.id
+                ORDER BY p.creado_en DESC
+            ";
+            return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\Exception $e) {
+            // Si la tabla pedido_direcciones no existe, usar el método básico
+            return $this->obtenerTodos();
+        }
     }
 
     public function actualizarEstado($id, $estado)

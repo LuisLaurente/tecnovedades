@@ -70,18 +70,44 @@ class Usuario
     public function crear($datos)
     {
         try {
+            // Crear el usuario básico primero
             $sql = "INSERT INTO usuarios (nombre, email, password, rol_id, activo) VALUES (?, ?, ?, ?, ?)";
             $stmt = $this->db->prepare($sql);
             
             $passwordHash = password_hash($datos['password'], PASSWORD_DEFAULT);
             
-            return $stmt->execute([
+            $result = $stmt->execute([
                 $datos['nombre'],
                 $datos['email'],
                 $passwordHash,
                 $datos['rol_id'] ?? 2, // Por defecto rol 'usuario'
                 $datos['activo'] ?? 1
             ]);
+            
+            if ($result) {
+                $userId = $this->db->lastInsertId();
+                
+                // Si se proporcionaron datos adicionales, guardarlos en usuario_detalles
+                if (!empty($datos['telefono']) || !empty($datos['fecha_nacimiento']) || !empty($datos['genero'])) {
+                    try {
+                        $sqlDetalles = "INSERT INTO usuario_detalles (usuario_id, telefono, fecha_nacimiento, genero) VALUES (?, ?, ?, ?)";
+                        $stmtDetalles = $this->db->prepare($sqlDetalles);
+                        $stmtDetalles->execute([
+                            $userId,
+                            $datos['telefono'] ?? null,
+                            $datos['fecha_nacimiento'] ?? null,
+                            $datos['genero'] ?? null
+                        ]);
+                    } catch (\PDOException $e) {
+                        // Si la tabla usuario_detalles no existe, continuar sin error
+                        error_log("No se pudieron guardar detalles del usuario: " . $e->getMessage());
+                    }
+                }
+                
+                return $userId;
+            }
+            
+            return false;
         } catch (\PDOException $e) {
             error_log("Error al crear usuario: " . $e->getMessage());
             return false;

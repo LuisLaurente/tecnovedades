@@ -9,7 +9,7 @@ class DetallePedido {
     private $db;
 
     public function __construct() {
-        $this->db = Database::getInstance()->getConnection();
+        $this->db = \Core\Database::getConexion();
     }
 
     public function crear($pedido_id, $producto_id, $cantidad, $precio_unitario, $variante_id = null) {
