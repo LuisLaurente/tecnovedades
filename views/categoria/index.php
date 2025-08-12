@@ -1,3 +1,9 @@
+<?php
+$categoriaNombre = isset($categoria['nombre']) ? htmlspecialchars($categoria['nombre']) : "Categoría";
+$metaTitle = "Productos en la categoría {$categoriaNombre} | Tienda Tecnovedades";
+$metaDescription = "Encuentra los mejores productos en la categoría {$categoriaNombre} a precios increíbles.";
+?>
+
 <!DOCTYPE html>
 <html lang="es">
 <?php include_once __DIR__ . '/../admin/includes/head.php'; ?>

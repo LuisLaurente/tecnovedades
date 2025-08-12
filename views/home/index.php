@@ -1,4 +1,8 @@
 <?php
+$metaTitle = "Bienvenido a Tienda Tecnovedades - Tecnología y Novedades";
+$metaDescription = "Descubre lo último en tecnología, novedades y accesorios al mejor precio.";
+?>
+<?php
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -115,7 +119,7 @@ if (isset($_SESSION['carrito'])) {
                             <a href="<?= url('producto/ver/' . $producto['id']) ?>" class="product-link">
                                 <div class="product-image-container">
                                     <img src="<?= url('uploads/' . $producto['imagen']) ?>"
-                                        alt="<?= htmlspecialchars($producto['nombre']) ?>">
+                                        alt="<?= htmlspecialchars($producto['nombre']) ?>" loading="lazy">
                                 </div>
 
                                 <div class="product-info">

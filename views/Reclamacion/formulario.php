@@ -1,3 +1,7 @@
+<?php
+$metaTitle = "Contáctanos | Tienda Tecnovedades";
+$metaDescription = "Envíanos tus dudas o consultas. Nuestro equipo de atención al cliente está disponible para ayudarte.";
+?>
 <!DOCTYPE html>
 <html lang="es">
 <?php include_once __DIR__ . '/../admin/includes/head.php'; ?>

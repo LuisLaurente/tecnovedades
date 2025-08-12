@@ -16,7 +16,7 @@ if (isset($_SESSION['carrito'])) {
 <html lang="es">
 <?php include_once __DIR__ . '/../admin/includes/head.php'; ?>
 
-<link rel="stylesheet" href="<?= url('css/producto-index.css') ?>">
+<link rel="stylesheet" href="<?= url('css/min/producto-index.min.css') ?>">
 
 
 <body>
@@ -221,7 +221,7 @@ if (isset($_SESSION['carrito'])) {
                                 <?php foreach ($producto['imagenes'] as $imagen): ?>
                                     <img src="<?= url('uploads/' . $imagen['nombre_imagen']) ?>" 
                                          alt="Imagen de <?= htmlspecialchars($producto['nombre']) ?>" 
-                                         class="imagen-miniatura">
+                                         class="imagen-miniatura" loading="lazy">
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <span class="sin-imagen">Sin imágenes</span>
@@ -296,7 +296,7 @@ if (isset($_SESSION['carrito'])) {
             </div>
         </div>
 
-        <script src="<?= url('js/producto-filtros.js') ?>?v=<?= time() ?>"></script>
+        <script src="<?= url('js/min/producto-filtros.min.js') ?>?v=<?= time() ?>"></script>
 </body>
 
 </html>

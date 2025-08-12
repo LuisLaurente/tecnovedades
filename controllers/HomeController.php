@@ -60,6 +60,12 @@ class HomeController
             exit;
         }
 
+        // 🔹 Variables SEO para la portada
+        $meta_title = "Tienda Tecnovedades - Productos tecnológicos y novedades";
+        $meta_description = "Explora nuestra tienda online con lo último en tecnología, accesorios y novedades a precios increíbles.";
+        $meta_image = url('images/default-share.png'); // Logo o imagen destacada
+        $canonical = url('home/index');
+
         // ✅ Mostrar vista
         require_once __DIR__ . '/../views/home/index.php';
     }

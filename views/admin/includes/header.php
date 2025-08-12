@@ -47,7 +47,7 @@ function isClienteHeader() {
     <!-- Left: logo -->
     <div class="header-left">
       <a href="<?= url('home/index') ?>" class="logo-link" aria-label="Bytebox home">
-        <img src="<?= url('img/logo.png') ?>" alt="Bytebox" class="logo-image">
+        <img src="<?= url('image/faviconLogo.png') ?>" alt="Bytebox" class="logo-image">
       </a>
     </div>
 
