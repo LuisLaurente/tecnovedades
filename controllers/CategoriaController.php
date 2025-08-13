@@ -10,6 +10,12 @@ class CategoriaController
     {
         require_once __DIR__ . '/../Core/Helpers/urlHelper.php';
         $categorias = Categoria::obtenerTodas();
+
+        // 🔹 Variables SEO para página de categorías
+        $meta_title = "Categorías de productos | Tienda Tecnovedades";
+        $meta_description = "Explora nuestras categorías y encuentra productos tecnológicos para cada necesidad.";
+        $meta_image = url('images/default-share.png');
+        $canonical = url('categoria/index');
         require_once __DIR__ . '/../views/categoria/index.php';
     }
 

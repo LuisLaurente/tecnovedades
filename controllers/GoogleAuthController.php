@@ -10,7 +10,7 @@ class GoogleAuthController extends BaseController
 
     public function __construct()
     {
-        $config = require __DIR__ . '/../config/oauth.php';
+        $config = require __DIR__ . '/../config/oauth.template.php';
         $this->provider = new Google([
             'clientId'     => $config['google']['clientId'],
             'clientSecret' => $config['google']['clientSecret'],
