@@ -25,13 +25,13 @@ class AuthMiddleware
         'googleauth/login',
         'auth/google-callback',
 
-    // Buscador de productos público
-    'producto/autocomplete',
-    'producto/busqueda',
-    // Permitir finalizar compra sin login
-    'pedido/checkout',
-    // Permitir ver productos sin login
-    'producto/ver',
+        // Buscador de productos público
+        'producto/autocomplete',
+        'producto/busqueda',
+        // Permitir finalizar compra sin login
+        'pedido/checkout',
+        // Permitir ver productos sin login
+        'producto/ver',
 
     ];
 

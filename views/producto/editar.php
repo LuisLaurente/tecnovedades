@@ -19,11 +19,66 @@
             <textarea name="descripcion" id="descripcion" required><?= htmlspecialchars($producto['descripcion']) ?></textarea>
         </div>
 
-        <!-- Precio -->
+        <!-- Precio Original (tachado) -->
         <div class="form-group">
-            <label for="precio">Precio (S/.)</label>
-            <input type="number" step="0.01" name="precio" id="precio" value="<?= htmlspecialchars($producto['precio']) ?>" required>
+            <label for="precio_tachado">Precio Original (tachado) (S/.)</label>
+            <input
+                type="number"
+                step="0.01"
+                min="0"
+                name="precio_tachado"
+                id="precio_tachado"
+                placeholder="Opcional — ej. 120.00"
+                value="<?= isset($producto['precio_tachado']) ? htmlspecialchars($producto['precio_tachado']) : '' ?>">
         </div>
+
+        <!-- Checkbox visibilidad para precio tachado -->
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox"
+                name="precio_tachado_visible" id="precio_tachado_visible"
+                <?= isset($producto['precio_tachado_visible']) && $producto['precio_tachado_visible'] ? 'checked' : (empty($producto) ? 'checked' : '') ?>>
+            <label class="form-check-label" for="precio_tachado_visible">
+                Mostrar precio tachado en la tarjeta
+            </label>
+        </div>
+
+        <!-- Precio Final -->
+        <div class="form-group">
+            <label for="precio">Precio Final (S/.)</label>
+            <input
+                type="number"
+                step="0.01"
+                min="0"
+                name="precio"
+                id="precio"
+                required
+                value="<?= isset($producto['precio']) ? htmlspecialchars($producto['precio']) : '' ?>">
+        </div>
+
+        <!-- Porcentaje (solo lectura para el admin) -->
+        <div class="form-group">
+            <label for="porcentaje_descuento_readonly">Porcentaje de Descuento</label>
+            <input type="text" id="porcentaje_descuento_readonly" readonly
+                value="<?= isset($producto['precio_tachado']) && $producto['precio_tachado'] > $producto['precio'] ?
+                            number_format((($producto['precio_tachado'] - $producto['precio']) / $producto['precio_tachado']) * 100, 2) . '%' : '0.00%' ?>"
+                style="background:#f5f5f5; border:1px solid #ddd; padding:6px;">
+
+            <!-- Hidden para enviar el porcentaje al backend -->
+            <input type="hidden" name="porcentaje_descuento" id="porcentaje_descuento"
+                value="<?= isset($producto['precio_tachado']) && $producto['precio_tachado'] > $producto['precio'] ?
+                            number_format((($producto['precio_tachado'] - $producto['precio']) / $producto['precio_tachado']) * 100, 2) : '0' ?>">
+        </div>
+
+        <!-- Checkbox visibilidad para porcentaje -->
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox"
+                name="porcentaje_visible" id="porcentaje_visible"
+                <?= isset($producto['porcentaje_visible']) && $producto['porcentaje_visible'] ? 'checked' : (empty($producto) ? 'checked' : '') ?>>
+            <label class="form-check-label" for="porcentaje_visible">
+                Mostrar porcentaje de descuento en la tarjeta
+            </label>
+        </div>
+
 
         <!-- Stock -->
         <div class="form-group">
@@ -73,7 +128,8 @@
         <h3>📋 Categorías</h3>
         <div class="checkbox-container">
             <?php
-            function renderCheckboxCategoriasEdit($categorias, $seleccionadas, $padre = null, $nivel = 0) {
+            function renderCheckboxCategoriasEdit($categorias, $seleccionadas, $padre = null, $nivel = 0)
+            {
                 foreach ($categorias as $cat) {
                     if ($cat['id_padre'] == $padre) {
                         $checked = in_array($cat['id'], $seleccionadas) ? 'checked' : '';
@@ -146,4 +202,55 @@
             </div>`;
         container.insertAdjacentHTML('beforeend', html);
     }
+</script>
+<script>
+    (function() {
+        const precioTachadoEl = document.getElementById('precio_tachado');
+        const precioFinalEl = document.getElementById('precio');
+        const porcentajeReadonlyEl = document.getElementById('porcentaje_descuento_readonly');
+        const porcentajeHiddenEl = document.getElementById('porcentaje_descuento');
+
+        // Calcula porcentaje a partir del precio tachado y precio final
+        function calcularPorcentaje(precioTachado, precioFinal) {
+            if (!precioTachado || precioTachado <= 0) return 0;
+            // Si precioFinal >= precioTachado no hay descuento
+            if (!precioFinal || precioFinal >= precioTachado) return 0;
+            const diff = precioTachado - precioFinal;
+            const pct = (diff / precioTachado) * 100;
+            return parseFloat(pct.toFixed(2));
+        }
+
+        // Actualiza la UI y el hidden
+        function actualizarPorcentajeUI(pct) {
+            porcentajeReadonlyEl.value = (pct > 0) ? pct.toFixed(2) + '%' : '0.00%';
+            porcentajeHiddenEl.value = (pct > 0) ? pct.toFixed(2) : '0';
+        }
+
+        // Handler cuando cambia precio tachado o precio final
+        function onChangeCampos() {
+            const precioTachado = parseFloat(precioTachadoEl.value) || 0;
+            const precioFinal = parseFloat(precioFinalEl.value) || 0;
+
+            const pct = calcularPorcentaje(precioTachado, precioFinal);
+            actualizarPorcentajeUI(pct);
+        }
+
+        // Listeners
+        precioTachadoEl.addEventListener('input', function() {
+            // El admin puede editar precio tachado; no forzamos cambios en precio final,
+            // solo recalculamos % informativo.
+            onChangeCampos();
+        });
+
+        precioFinalEl.addEventListener('input', function() {
+            // El admin edita el precio final (este es el campo importante).
+            // Recalculamos % informativo basado en precio_tachado (si existe).
+            onChangeCampos();
+        });
+
+        // Inicializa al cargar
+        document.addEventListener('DOMContentLoaded', function() {
+            onChangeCampos();
+        });
+    })();
 </script>

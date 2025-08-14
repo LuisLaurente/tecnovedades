@@ -4,63 +4,73 @@ namespace Controllers;
 
 use Models\Producto;
 use Models\Etiqueta;
+use Models\Banner;
 
 class HomeController
 {
-    public function index()
-    {
-        $productoModel = new Producto();
+public function index()
+{
+    $productoModel = new Producto();
 
-        // ✅ Filtros comunes (mismos que en ProductoController)
-        $validacionFiltros = \Core\Helpers\Validator::validarFiltrosGET($_GET);
-        $minPrice = $validacionFiltros['filtros_validos']['min_price'] ?? null;
-        $maxPrice = $validacionFiltros['filtros_validos']['max_price'] ?? null;
-        $categoriaId = isset($_GET['categoria']) && is_numeric($_GET['categoria']) ? (int)$_GET['categoria'] : null;
+    // Filtros
+    $validacionFiltros = \Core\Helpers\Validator::validarFiltrosGET($_GET);
+    $minPrice = $validacionFiltros['filtros_validos']['min_price'] ?? null;
+    $maxPrice = $validacionFiltros['filtros_validos']['max_price'] ?? null;
+    $categoriaId = isset($_GET['categoria']) && is_numeric($_GET['categoria']) ? (int)$_GET['categoria'] : null;
+    $etiquetasSeleccionadas = $_GET['etiquetas'] ?? [];
+    $soloDisponibles = isset($_GET['disponibles']) && $_GET['disponibles'] == '1';
+    $orden = $_GET['orden'] ?? '';
 
-        // ✅ Filtros adicionales
-        $etiquetasSeleccionadas = $_GET['etiquetas'] ?? [];
-        $soloDisponibles = isset($_GET['disponibles']) && $_GET['disponibles'] == '1';
-        $orden = $_GET['orden'] ?? '';
+    // 📌 Paginación
+    $productosPorPagina = 8; // o 7, como prefieras
+    $paginaActual = isset($_GET['pagina']) && is_numeric($_GET['pagina']) && $_GET['pagina'] > 0 
+        ? (int)$_GET['pagina'] 
+        : 1;
+    $offset = ($paginaActual - 1) * $productosPorPagina;
 
-        // ✅ Obtener datos para filtros y visualización (solo productos visibles)
-        $estadisticasPrecios = $productoModel->obtenerEstadisticasPrecios(true); // ← si tienes soporte para visibles
-        $categoriasDisponibles = Producto::obtenerCategoriasConProductos(true); // ← igual aquí, si hay variante pública
-        $productos = $productoModel->obtenerFiltrados($minPrice, $maxPrice, $categoriaId, $etiquetasSeleccionadas, $soloDisponibles, $orden, true); 
-        $totalFiltrados = $productoModel->contarFiltrados($minPrice, $maxPrice, $categoriaId, $etiquetasSeleccionadas, true);
+    // Datos para filtros
+    $estadisticasPrecios = $productoModel->obtenerEstadisticasPrecios(true);
+    $categoriasDisponibles = Producto::obtenerCategoriasConProductos(true);
 
-        // ✅ Asociar categorías a cada producto
-        foreach ($productos as &$producto) {
-            $producto['categorias'] = Producto::obtenerCategoriasPorProducto($producto['id']);
-            $imagen = \Models\ImagenProducto::obtenerPrimeraPorProducto($producto['id']);
-            $producto['imagen'] = $imagen['nombre_imagen'] ?? 'placeholder.png';
-        }
-        unset($producto);
+    // ✅ Obtener productos limitados por página
+    $productos = $productoModel->obtenerFiltrados(
+        $minPrice, 
+        $maxPrice, 
+        $categoriaId, 
+        $etiquetasSeleccionadas, 
+        $soloDisponibles, 
+        $orden, 
+        true, 
+        $productosPorPagina, 
+        $offset
+    );
 
-        // ✅ Obtener etiquetas
-        $etiquetaModel = new Etiqueta();
-        $todasEtiquetas = $etiquetaModel->obtenerTodas();
+    $totalFiltrados = $productoModel->contarFiltrados(
+        $minPrice, 
+        $maxPrice, 
+        $categoriaId, 
+        $etiquetasSeleccionadas, 
+        true
+    );
 
-        // ✅ Si es petición AJAX (filtros dinámicos en Home)
-        if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
-            header('Content-Type: application/json');
-            echo json_encode([
-                'success' => empty($validacionFiltros['errores']),
-                'productos' => $productos,
-                'total' => $totalFiltrados,
-                'filtros' => [
-                    'min_price' => $minPrice,
-                    'max_price' => $maxPrice,
-                    'categoria' => $categoriaId,
-                    'etiquetas' => $etiquetasSeleccionadas,
-                    'disponibles' => $soloDisponibles,
-                    'orden' => $orden
-                ],
-                'errores' => $validacionFiltros['errores'] ?? []
-            ]);
-            exit;
-        }
+    $totalPaginas = ceil($totalFiltrados / $productosPorPagina);
 
-        // ✅ Mostrar vista
-        require_once __DIR__ . '/../views/home/index.php';
+    // Asociar imagen principal
+    foreach ($productos as &$producto) {
+        $producto['categorias'] = Producto::obtenerCategoriasPorProducto($producto['id']);
+        $imagen = \Models\ImagenProducto::obtenerPrimeraPorProducto($producto['id']);
+        $producto['imagen'] = $imagen['nombre_imagen'] ?? 'placeholder.png';
     }
+    unset($producto);
+
+    // Etiquetas
+    $etiquetaModel = new Etiqueta();
+    $todasEtiquetas = $etiquetaModel->obtenerTodas();
+
+    // Banners
+    $banners = Banner::obtenerActivos();
+
+    require_once __DIR__ . '/../views/home/index.php';
+}
+
 }

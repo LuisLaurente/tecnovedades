@@ -53,11 +53,25 @@ class Producto
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($productos as &$producto) {
+            $producto = $this->prepararProductoParaVista($producto);
+        }
+
+        return $productos;
     }
 
-    public function obtenerFiltrados($min = null, $max = null, $categoriaId = null, $etiquetas = [], $soloDisponibles = false, $orden = '')
-    {
+    public function obtenerFiltrados(
+        $min = null,
+        $max = null,
+        $categoriaId = null,
+        $etiquetas = [],
+        $soloDisponibles = false,
+        $orden = '',
+        $limit = null,
+        $offset = null
+    ) {
         $min = \Core\Helpers\Validator::sanitizarPrecio($min);
         $max = \Core\Helpers\Validator::sanitizarPrecio($max);
 
@@ -66,6 +80,7 @@ class Producto
         $conditions = ["p.visible = 1"];
         $params = [];
 
+        // Filtro por etiquetas
         if (!empty($etiquetas)) {
             $joins[] = "LEFT JOIN producto_etiqueta pe ON p.id = pe.producto_id";
             $etiquetaPlaceholders = [];
@@ -77,6 +92,7 @@ class Producto
             $conditions[] = "pe.etiqueta_id IN (" . implode(',', $etiquetaPlaceholders) . ")";
         }
 
+        // Filtro por categoría y subcategorías
         if (!is_null($categoriaId) && $categoriaId > 0) {
             $joins[] = "INNER JOIN producto_categoria pc ON p.id = pc.id_producto";
             $categoriaIds = [$categoriaId];
@@ -96,6 +112,7 @@ class Producto
             $conditions[] = "pc.id_categoria IN (" . implode(",", $catPlaceholders) . ")";
         }
 
+        // Rango de precio
         if (!is_null($min) && $min >= 0) {
             $conditions[] = "p.precio >= :min_price";
             $params[':min_price'] = $min;
@@ -106,17 +123,20 @@ class Producto
             $params[':max_price'] = $max;
         }
 
+        // Disponibilidad
         if ($soloDisponibles) {
             $conditions[] = "p.stock > 0";
         }
 
+        // Unir joins
         if (!empty($joins)) {
             $sql .= " " . implode(" ", $joins);
         }
 
+        // Condiciones
         $sql .= " WHERE " . implode(" AND ", $conditions);
 
-        // Aplicar ordenamiento
+        // Ordenamiento
         $ordenesValidos = [
             'precio_asc'   => 'p.precio ASC',
             'precio_desc'  => 'p.precio DESC',
@@ -131,17 +151,39 @@ class Producto
             $sql .= " ORDER BY p.precio ASC, p.nombre ASC";
         }
 
+        // Paginación
+        if (!is_null($limit) && is_numeric($limit)) {
+            $sql .= " LIMIT :limit";
+            $params[':limit'] = (int)$limit;
+
+            if (!is_null($offset) && is_numeric($offset)) {
+                $sql .= " OFFSET :offset";
+                $params[':offset'] = (int)$offset;
+            }
+        }
+
         $stmt = $this->db->prepare($sql);
-        $stmt->execute($params);
+
+        // Bind manual para evitar errores con enteros en LIMIT/OFFSET
+        foreach ($params as $key => $value) {
+            if (in_array($key, [':limit', ':offset'])) {
+                $stmt->bindValue($key, $value, PDO::PARAM_INT);
+            } else {
+                $stmt->bindValue($key, $value);
+            }
+        }
+
+        $stmt->execute();
 
         $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         foreach ($productos as &$producto) {
-            $producto['precio'] = number_format((float)$producto['precio'], 2, '.', '');
+            $producto = $this->prepararProductoParaVista($producto);
         }
 
         return $productos;
     }
+
 
     public function contarFiltrados($min = null, $max = null, $categoriaId = null, $etiquetas = null)
     {
@@ -238,11 +280,15 @@ class Producto
         return $stmt->fetch();
     }
 
-    public static function actualizar($id, $nombre, $descripcion, $precio, $stock, $visible)
+    public static function actualizar($id, $nombre, $descripcion, $precio, $precio_tachado, $porcentaje_descuento, $precio_tachado_visible, $porcentaje_visible, $stock, $visible)
     {
         $db = Database::getInstance()->getConnection();
-        $stmt = $db->prepare("UPDATE productos SET nombre = ?, descripcion = ?, precio = ?, stock = ?, visible = ? WHERE id = ?");
-        $stmt->execute([$nombre, $descripcion, $precio, $stock, $visible, $id]);
+        $stmt = $db->prepare("
+        UPDATE productos 
+        SET nombre = ?, descripcion = ?, precio = ?, precio_tachado = ?, porcentaje_descuento = ?, precio_tachado_visible = ?, porcentaje_visible = ?, stock = ?, visible = ? 
+        WHERE id = ?
+    ");
+        $stmt->execute([$nombre, $descripcion, $precio, $precio_tachado, $porcentaje_descuento, $precio_tachado_visible, $porcentaje_visible, $stock, $visible, $id]);
     }
 
     public static function eliminar($id)
@@ -308,24 +354,102 @@ class Producto
         $stmt = $db->query("SELECT * FROM productos WHERE visible = 1");
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
-    public function buscarPorNombre($q)
+    public function buscarPorNombre(string $q): array
     {
-        $db = \Core\Database::getInstance()->getConnection();
+        $db = Database::getInstance()->getConnection();
 
         $sql = "
-        SELECT p.id, p.nombre, p.descripcion, p.precio,
-               (SELECT ip.nombre_imagen 
-                FROM imagenes_producto ip 
-                WHERE ip.producto_id = p.id 
+        SELECT p.*,
+               (SELECT ip.nombre_imagen
+                FROM imagenes_producto ip
+                WHERE ip.producto_id = p.id
+                ORDER BY ip.id ASC
                 LIMIT 1) AS imagen
         FROM productos p
-        WHERE p.nombre LIKE :q OR p.descripcion LIKE :q
-        LIMIT 20
+        WHERE (p.nombre LIKE :q OR p.descripcion LIKE :q)
+          AND p.visible = 1
+        LIMIT 100
     ";
 
         $stmt = $db->prepare($sql);
-        $like = "%$q%";
+        $like = '%' . $q . '%';
         $stmt->execute([':q' => $like]);
+
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+    /**
+     * Calcula el precio final basado en precio_tachado y porcentaje_descuento.
+     * Si el precio final (precio) no coincide, puede usarse para validaciones o ajustes.
+     * 
+     * @param float|null $precioTachado
+     * @param float|null $porcentajeDescuento
+     * @return float|null Precio final calculado o null si no hay datos suficientes.
+     */
+    public function calcularPrecioFinal(?float $precioTachado, ?float $porcentajeDescuento): ?float
+    {
+        if ($precioTachado !== null && $porcentajeDescuento !== null) {
+            $descuento = $precioTachado * ($porcentajeDescuento / 100);
+            return round($precioTachado - $descuento, 2);
+        }
+        return null;
+    }
+
+    /**
+     * Formatea un número como precio con 2 decimales y punto decimal.
+     * 
+     * @param mixed $precio
+     * @return string
+     */
+    public function formatearPrecio($precio): string
+    {
+        return number_format((float)$precio, 2, '.', '');
+    }
+
+    /**
+     * Obtiene el texto para el badge del porcentaje, por ejemplo "-40%".
+     * Retorna cadena vacía si no hay descuento válido.
+     * 
+     * @param float|null $porcentajeDescuento
+     * @return string
+     */
+    public function obtenerTextoBadge(?float $porcentajeDescuento): string
+    {
+        if ($porcentajeDescuento !== null && $porcentajeDescuento > 0) {
+            return '-' . $this->formatearPrecio($porcentajeDescuento) . '%';
+        }
+        return '';
+    }
+
+    /**
+     * Completa los datos de un producto con cálculo y formateo de precios y porcentaje.
+     * Modifica el array $producto directamente.
+     * 
+     * @param array $producto Producto con claves 'precio', 'precio_tachado', 'porcentaje_descuento'
+     * @return array Producto modificado con datos formateados y precio calculado.
+     */
+    public function prepararProductoParaVista(array $producto): array
+    {
+        $producto['precio'] = $this->formatearPrecio($producto['precio'] ?? 0);
+        $producto['precio_tachado'] = isset($producto['precio_tachado']) ? $this->formatearPrecio($producto['precio_tachado']) : null;
+        $producto['porcentaje_descuento'] = isset($producto['porcentaje_descuento']) ? (float)$producto['porcentaje_descuento'] : 0;
+
+        // flags (aseguramos booleanos; default true si no existe para compatibilidad)
+        $producto['precio_tachado_visible'] = isset($producto['precio_tachado_visible']) ? (bool)$producto['precio_tachado_visible'] : true;
+        $producto['porcentaje_visible'] = isset($producto['porcentaje_visible']) ? (bool)$producto['porcentaje_visible'] : true;
+
+        // Si no hay precio tachado o no es mayor, ocultamos
+        if (empty($producto['precio_tachado']) || (float)$producto['precio_tachado'] <= (float)$producto['precio']) {
+            $producto['precio_tachado'] = null;
+            $producto['porcentaje_descuento'] = 0;
+            $producto['precio_tachado_visible'] = false;
+            $producto['porcentaje_visible'] = false;
+        }
+
+        // Texto para badge solo si porcentaje_visible = true y porcentaje > 0
+        $producto['texto_badge'] = ($producto['porcentaje_visible'] && $producto['porcentaje_descuento'] > 0)
+            ? '-' . $this->formatearPrecio($producto['porcentaje_descuento']) . '%'
+            : '';
+
+        return $producto;
     }
 }

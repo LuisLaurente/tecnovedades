@@ -71,7 +71,7 @@ class CarritoController
         // Evaluar promociones siempre que se cargue el carrito
         $promociones = PromocionHelper::evaluar($carrito, $usuario);
         $totales = PromocionHelper::calcularTotales($carrito, $promociones);
-        
+
         // Verificar si hay un cupón aplicado y agregarlo al descuento
         $cupon_aplicado = \Core\Helpers\CuponHelper::obtenerCuponAplicado();
         if ($cupon_aplicado) {
@@ -105,7 +105,6 @@ class CarritoController
         // Hacemos disponibles las variables en la vista
         $promocionesAplicadas = $promociones;
         require __DIR__ . '/../views/carrito/ver.php';
-
     }
 
     public function aumentar($clave)
@@ -114,8 +113,10 @@ class CarritoController
             $_SESSION['carrito'][$clave]['cantidad']++;
         }
 
-        // Recalcular promociones
+        // Usuario puede ser null si es invitado
         $usuario = $_SESSION['usuario'] ?? null;
+
+        // Calcular promociones para todos (invitados y logueados)
         $_SESSION['promociones'] = PromocionHelper::evaluar($_SESSION['carrito'], $usuario);
 
         header('Location: ' . url('carrito/ver'));

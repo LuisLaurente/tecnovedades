@@ -40,12 +40,23 @@ if (isset($_SESSION['carrito'])) {
                                 <div class="product-image-container">
                                     <img src="<?= url('uploads/' . $producto['imagen']) ?>"
                                         alt="<?= htmlspecialchars($producto['nombre']) ?>">
+
+                                    <?php if (!empty($producto['porcentaje_descuento']) && $producto['porcentaje_visible']): ?>
+                                        <span class="discount-badge">
+                                            -<?= number_format($producto['porcentaje_descuento'], 0) ?>%
+                                        </span>
+                                    <?php endif; ?>
                                 </div>
+
                                 <div class="product-info">
                                     <h3 class="product-title"><?= htmlspecialchars($producto['nombre']) ?></h3>
                                     <p class="product-description"><?= htmlspecialchars($producto['descripcion']) ?></p>
+
                                     <div class="product-price">
-                                        S/ <?= number_format($producto['precio'], 2) ?>
+                                        <?php if (!empty($producto['precio_tachado']) && $producto['precio_tachado_visible']): ?>
+                                            <span class="old-price">S/ <?= number_format($producto['precio_tachado'], 2) ?></span>
+                                        <?php endif; ?>
+                                        <span class="current-price">S/ <?= number_format($producto['precio'], 2) ?></span>
                                     </div>
                                 </div>
                             </a>
