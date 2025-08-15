@@ -65,6 +65,11 @@ class ProductoController
             ]);
             exit;
         }
+        // 🔹 Variables SEO para listado
+        $metaTitle = 'Catálogo de productos | Tienda Tecnovedades';
+        $metaDescription = 'Explora nuestro catálogo con la mejor tecnología y novedades a precios increíbles.';
+        $metaImage = url('images/catalogo-share.png');
+        $canonical = url('producto');
 
         // Mostrar vista
         require_once __DIR__ . '/../views/producto/index.php';
@@ -262,30 +267,32 @@ class ProductoController
     {
         $productoModel = new Producto();
 
-        // Validar que $id sea numérico
         if (!is_numeric($id)) {
-            // Redirigir o mostrar error
             header('Location: ' . url('producto'));
             exit;
         }
 
-        // Obtener el producto
         $producto = $productoModel->obtenerPorId((int)$id);
 
         if (!$producto) {
-            // Producto no encontrado, redirigir o mostrar error
             header('Location: ' . url('producto'));
             exit;
         }
 
-        // Obtener categorías asociadas
         $producto['categorias'] = Producto::obtenerCategoriasPorProducto($producto['id']);
-        // Obtener imágenes asociadas
         $producto['imagenes'] = \Models\ImagenProducto::obtenerPorProducto($producto['id']);
 
-        // Cargar la vista descripción
+        // 🔹 Variables SEO dinámicas
+        $meta_title = $producto['nombre'] . ' | Tienda Tecnovedades';
+        $meta_description = substr(strip_tags($producto['descripcion']), 0, 160);
+        $meta_image = !empty($producto['imagenes']) 
+            ? url('uploads/' . $producto['imagenes'][0]['nombre']) 
+            : url('images/default-share.png');
+        $canonical = url('producto/ver/' . $producto['id']);
+
         require_once __DIR__ . '/../views/producto/descripcion.php';
     }
+
     public function busqueda()
     {
         $q = isset($_GET['q']) ? trim($_GET['q']) : '';
@@ -301,6 +308,12 @@ class ProductoController
 
         // Definir $termino para que exista en la vista
         $termino = $q;
+
+        // 🔹 Variables SEO para resultados de búsqueda
+        $metaTitle = 'Resultados para "' . htmlspecialchars($termino) . '" | Tienda Tecnovedades';
+        $metaDescription = 'Encuentra los mejores productos relacionados con "' . htmlspecialchars($termino) . '".';
+        $metaImage = url('images/busqueda-share.png');
+        $canonical = url('producto/busqueda?q=' . urlencode($termino));
 
         // Renderizamos la vista de búsqueda
         include __DIR__ . '/../views/home/busqueda.php';

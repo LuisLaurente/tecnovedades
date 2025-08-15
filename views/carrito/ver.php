@@ -2,8 +2,12 @@
 
 <!-- Estilos y botón de volver -->
 <link rel="stylesheet" href="<?= url('css/carrito.css') ?>">
-<a href="<?= url('/') ?>" class="boton-volver">🛒 Volverrrr</a>
-<a href="<?= url('pedido/checkout') ?>" class="boton-checkout">Finalizar compra</a>
+<a href="<?= url('/') ?>" class="boton-volver">🛒 Volver</a>
+<?php if (isset($_SESSION['usuario'])): ?>
+    <a href="<?= url('pedido/checkout') ?>" class="boton-checkout">Finalizar compra</a>
+<?php else: ?>
+    <a href="<?= url('pedido/precheckout') ?>" class="boton-checkout">Continuar compra</a>
+<?php endif; ?>
 
 
 <!-- Contenido del carrito -->

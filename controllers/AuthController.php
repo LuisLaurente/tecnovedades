@@ -31,9 +31,14 @@ class AuthController extends BaseController
      */
     public function login()
     {
-        // Si ya está autenticado, redirigir al perfil
+        // Si ya está autenticado, redirigir al perfil o a la URL de redirección
         if (SessionHelper::isAuthenticated()) {
-            header('Location: ' . url('/auth/profile'));
+            $redirect = $_GET['redirect'] ?? '';
+            if (!empty($redirect)) {
+                header('Location: ' . url($redirect));
+            } else {
+                header('Location: ' . url('/auth/profile'));
+            }
             exit;
         }
 
@@ -41,6 +46,7 @@ class AuthController extends BaseController
         LoginRateHelper::cleanOldAttempts();
         
         $error = $_GET['error'] ?? '';
+        $redirect = $_GET['redirect'] ?? '';
         
         // Verificar si hay una IP bloqueada
         $ip = $_SERVER['REMOTE_ADDR'];
@@ -77,6 +83,7 @@ class AuthController extends BaseController
             $email = $_POST['email'] ?? '';
             $password = $_POST['password'] ?? '';
             $remember = isset($_POST['remember']);
+            $redirect = $_POST['redirect'] ?? '';
             
             // Verificar bloqueo por intentos fallidos (usando IP si el email no existe)
             $identifier = $email ?: $_SERVER['REMOTE_ADDR']; 
@@ -185,8 +192,12 @@ class AuthController extends BaseController
                 setcookie('remember_token', $token, time() + (30 * 24 * 60 * 60), '/'); // 30 días
             }
 
-            // Redirigir al perfil
-            header('Location: ' . url('/auth/profile'));
+            // Redirigir según el parámetro redirect o al perfil por defecto
+            if (!empty($redirect)) {
+                header('Location: ' . url($redirect));
+            } else {
+                header('Location: ' . url('/auth/profile'));
+            }
             exit;
 
         } catch (\Exception $e) {
@@ -314,6 +325,156 @@ class AuthController extends BaseController
             error_log("Error en AuthController::updateProfile: " . $e->getMessage());
             $error = urlencode('Error interno del servidor');
             header('Location: ' . url("/auth/profile?error=$error"));
+            exit;
+        }
+    }
+
+    /**
+     * Mostrar formulario de registro
+     */
+    public function registro()
+    {
+        // Si ya está autenticado, redirigir al perfil o a la URL de redirección
+        if (SessionHelper::isAuthenticated()) {
+            $redirect = $_GET['redirect'] ?? '';
+            if (!empty($redirect)) {
+                header('Location: ' . url($redirect));
+            } else {
+                header('Location: ' . url('/auth/profile'));
+            }
+            exit;
+        }
+
+        $error = $_GET['error'] ?? '';
+        $success = $_GET['success'] ?? '';
+        $redirect = $_GET['redirect'] ?? '';
+        
+        require_once __DIR__ . '/../views/auth/registro.php';
+    }
+
+    /**
+     * Procesar registro de nuevo usuario
+     */
+    public function procesarRegistro()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . url('/auth/registro'));
+            exit;
+        }
+
+        try {
+            // Verificar token CSRF
+            $csrfToken = $_POST['csrf_token'] ?? '';
+            if (empty($csrfToken) || !CsrfHelper::validateToken($csrfToken, 'registro_form')) {
+                SecurityLogger::log(SecurityLogger::CSRF_ERROR, 'Token CSRF inválido en registro', [
+                    'email' => $_POST['email'] ?? 'no proporcionado'
+                ]);
+                $error = urlencode('Error de seguridad: Token inválido o expirado.');
+                header('Location: ' . url("/auth/registro?error=$error"));
+                exit;
+            }
+
+            $nombre = trim($_POST['nombre'] ?? '');
+            $email = trim($_POST['email'] ?? '');
+            $password = $_POST['password'] ?? '';
+            $confirmPassword = $_POST['confirm_password'] ?? '';
+            $redirect = $_POST['redirect'] ?? '';
+
+            // Validaciones
+            $errores = [];
+            
+            if (empty($nombre)) {
+                $errores[] = 'El nombre es requerido';
+            } elseif (strlen($nombre) < 2) {
+                $errores[] = 'El nombre debe tener al menos 2 caracteres';
+            }
+
+            if (empty($email)) {
+                $errores[] = 'El email es requerido';
+            } elseif (!Validator::email($email)) {
+                $errores[] = 'El email no es válido';
+            }
+
+            if (empty($password)) {
+                $errores[] = 'La contraseña es requerida';
+            } elseif (strlen($password) < 6) {
+                $errores[] = 'La contraseña debe tener al menos 6 caracteres';
+            }
+
+            if ($password !== $confirmPassword) {
+                $errores[] = 'Las contraseñas no coinciden';
+            }
+
+            // Verificar si el email ya existe
+            if (empty($errores)) {
+                $usuarioExistente = $this->usuarioModel->obtenerPorEmail($email);
+                if ($usuarioExistente) {
+                    $errores[] = 'Ya existe un usuario con este email';
+                }
+            }
+
+            if (!empty($errores)) {
+                $error = urlencode(implode(', ', $errores));
+                $redirectParam = !empty($redirect) ? '&redirect=' . urlencode($redirect) : '';
+                header('Location: ' . url("/auth/registro?error=$error$redirectParam"));
+                exit;
+            }
+
+            // Crear usuario
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            $usuarioData = [
+                'nombre' => $nombre,
+                'email' => $email,
+                'password' => $hashedPassword,
+                'rol_id' => 2, // Cliente por defecto
+                'activo' => 1
+            ];
+
+            $usuarioId = $this->usuarioModel->crear($usuarioData);
+            
+            if (!$usuarioId) {
+                $error = urlencode('Error al crear el usuario');
+                $redirectParam = !empty($redirect) ? '&redirect=' . urlencode($redirect) : '';
+                header('Location: ' . url("/auth/registro?error=$error$redirectParam"));
+                exit;
+            }
+
+            // Crear registro en usuario_detalles si las tablas están migradas
+            try {
+                $detallesSql = "INSERT INTO usuario_detalles (usuario_id) VALUES (?)";
+                $stmt = \Core\Database::getConexion()->prepare($detallesSql);
+                $stmt->execute([$usuarioId]);
+            } catch (\Exception $e) {
+                // Si falla, es porque las tablas no están migradas aún, continuamos
+            }
+
+            // Iniciar sesión automáticamente
+            $usuario = $this->usuarioModel->obtenerPorId($usuarioId);
+            $rol = $this->rolModel->obtenerPorId($usuario['rol_id']);
+            
+            SessionHelper::login($usuario, $rol);
+            $_SESSION['mostrar_popup'] = true;
+
+            // Registrar evento
+            SecurityLogger::log(SecurityLogger::LOGIN_SUCCESS, 'Usuario registrado e iniciado sesión exitosamente', [
+                'user_id' => $usuarioId,
+                'email' => $email,
+                'auto_login' => true
+            ]);
+
+            // Redirigir según el parámetro redirect
+            if (!empty($redirect)) {
+                header('Location: ' . url($redirect));
+            } else {
+                header('Location: ' . url('/auth/profile'));
+            }
+            exit;
+
+        } catch (\Exception $e) {
+            error_log("Error en AuthController::procesarRegistro: " . $e->getMessage());
+            $error = urlencode('Error interno del servidor');
+            $redirectParam = !empty($redirect) ? '&redirect=' . urlencode($redirect) : '';
+            header('Location: ' . url("/auth/registro?error=$error$redirectParam"));
             exit;
         }
     }

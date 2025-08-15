@@ -40,14 +40,20 @@
                     <span class="detail-label">Fecha:</span>
                     <span class="detail-value"><?= date('d/m/Y H:i', strtotime($pedido['creado_en'] ?? 'now')) ?></span>
                 </div>
+                <?php if (isset($direccion_pedido) && $direccion_pedido): ?>
+                <div class="order-detail">
+                    <span class="detail-label">Dirección de Envío:</span>
+                    <span class="detail-value"><?= htmlspecialchars($direccion_pedido) ?></span>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
         
         <div class="action-buttons">
-            <a href="<?= url('producto/index') ?>" class="btn btn-primary">
+            <a href="<?= url('') ?>" class="btn btn-primary">
                 Seguir comprando
             </a>
-            <a href="<?= url('pedido/ver/' . ($pedido['id'] ?? '')) ?>" class="btn btn-secondary">
+            <a href="<?= url('auth/profile' . ($pedido['id'] ?? '')) ?>" class="btn btn-secondary">
                 Ver mi pedido
             </a>
         </div>

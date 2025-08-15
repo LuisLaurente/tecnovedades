@@ -1,6 +1,7 @@
 <?php
 /**
  * Script para verificar que las mejoras de seguridad estén funcionando correctamente
+ * Test de seguridad mejorada de pedidos
  */
 
 // Aplicar las mismas configuraciones de sesión que en index.php

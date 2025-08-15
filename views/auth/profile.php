@@ -99,8 +99,15 @@
                                             🔑 Permisos asignados
                                         </label>
                                         <div class="flex flex-wrap gap-2">
-                                            <?php if (!empty($rol['permisos'])): ?>
-                                                <?php foreach ($rol['permisos'] as $permiso): ?>
+                                            <?php 
+                                            // Asegurar que permisos es un array
+                                            $permisos = $rol['permisos'] ?? [];
+                                            if (is_string($permisos)) {
+                                                $permisos = json_decode($permisos, true) ?: [];
+                                            }
+                                            
+                                            if (!empty($permisos) && is_array($permisos)): ?>
+                                                <?php foreach ($permisos as $permiso): ?>
                                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                                         <?= htmlspecialchars($permiso) ?>
                                                     </span>

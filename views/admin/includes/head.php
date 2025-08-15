@@ -1,3 +1,34 @@
+    <?php
+    $metaTitle = $metaTitle ?? 'Tienda Tecnovedades';
+    $metaDescription = $metaDescription ?? 'Compra tecnología y novedades al mejor precio.';
+    $metaImage = $metaImage ?? url('images/default-share.png');
+    $canonical = $canonical ?? url('');
+    ?>
+    <!-- Favicon -->
+    <link rel="icon" href="<?= url('image/favicon.ico') ?>" type="image/x-icon">
+    <link rel="icon" type="image/png" sizes="32x32" href="<?= url('image/favicon.png') ?>">
+
+    <!-- Web Manifest -->
+    <link rel="manifest" href="<?= url('manifest.webmanifest') ?>">
+    <meta name="theme-color" content="#2563eb">
+
+    <title><?= htmlspecialchars($metaTitle) ?></title>
+    <meta name="description" content="<?= htmlspecialchars($metaDescription) ?>">
+    <link rel="canonical" href="<?= $canonical ?>">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="<?= htmlspecialchars($metaTitle) ?>">
+    <meta property="og:description" content="<?= htmlspecialchars($metaDescription) ?>">
+    <meta property="og:image" content="<?= $metaImage ?>">
+    <meta property="og:url" content="<?= $canonical ?>">
+    <meta property="og:type" content="website">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<?= htmlspecialchars($metaTitle) ?>">
+    <meta name="twitter:description" content="<?= htmlspecialchars($metaDescription) ?>">
+    <meta name="twitter:image" content="<?= $metaImage ?>">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -9,7 +40,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- CSS personalizado para usuarios -->
-    <link rel="stylesheet" href="<?= url('css/head.css') ?>">
+    <link rel="stylesheet" href="<?= url('css/min/head.min.css') ?>">
     <!-- CSS personalizado para animaciones de modales -->
     <style>
         @keyframes fadeIn {
