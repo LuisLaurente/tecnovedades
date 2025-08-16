@@ -50,10 +50,10 @@
         </div>
         
         <div class="action-buttons">
-            <a href="<?= url('') ?>" class="btn btn-primary">
+            <a href="<?= url('home/index') ?>" class="btn btn-primary">
                 Seguir comprando
             </a>
-            <a href="<?= url('auth/profile' . ($pedido['id'] ?? '')) ?>" class="btn btn-secondary">
+             <a href="<?= url('/usuario/pedidos') ?>" class="btn btn-secondary">
                 Ver mi pedido
             </a>
         </div>
