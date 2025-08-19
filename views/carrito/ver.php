@@ -4,7 +4,11 @@
 <link rel="stylesheet" href="<?= url('css/carrito.css') ?>">
 <a href="<?= url('/') ?>" class="boton-volver">🛒 Volver</a>
 <?php if (isset($_SESSION['usuario'])): ?>
-    <a href="<?= url('pedido/checkout') ?>" class="boton-checkout">Finalizar compra</a>
+    
+    <?php if (!empty($_SESSION['carrito']) && count($_SESSION['carrito']) > 0): ?>
+        <a href="<?= url('pedido/checkout') ?>" class="boton-checkout">Finalizar compra</a> 
+    <?php endif; ?>
+
 <?php else: ?>
     <a href="<?= url('pedido/precheckout') ?>" class="boton-checkout">Continuar compra</a>
 <?php endif; ?>
