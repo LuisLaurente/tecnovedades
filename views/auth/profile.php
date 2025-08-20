@@ -8,6 +8,8 @@
         <div class="fixed inset-y-0 left-0 z-50">
             <?php include_once __DIR__ . '/../admin/includes/navbar.php'; ?>
         </div>
+         <div class="flex-1 ml-64 flex flex-col min-h-screen">
+
         <main class="flex-1 p-2 bg-gray-50 overflow-y-auto">
             <!-- Incluir header superior fijo -->
             <div class="sticky top-0 z-40">
@@ -38,7 +40,7 @@
                                 <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
                                     📝 Información Personal
                                 </h3>
-                                
+
                                 <form method="POST" action="<?= url('/auth/updateProfile') ?>">
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <!-- Nombre -->
@@ -46,12 +48,12 @@
                                             <label for="nombre" class="block text-sm font-medium text-gray-700">
                                                 Nombre completo
                                             </label>
-                                            <input type="text" 
-                                                   name="nombre" 
-                                                   id="nombre" 
-                                                   value="<?= htmlspecialchars($usuario['nombre']) ?>"
-                                                   required
-                                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                            <input type="text"
+                                                name="nombre"
+                                                id="nombre"
+                                                value="<?= htmlspecialchars($usuario['nombre']) ?>"
+                                                required
+                                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                         </div>
 
                                         <!-- Email -->
@@ -59,12 +61,12 @@
                                             <label for="email" class="block text-sm font-medium text-gray-700">
                                                 Correo electrónico
                                             </label>
-                                            <input type="email" 
-                                                   name="email" 
-                                                   id="email" 
-                                                   value="<?= htmlspecialchars($usuario['email']) ?>"
-                                                   required
-                                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                            <input type="email"
+                                                name="email"
+                                                id="email"
+                                                value="<?= htmlspecialchars($usuario['email']) ?>"
+                                                required
+                                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                         </div>
 
                                         <!-- Información de solo lectura -->
@@ -100,12 +102,12 @@
                                         </label>
                                         <div class="flex flex-wrap gap-2">
                                             <?php 
+
                                             // Asegurar que permisos es un array
                                             $permisos = $rol['permisos'] ?? [];
                                             if (is_string($permisos)) {
                                                 $permisos = json_decode($permisos, true) ?: [];
                                             }
-                                            
                                             if (!empty($permisos) && is_array($permisos)): ?>
                                                 <?php foreach ($permisos as $permiso): ?>
                                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -120,8 +122,8 @@
 
                                     <!-- Botones -->
                                     <div class="mt-6 flex justify-end space-x-3">
-                                        <button type="submit" 
-                                                class="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        <button type="submit"
+                                            class="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                             💾 Guardar cambios
                                         </button>
                                     </div>
@@ -135,7 +137,7 @@
                                 <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
                                     🕒 Información de Sesión
                                 </h3>
-                                
+
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                     <div class="bg-blue-50 p-4 rounded-lg">
                                         <dt class="text-sm font-medium text-gray-500">Sesión iniciada</dt>
@@ -146,7 +148,7 @@
                                             <?= date('d/m/Y', $_SESSION['login_time'] ?? time()) ?>
                                         </dd>
                                     </div>
-                                    
+
                                     <div class="bg-green-50 p-4 rounded-lg">
                                         <dt class="text-sm font-medium text-gray-500">Última actividad</dt>
                                         <dd class="mt-1 text-lg font-semibold text-green-600">
@@ -156,7 +158,7 @@
                                             <?= date('d/m/Y', $_SESSION['last_activity'] ?? time()) ?>
                                         </dd>
                                     </div>
-                                    
+
                                     <div class="bg-purple-50 p-4 rounded-lg">
                                         <dt class="text-sm font-medium text-gray-500">ID de usuario</dt>
                                         <dd class="mt-1 text-lg font-semibold text-purple-600">
@@ -170,7 +172,7 @@
                                     <div class="bg-yellow-50 p-4 rounded-lg">
                                         <dt class="text-sm font-medium text-gray-500">Tiempo de sesión</dt>
                                         <dd class="mt-1 text-lg font-semibold text-yellow-600">
-                                            <?php 
+                                            <?php
                                             $tiempoSesion = time() - ($_SESSION['login_time'] ?? time());
                                             $horas = floor($tiempoSesion / 3600);
                                             $minutos = floor(($tiempoSesion % 3600) / 60);
@@ -207,11 +209,13 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="mt-4">
                 <?php include_once __DIR__ . '/../admin/includes/footer.php'; ?>
             </div>
         </main>
+         </div>
     </div>
 </body>
+
 </html>

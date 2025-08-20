@@ -1,6 +1,5 @@
 <?php
 // views/home/index.php (versión corregida)
-
 $metaTitle = "Bienvenido a Tienda Tecnovedades - Tecnología y Novedades";
 $metaDescription = "Descubre lo último en tecnología, novedades y accesorios al mejor precio.";
 
@@ -182,6 +181,7 @@ if (!isset($totalPaginas)) {
                 document.cookie = 'cookies_consent=0; expires=' + new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toUTCString() + '; path=/';
                 document.getElementById('cookie-banner').style.display = 'none';
             });
+
         </script>
     <?php endif; ?>
 

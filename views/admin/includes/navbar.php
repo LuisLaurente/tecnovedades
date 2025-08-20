@@ -220,7 +220,6 @@ $userRole = \Core\Helpers\SessionHelper::getRole();
                 </div>
                 <span class="font-medium">Banners</span>
             </a>
-
         <?php endif; ?>
 
         <!-- Carga Masiva -->
@@ -255,7 +254,6 @@ $userRole = \Core\Helpers\SessionHelper::getRole();
     <div class="p-4 border-t border-blue-100 bg-white/30 backdrop-blur-sm flex-shrink-0 space-y-4">
             <a href="<?= url('/home/index') ?>" class="nav-link group flex items-center p-2 text-gray-600 hover:bg-white/60 rounded-lg transition-all duration-200 backdrop-blur-sm border border-gray-300 hover:border-blue-400">
                 <div class="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center mr-2 group-hover:scale-105 transition-transform">
-                    
                 </div>
                 <span class="text-xs font-medium">Listado de Productos</span>
             </a>

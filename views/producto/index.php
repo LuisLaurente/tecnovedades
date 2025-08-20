@@ -261,8 +261,6 @@ if (isset($_SESSION['carrito'])) {
                                 </div>
                             <?php endif; ?>
                         </div>
-
-
                         <!-- CSS para tabla de administración -->
                         <style>
                             .admin-productos-table {

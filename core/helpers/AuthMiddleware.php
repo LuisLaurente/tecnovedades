@@ -28,7 +28,6 @@ class AuthMiddleware
         // Rutas públicas para OAuth
         'googleauth/login',
         'auth/google-callback',
-
         // Buscador de productos público
         'producto/autocomplete',
         'producto/busqueda',
@@ -38,7 +37,6 @@ class AuthMiddleware
         'pedido/quitarCupon',
         // Permitir ver productos sin login
         'producto/ver',
-
     ];
 
     /**

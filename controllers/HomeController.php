@@ -94,7 +94,6 @@ class HomeController
             ], JSON_UNESCAPED_UNICODE);
             exit;
         }
-
         // Vista completa (no-AJAX)
         require_once __DIR__ . '/../views/home/index.php';
     }
