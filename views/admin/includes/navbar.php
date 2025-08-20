@@ -6,6 +6,33 @@ function hasPermission($permission)
     return \Core\Helpers\SessionHelper::hasPermission($permission);
 }
 
+// Función para verificar si el usuario es un cliente (rol usuario)
+function isCliente()
+{
+    $userRole = \Core\Helpers\SessionHelper::getRole();
+
+    // Si el rol es un array, obtener el nombre
+    if (is_array($userRole) && isset($userRole['nombre'])) {
+        return $userRole['nombre'] === 'usuario';
+    }
+
+    // Si es una cadena, verificar directamente
+    if (is_string($userRole)) {
+        return $userRole === 'usuario';
+    }
+
+    // Verificar por permisos - los clientes solo tienen 'perfil'
+    $userPermissions = \Core\Helpers\SessionHelper::getPermissions();
+    if (is_array($userPermissions)) {
+        // Cliente típico: solo tiene permiso de 'perfil' y no tiene permisos administrativos
+        return in_array('perfil', $userPermissions) &&
+            !in_array('usuarios', $userPermissions) &&
+            !in_array('productos', $userPermissions);
+    }
+
+    return false;
+}
+
 // Obtener información del usuario
 $userName = \Core\Helpers\SessionHelper::getUserName();
 $userEmail = \Core\Helpers\SessionHelper::getUserEmail();
@@ -41,6 +68,39 @@ $userRole = \Core\Helpers\SessionHelper::getRole();
             </div>
             <span class="font-medium">Mi Perfil</span>
         </a>
+
+        <!-- Divisor -->
+        <div class="my-4 border-t border-blue-200/50"></div>
+
+        <!-- Sección Vista Cliente (solo para usuarios con rol 'usuario') -->
+        <?php if (isCliente()): ?>
+            <div class="mb-3">
+                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 mb-2">Vista Cliente</h3>
+            </div>
+
+            <!-- Mis Pedidos -->
+            <a href="<?= url('/usuario/pedidos') ?>" class="nav-link group flex items-center p-3 text-gray-700 hover:bg-white/60 rounded-xl transition-all duration-200 backdrop-blur-sm border border-transparent hover:border-blue-200">
+                <div class="w-10 h-10 bg-gradient-to-br from-violet-400 to-violet-600 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                    </svg>
+                </div>
+                <span class="font-medium">📦 Mis Pedidos</span>
+            </a>
+
+            <!-- Divisor solo si es cliente -->
+            <div class="my-4 border-t border-blue-200/50"></div>
+        <?php endif; ?>
+
+        <!-- Sección Panel Administrativo (solo para usuarios con permisos administrativos) -->
+        <?php
+        $tienePermisosAdmin = hasPermission('usuarios') || hasPermission('productos') || hasPermission('categorias') || hasPermission('pedidos');
+        if ($tienePermisosAdmin):
+        ?>
+            <div class="mb-3">
+                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 mb-2">Panel Administrativo</h3>
+            </div>
+        <?php endif; ?>
 
         <!-- Gestión de Usuarios (solo admin) -->
         <?php if (hasPermission('usuarios')): ?>
@@ -160,6 +220,7 @@ $userRole = \Core\Helpers\SessionHelper::getRole();
                 </div>
                 <span class="font-medium">Banners</span>
             </a>
+
         <?php endif; ?>
 
         <!-- Carga Masiva -->
@@ -186,11 +247,20 @@ $userRole = \Core\Helpers\SessionHelper::getRole();
             </a>
         <?php endif; ?>
 
+
+
     </nav>
 
     <!-- Sección de información del usuario -->
-    <div class="p-4 border-t border-blue-100 bg-white/30 backdrop-blur-sm flex-shrink-0">
-        <div class="flex items-center p-3 bg-white/60 rounded-xl shadow-sm mb-3 backdrop-blur-sm">
+    <div class="p-4 border-t border-blue-100 bg-white/30 backdrop-blur-sm flex-shrink-0 space-y-4">
+            <a href="<?= url('/home/index') ?>" class="nav-link group flex items-center p-2 text-gray-600 hover:bg-white/60 rounded-lg transition-all duration-200 backdrop-blur-sm border border-gray-300 hover:border-blue-400">
+                <div class="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center mr-2 group-hover:scale-105 transition-transform">
+                    
+                </div>
+                <span class="text-xs font-medium">Listado de Productos</span>
+            </a>
+        
+        <div class="flex items-center p-3 bg-white/60 rounded-xl shadow-sm backdrop-blur-sm">
             <div class="w-10 h-10 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full flex items-center justify-center mr-3">
                 <span class="text-sm font-bold text-white">
                     <?= strtoupper(substr($userName ?? 'U', 0, 1)) ?>
@@ -205,7 +275,6 @@ $userRole = \Core\Helpers\SessionHelper::getRole();
                 </p>
             </div>
         </div>
-
         <!-- Debug de permisos (solo en desarrollo) -->
         <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
             <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs">

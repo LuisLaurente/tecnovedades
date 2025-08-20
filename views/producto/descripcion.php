@@ -43,15 +43,6 @@ $breadcrumb = isset($producto['breadcrumb']) ? $producto['breadcrumb'] : ['Inici
     <title><?= htmlspecialchars($producto['nombre']) ?> - Bytebox</title>
     <link rel="stylesheet" href="<?= url('css/producto-descripcion.css') ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        /* Refuerzos mínimos por si tu CSS no lo tiene */
-        .precio-tachado { text-decoration: line-through; color:#888; margin-right:8px; }
-        .precio-final { font-weight: 700; }
-        .badge-descuento { display:inline-block; background:#e53935; color:#fff; padding:4px 8px; border-radius:6px; font-weight:700; margin:6px 0 10px; }
-        .producto-precio { font-size:1.2rem; margin: 6px 0 12px; }
-        .categoria-label { background:#f3f4f6; padding:4px 8px; border-radius:8px; margin-right:6px; display:inline-block; }
-        .miniatura.activo { outline: 2px solid #333; }
-    </style>
 </head>
 <body>
 

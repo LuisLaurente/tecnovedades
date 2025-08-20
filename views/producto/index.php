@@ -16,7 +16,7 @@ if (isset($_SESSION['carrito'])) {
 <html lang="es">
 <?php include_once __DIR__ . '/../admin/includes/head.php'; ?>
 
-<link rel="stylesheet" href="<?= url('css/producto-index.css') ?>">
+<link rel="stylesheet" href="<?= url('css/min/producto-index.min.css') ?>">
 
 
 <body>
@@ -79,7 +79,7 @@ if (isset($_SESSION['carrito'])) {
 
                         <a href="<?= url('cargaMasiva/descargarPlantilla') ?>">📥 Descargar Plantilla CSV</a><br>
                         <!-- Carrito -->
-                        <a href="<?= url('carrito/ver') ?>" class="boton-carrito">🛒 Ver Carrito<?php if ($cantidadEnCarrito > 0): ?>
+                        <a href="<?= url('carrito/ver') ?>" class="boton-carrito"> Ver Carrito<?php if ($cantidadEnCarrito > 0): ?>
                             <span style="
             position: absolute;
             top: -8px;
@@ -214,41 +214,41 @@ if (isset($_SESSION['carrito'])) {
                                                     <?php else: ?>
                                                         —
                                                     <?php endif; ?>
-                                                    </td>
-                                                    <td>
-                                                        <?php if (!empty($producto['porcentaje_descuento']) && $producto['porcentaje_descuento'] > 0): ?>
-                                                            <?= number_format($producto['porcentaje_descuento'], 2) ?>%
-                                                        <?php else: ?>
-                                                            —
-                                                        <?php endif; ?>
-                                                    </td>
-                                                    <td class="<?= $producto['visible'] ? 'disponible' : 'no-disponible' ?>">
-                                                        <?= $producto['visible'] ? 'Sí' : 'No' ?>
-                                                    </td>
-                                                    <td>
-                                                        <?php if (!empty($producto['categorias'])): ?>
-                                                            <?= implode(', ', array_map('htmlspecialchars', $producto['categorias'])) ?>
-                                                        <?php else: ?>
-                                                            <span class="sin-categoria">Sin categoría</span>
-                                                        <?php endif; ?>
-                                                    </td>
-                                                    <td class="imagenes-columna">
-                                                        <?php if (!empty($producto['imagenes'])): ?>
-                                                            <?php foreach ($producto['imagenes'] as $imagen): ?>
-                                                                <img src="<?= url('uploads/' . $imagen['nombre_imagen']) ?>"
-                                                                    alt="Imagen de <?= htmlspecialchars($producto['nombre']) ?>"
-                                                                    class="imagen-miniatura">
-                                                            <?php endforeach; ?>
-                                                        <?php else: ?>
-                                                            <span class="sin-imagen">Sin imágenes</span>
-                                                        <?php endif; ?>
-                                                    </td>
-                                                    <td class="acciones">
-                                                        <a href="<?= url('producto/editar/' . $producto['id']) ?>">✏️ Editar</a>
-                                                        <a href="<?= url('producto/eliminar/' . $producto['id']) ?>"
-                                                            class="eliminar"
-                                                            onclick="return confirm('¿Estás seguro de eliminar este producto?')">🗑️ Eliminar</a>
-                                                    </td>
+                                                </td>
+                                                <td>
+                                                    <?php if (!empty($producto['porcentaje_descuento']) && $producto['porcentaje_descuento'] > 0): ?>
+                                                        <?= number_format($producto['porcentaje_descuento'], 2) ?>%
+                                                    <?php else: ?>
+                                                        —
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td class="<?= $producto['visible'] ? 'disponible' : 'no-disponible' ?>">
+                                                    <?= $producto['visible'] ? 'Sí' : 'No' ?>
+                                                </td>
+                                                <td>
+                                                    <?php if (!empty($producto['categorias'])): ?>
+                                                        <?= implode(', ', array_map('htmlspecialchars', $producto['categorias'])) ?>
+                                                    <?php else: ?>
+                                                        <span class="sin-categoria">Sin categoría</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td class="imagenes-columna">
+                                                    <?php if (!empty($producto['imagenes'])): ?>
+                                                        <?php foreach ($producto['imagenes'] as $imagen): ?>
+                                                            <img src="<?= url('uploads/' . $imagen['nombre_imagen']) ?>"
+                                                                alt="Imagen de <?= htmlspecialchars($producto['nombre']) ?>"
+                                                                class="imagen-miniatura">
+                                                        <?php endforeach; ?>
+                                                    <?php else: ?>
+                                                        <span class="sin-imagen">Sin imágenes</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td class="acciones">
+                                                    <a href="<?= url('producto/editar/' . $producto['id']) ?>">✏️ Editar</a>
+                                                    <a href="<?= url('producto/eliminar/' . $producto['id']) ?>"
+                                                        class="eliminar"
+                                                        onclick="return confirm('¿Estás seguro de eliminar este producto?')">🗑️ Eliminar</a>
+                                                </td>
                                             </tr>
                                         <?php endforeach; ?>
                                     </tbody>
@@ -331,7 +331,7 @@ if (isset($_SESSION['carrito'])) {
             </div>
         </div>
 
-        <script src="<?= url('js/producto-filtros.js') ?>?v=<?= time() ?>"></script>
+        <script src="<?= url('js/min/producto-filtros.min.js') ?>?v=<?= time() ?>"></script>
 </body>
 
 </html>

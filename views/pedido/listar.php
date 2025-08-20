@@ -116,7 +116,7 @@
                                         <thead>
                                             <tr>
                                                 <th>ID</th>
-                                                <th>Cliente</th>
+                                                <th>Usuario</th>
                                                 <th>Estado</th>
                                                 <th>Monto Total</th>
                                                 <th>Fecha</th>

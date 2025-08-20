@@ -12,6 +12,32 @@ if (!isset($cantidadEnCarrito)) {
     }
   }
 }
+
+// Función para verificar si el usuario es un cliente (rol usuario)
+function isClienteHeader() {
+    $userRole = \Core\Helpers\SessionHelper::getRole();
+    
+    // Si el rol es un array, obtener el nombre
+    if (is_array($userRole) && isset($userRole['nombre'])) {
+        return $userRole['nombre'] === 'usuario';
+    }
+    
+    // Si es una cadena, verificar directamente
+    if (is_string($userRole)) {
+        return $userRole === 'usuario';
+    }
+    
+    // Verificar por permisos - los clientes solo tienen 'perfil'
+    $userPermissions = \Core\Helpers\SessionHelper::getPermissions();
+    if (is_array($userPermissions)) {
+        // Cliente típico: solo tiene permiso de 'perfil' y no tiene permisos administrativos
+        return in_array('perfil', $userPermissions) && 
+               !in_array('usuarios', $userPermissions) && 
+               !in_array('productos', $userPermissions);
+    }
+    
+    return false;
+}
 ?>
 <link rel="stylesheet" href="<?= url('css/header.css') ?>">
 
@@ -49,10 +75,24 @@ if (!isset($cantidadEnCarrito)) {
       </form>
     </nav>
 
-    <!-- Right: profile (icon only) then cart -->
+    <!-- Right: tienda, perfil, cart -->
     <div class="header-right">
 
-      <!-- Perfil: contenedor envuelve botón + dropdown -->
+
+      <!-- Botón Ir a Tienda (solo para clientes) -->
+      <?php if (isClienteHeader()): ?>
+      <div class="shop-button-container">
+        <a href="<?= url('/producto/index') ?>" class="shop-button" aria-label="Ir a la tienda">
+          <svg class="shop-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+          </svg>
+          <span class="shop-text">Tienda</span>
+        </a>
+      </div>
+      <?php endif; ?>
+
+      <!-- Perfil: contenedor envuelve botón + dropdown (para evitar gaps) -->
+
       <div class="user-profile-container" id="userProfileContainer">
         <button class="user-profile-button" id="userProfileButton" aria-haspopup="true" aria-expanded="false" aria-label="Abrir menú de usuario">
           <!-- Icono persona minimalista -->

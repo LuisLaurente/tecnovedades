@@ -155,6 +155,15 @@
                 <button type="button" class="btn btn-add" onclick="agregarVariante()">+ Agregar Variante</button>
             </div>
 
+            <!-- Destacado -->
+            <div class="form-group">
+                <div class="visible-checkbox">
+                    <input type="checkbox" name="destacado" id="destacado" value="1"
+                        <?= isset($producto['destacado']) && $producto['destacado'] ? 'checked' : '' ?>>
+                    <label for="destacado">Marcar como producto destacado ⭐</label>
+                </div>
+            </div>
+
             <!-- Botones de acción -->
             <div class="form-actions">
                 <button type="submit" class="btn btn-success">💾 Guardar Producto</button>

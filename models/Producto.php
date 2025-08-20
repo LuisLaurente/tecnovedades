@@ -63,194 +63,126 @@ class Producto
     }
 
     public function obtenerFiltrados(
-        $min = null,
-        $max = null,
+        $minPrice = null,
+        $maxPrice = null,
         $categoriaId = null,
-        $etiquetas = [],
+        array $etiquetas = [],
         $soloDisponibles = false,
         $orden = '',
+        $visibleOnly = true,
         $limit = null,
         $offset = null
     ) {
-        $min = \Core\Helpers\Validator::sanitizarPrecio($min);
-        $max = \Core\Helpers\Validator::sanitizarPrecio($max);
+        $db = \Core\Database::getInstance()->getConnection();
 
-        $sql = "SELECT DISTINCT p.* FROM productos p";
-        $joins = [];
-        $conditions = ["p.visible = 1"];
-        $params = [];
+        list($whereSql, $params) = $this->buildWhereClause($minPrice, $maxPrice, $categoriaId, $etiquetas, $visibleOnly);
 
-        // Filtro por etiquetas
-        if (!empty($etiquetas)) {
-            $joins[] = "LEFT JOIN producto_etiqueta pe ON p.id = pe.producto_id";
-            $etiquetaPlaceholders = [];
-            foreach ($etiquetas as $i => $etiquetaId) {
-                $key = ":etiqueta_$i";
-                $etiquetaPlaceholders[] = $key;
-                $params[$key] = $etiquetaId;
-            }
-            $conditions[] = "pe.etiqueta_id IN (" . implode(',', $etiquetaPlaceholders) . ")";
-        }
-
-        // Filtro por categoría y subcategorías
-        if (!is_null($categoriaId) && $categoriaId > 0) {
-            $joins[] = "INNER JOIN producto_categoria pc ON p.id = pc.id_producto";
-            $categoriaIds = [$categoriaId];
-            $stmt = $this->db->prepare("SELECT id FROM categorias WHERE id_padre = :categoria_padre");
-            $stmt->execute([':categoria_padre' => $categoriaId]);
-            $subcats = $stmt->fetchAll(PDO::FETCH_COLUMN);
-            if (!empty($subcats)) {
-                $categoriaIds = array_merge($categoriaIds, $subcats);
-            }
-
-            $catPlaceholders = [];
-            foreach ($categoriaIds as $i => $catId) {
-                $key = ":cat_$i";
-                $catPlaceholders[] = $key;
-                $params[$key] = $catId;
-            }
-            $conditions[] = "pc.id_categoria IN (" . implode(",", $catPlaceholders) . ")";
-        }
-
-        // Rango de precio
-        if (!is_null($min) && $min >= 0) {
-            $conditions[] = "p.precio >= :min_price";
-            $params[':min_price'] = $min;
-        }
-
-        if (!is_null($max) && $max >= 0) {
-            $conditions[] = "p.precio <= :max_price";
-            $params[':max_price'] = $max;
-        }
-
-        // Disponibilidad
+        // disponibilidad por stock: detectamos columna de stock si existe
         if ($soloDisponibles) {
-            $conditions[] = "p.stock > 0";
+            $cols = $this->getTableColumns('productos');
+            $stockCols = ['stock', 'cantidad', 'cantidad_stock', 'qty', 'cantidad_disponible', 'disponible'];
+            $foundStockCol = null;
+            foreach ($stockCols as $c) {
+                if (in_array($c, $cols, true)) {
+                    $foundStockCol = $c;
+                    break;
+                }
+            }
+            if ($foundStockCol) {
+                // si ya hay WHERE, añadimos con AND
+                $whereSql .= ($whereSql ? " AND " : " WHERE ") . "p.`{$foundStockCol}` > 0";
+            }
         }
 
-        // Unir joins
-        if (!empty($joins)) {
-            $sql .= " " . implode(" ", $joins);
+        // Orden
+        $orderSql = " ORDER BY p.id DESC"; // por defecto
+        switch ($orden) {
+            case 'precio_asc':
+                $orderSql = " ORDER BY p.precio ASC";
+                break;
+            case 'precio_desc':
+                $orderSql = " ORDER BY p.precio DESC";
+                break;
+            case 'nombre_asc':
+                $orderSql = " ORDER BY p.nombre ASC";
+                break;
+            case 'nombre_desc':
+                $orderSql = " ORDER BY p.nombre DESC";
+                break;
+            default:
+                // si existe columna destacado, puedes ordenar por ella primero
+                $prodCols = $this->getTableColumns('productos');
+                if (in_array('destacado', $prodCols, true)) {
+                    $orderSql = " ORDER BY p.destacado DESC, p.id DESC";
+                } else {
+                    $orderSql = " ORDER BY p.id DESC";
+                }
+                break;
         }
 
-        // Condiciones
-        $sql .= " WHERE " . implode(" AND ", $conditions);
+        $sql = "SELECT p.* FROM productos p" . $whereSql . $orderSql;
 
-        // Ordenamiento
-        $ordenesValidos = [
-            'precio_asc'   => 'p.precio ASC',
-            'precio_desc'  => 'p.precio DESC',
-            'nombre_asc'   => 'p.nombre ASC',
-            'nombre_desc'  => 'p.nombre DESC',
-            'fecha_desc'   => 'p.created_at DESC'
-        ];
-
-        if (array_key_exists($orden, $ordenesValidos)) {
-            $sql .= " ORDER BY " . $ordenesValidos[$orden];
+        if (is_numeric($limit) && is_numeric($offset)) {
+            $sql .= " LIMIT :limit OFFSET :offset";
+            $stmt = $db->prepare($sql);
+            // binds params dinámicos
+            foreach ($params as $k => $v) {
+                // inferir tipo
+                if (is_int($v)) $stmt->bindValue($k, $v, \PDO::PARAM_INT);
+                else $stmt->bindValue($k, $v);
+            }
+            $stmt->bindValue(':limit', (int)$limit, \PDO::PARAM_INT);
+            $stmt->bindValue(':offset', (int)$offset, \PDO::PARAM_INT);
+            $stmt->execute();
         } else {
-            $sql .= " ORDER BY p.precio ASC, p.nombre ASC";
-        }
-
-        // Paginación
-        if (!is_null($limit) && is_numeric($limit)) {
-            $sql .= " LIMIT :limit";
-            $params[':limit'] = (int)$limit;
-
-            if (!is_null($offset) && is_numeric($offset)) {
-                $sql .= " OFFSET :offset";
-                $params[':offset'] = (int)$offset;
+            $stmt = $db->prepare($sql);
+            foreach ($params as $k => $v) {
+                if (is_int($v)) $stmt->bindValue($k, $v, \PDO::PARAM_INT);
+                else $stmt->bindValue($k, $v);
             }
+            $stmt->execute();
         }
 
-        $stmt = $this->db->prepare($sql);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
 
-        // Bind manual para evitar errores con enteros en LIMIT/OFFSET
-        foreach ($params as $key => $value) {
-            if (in_array($key, [':limit', ':offset'])) {
-                $stmt->bindValue($key, $value, PDO::PARAM_INT);
-            } else {
-                $stmt->bindValue($key, $value);
-            }
+    /**
+     * Devuelve array con los nombres de columnas de la tabla indicada (o [] si no existe / error)
+     */
+    private function getTableColumns(string $table): array
+    {
+        try {
+            $db = \Core\Database::getInstance()->getConnection();
+            $stmt = $db->query("SHOW COLUMNS FROM `{$table}`");
+            $cols = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            return array_column($cols, 'Field');
+        } catch (\Throwable $e) {
+            // tabla no existe o error -> devolvemos array vacío
+            return [];
         }
-
-        $stmt->execute();
-
-        $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        foreach ($productos as &$producto) {
-            $producto = $this->prepararProductoParaVista($producto);
-        }
-
-        return $productos;
     }
 
 
-    public function contarFiltrados($min = null, $max = null, $categoriaId = null, $etiquetas = null)
-    {
-        $min = \Core\Helpers\Validator::sanitizarPrecio($min);
-        $max = \Core\Helpers\Validator::sanitizarPrecio($max);
+    public function contarFiltrados(
+        $minPrice = null,
+        $maxPrice = null,
+        $categoriaId = null,
+        array $etiquetas = [],
+        $visibleOnly = true
+    ) {
+        $db = \Core\Database::getInstance()->getConnection();
 
-        $sql = "SELECT COUNT(DISTINCT p.id) as total FROM productos p";
-        $joins = [];
-        $conditions = ["p.visible = 1"];
-        $params = [];
+        list($whereSql, $params) = $this->buildWhereClause($minPrice, $maxPrice, $categoriaId, $etiquetas, $visibleOnly);
 
-        if (!is_null($categoriaId) && $categoriaId > 0) {
-            $joins[] = "INNER JOIN producto_categoria pc ON p.id = pc.id_producto";
-            $categoriaIds = [$categoriaId];
-
-            $stmt = $this->db->prepare("SELECT id FROM categorias WHERE id_padre = :categoria_padre");
-            $stmt->execute([':categoria_padre' => $categoriaId]);
-            $subcats = $stmt->fetchAll(PDO::FETCH_COLUMN);
-            if (!empty($subcats)) {
-                $categoriaIds = array_merge($categoriaIds, $subcats);
-            }
-
-            $catPlaceholders = [];
-            foreach ($categoriaIds as $i => $catId) {
-                $key = ":cat_$i";
-                $catPlaceholders[] = $key;
-                $params[$key] = $catId;
-            }
-
-            $conditions[] = "pc.id_categoria IN (" . implode(",", $catPlaceholders) . ")";
+        $sql = "SELECT COUNT(*) AS total FROM productos p" . $whereSql;
+        $stmt = $db->prepare($sql);
+        foreach ($params as $k => $v) {
+            if (is_int($v)) $stmt->bindValue($k, $v, \PDO::PARAM_INT);
+            else $stmt->bindValue($k, $v);
         }
-
-        // Filtro por etiquetas
-        if (!empty($etiquetas) && is_array($etiquetas)) {
-            $etiquetas = array_filter($etiquetas); // Eliminar valores vacíos
-            if (!empty($etiquetas)) {
-                $joins[] = "INNER JOIN producto_etiqueta pe ON p.id = pe.producto_id";
-                $etPlaceholders = [];
-                foreach ($etiquetas as $i => $etId) {
-                    $key = ":et_$i";
-                    $etPlaceholders[] = $key;
-                    $params[$key] = (int)$etId;
-                }
-                $conditions[] = "pe.etiqueta_id IN (" . implode(",", $etPlaceholders) . ")";
-            }
-        }
-
-        if (!is_null($min)) {
-            $conditions[] = "p.precio >= :min_price";
-            $params[':min_price'] = $min;
-        }
-
-        if (!is_null($max)) {
-            $conditions[] = "p.precio <= :max_price";
-            $params[':max_price'] = $max;
-        }
-
-        if (!empty($joins)) {
-            $sql .= " " . implode(" ", $joins);
-        }
-
-        $sql .= " WHERE " . implode(" AND ", $conditions);
-
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute($params);
-
-        return (int) $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+        $stmt->execute();
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        return (int)($row['total'] ?? 0);
     }
 
     public function obtenerEstadisticasPrecios()
@@ -280,16 +212,76 @@ class Producto
         return $stmt->fetch();
     }
 
-    public static function actualizar($id, $nombre, $descripcion, $precio, $precio_tachado, $porcentaje_descuento, $precio_tachado_visible, $porcentaje_visible, $stock, $visible)
-    {
-        $db = Database::getInstance()->getConnection();
-        $stmt = $db->prepare("
-        UPDATE productos 
-        SET nombre = ?, descripcion = ?, precio = ?, precio_tachado = ?, porcentaje_descuento = ?, precio_tachado_visible = ?, porcentaje_visible = ?, stock = ?, visible = ? 
-        WHERE id = ?
-    ");
-        $stmt->execute([$nombre, $descripcion, $precio, $precio_tachado, $porcentaje_descuento, $precio_tachado_visible, $porcentaje_visible, $stock, $visible, $id]);
+    public static function actualizar(
+        $id,
+        $nombre,
+        $descripcion,
+        $precio,
+        $precio_tachado,
+        $porcentaje_descuento,
+        $precio_tachado_visible,
+        $porcentaje_visible,
+        $stock,
+        $visible,
+        $destacado
+    ) {
+        try {
+            $db = Database::getInstance()->getConnection();
+
+            $sql = "
+            UPDATE productos
+            SET
+                nombre = :nombre,
+                descripcion = :descripcion,
+                precio = :precio,
+                precio_tachado = :precio_tachado,
+                porcentaje_descuento = :porcentaje_descuento,
+                precio_tachado_visible = :precio_tachado_visible,
+                porcentaje_visible = :porcentaje_visible,
+                stock = :stock,
+                visible = :visible,
+                destacado = :destacado
+            WHERE id = :id
+        ";
+
+            $stmt = $db->prepare($sql);
+
+            // binds
+            $stmt->bindValue(':nombre', $nombre, \PDO::PARAM_STR);
+            $stmt->bindValue(':descripcion', $descripcion, \PDO::PARAM_STR);
+
+            // precio puede ser decimal: lo pasamos tal cual (PDO no tiene FLOAT const)
+            $stmt->bindValue(':precio', $precio);
+
+            // precio_tachado puede ser NULL
+            if ($precio_tachado === null || $precio_tachado === '') {
+                $stmt->bindValue(':precio_tachado', null, \PDO::PARAM_NULL);
+            } else {
+                $stmt->bindValue(':precio_tachado', $precio_tachado);
+            }
+
+            // porcentaje entero
+            $stmt->bindValue(':porcentaje_descuento', (int)$porcentaje_descuento, \PDO::PARAM_INT);
+
+            $stmt->bindValue(':precio_tachado_visible', (int)$precio_tachado_visible, \PDO::PARAM_INT);
+            $stmt->bindValue(':porcentaje_visible', (int)$porcentaje_visible, \PDO::PARAM_INT);
+            $stmt->bindValue(':stock', (int)$stock, \PDO::PARAM_INT);
+            $stmt->bindValue(':visible', (int)$visible, \PDO::PARAM_INT);
+            $stmt->bindValue(':destacado', (int)$destacado, \PDO::PARAM_INT);
+
+            $stmt->bindValue(':id', (int)$id, \PDO::PARAM_INT);
+
+            $ok = $stmt->execute();
+
+            return (bool)$ok;
+        } catch (\PDOException $e) {
+            // Log para que puedas revisar el error exacto en los logs del servidor
+            error_log("[Producto::actualizar] Error PDO: " . $e->getMessage() . " -- SQL: " . $e->getTraceAsString());
+            return false;
+        }
     }
+
+
 
     public static function eliminar($id)
     {
@@ -451,5 +443,96 @@ class Producto
             : '';
 
         return $producto;
+    }
+
+    private function buildWhereClause($minPrice, $maxPrice, $categoriaId, array $etiquetas, $visibleOnly)
+    {
+        $where = [];
+        $params = [];
+
+        if ($visibleOnly) {
+            $where[] = "p.visible = 1";
+        }
+
+        if ($minPrice !== null && $minPrice !== '') {
+            $where[] = "p.precio >= :minPrice";
+            $params[':minPrice'] = $minPrice;
+        }
+
+        if ($maxPrice !== null && $maxPrice !== '') {
+            $where[] = "p.precio <= :maxPrice";
+            $params[':maxPrice'] = $maxPrice;
+        }
+
+        // --- Filtrar por categoría (detectamos columnas reales en producto_categoria) ---
+        if (!empty($categoriaId)) {
+            $pcCols = $this->getTableColumns('producto_categoria');
+            // posibles nombres
+            $prodColCandidates = ['producto_id', 'id_producto', 'productoId', 'productoId']; // posibles variantes
+            $catColCandidates  = ['categoria_id', 'id_categoria', 'categoriaId'];
+
+            $prodCol = null;
+            $catCol  = null;
+            foreach ($prodColCandidates as $c) if (in_array($c, $pcCols, true)) {
+                $prodCol = $c;
+                break;
+            }
+            foreach ($catColCandidates as $c) if (in_array($c, $pcCols, true)) {
+                $catCol = $c;
+                break;
+            }
+
+            // Si no detectamos, probamos nombres por defecto que usa tu proyecto: id_producto/id_categoria
+            if ($prodCol === null) $prodCol = in_array('id_producto', $pcCols, true) ? 'id_producto' : (in_array('producto_id', $pcCols, true) ? 'producto_id' : null);
+            if ($catCol === null)  $catCol  = in_array('id_categoria', $pcCols, true) ? 'id_categoria' : (in_array('categoria_id', $pcCols, true) ? 'categoria_id' : null);
+
+            if ($prodCol !== null && $catCol !== null) {
+                // usamos columnas detectadas
+                $where[] = "EXISTS (SELECT 1 FROM producto_categoria pc WHERE pc.`{$prodCol}` = p.id AND pc.`{$catCol}` = :categoriaId)";
+                $params[':categoriaId'] = (int)$categoriaId;
+            } else {
+                // si no existe la tabla o no encontramos columnas, ignoramos el filtro para evitar fallo fatal
+                // (podrías añadir logging aquí)
+            }
+        }
+
+        // --- Filtrar por etiquetas (producto_etiqueta) ---
+        if (!empty($etiquetas) && is_array($etiquetas)) {
+            $peCols = $this->getTableColumns('producto_etiqueta');
+            $prodColPeCandidates = ['producto_id', 'id_producto'];
+            $etColPeCandidates   = ['etiqueta_id', 'id_etiqueta', 'etiquetaId'];
+
+            $prodColPe = null;
+            $etColPe = null;
+            foreach ($prodColPeCandidates as $c) if (in_array($c, $peCols, true)) {
+                $prodColPe = $c;
+                break;
+            }
+            foreach ($etColPeCandidates as $c)  if (in_array($c, $peCols, true)) {
+                $etColPe = $c;
+                break;
+            }
+
+            if ($prodColPe === null) $prodColPe = in_array('producto_id', $peCols, true) ? 'producto_id' : (in_array('id_producto', $peCols, true) ? 'id_producto' : null);
+            if ($etColPe === null)   $etColPe   = in_array('etiqueta_id', $peCols, true) ? 'etiqueta_id' : (in_array('id_etiqueta', $peCols, true) ? 'id_etiqueta' : null);
+
+            if ($prodColPe !== null && $etColPe !== null) {
+                $placeholders = [];
+                foreach ($etiquetas as $idx => $et) {
+                    $ph = ':et' . $idx;
+                    $placeholders[] = $ph;
+                    $params[$ph] = (int)$et;
+                }
+                if (!empty($placeholders)) {
+                    $where[] = "EXISTS (SELECT 1 FROM producto_etiqueta pe WHERE pe.`{$prodColPe}` = p.id AND pe.`{$etColPe}` IN (" . implode(',', $placeholders) . "))";
+                }
+            } else {
+                // si no detectamos, ignoramos filtro de etiquetas
+            }
+        }
+
+        $whereSql = count($where) ? " WHERE " . implode(" AND ", $where) : "";
+
+        return [$whereSql, $params];
     }
 }

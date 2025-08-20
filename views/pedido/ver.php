@@ -37,18 +37,24 @@
                             <div class="order-grid">
                                 <!-- Panel de información -->
                                 <div class="info-panel">
-                                    <!-- Información del cliente -->
+                                    <!-- Información del usuario -->
                                     <div class="section">
-                                        <h3 class="section-title client-info">Información del Cliente</h3>
+                                        <h3 class="section-title client-info">Información del Usuario</h3>
                                         <div class="client-card">
                                             <div class="client-row">
-                                                <span class="client-label">Cliente ID:</span>
+                                                <span class="client-label">Usuario ID:</span>
                                                 <span class="client-value"><?= htmlspecialchars($pedido['cliente_id']) ?></span>
                                             </div>
                                             <div class="client-row">
                                                 <span class="client-label">Fecha del pedido:</span>
                                                 <span class="client-value"><?= date('d/m/Y H:i', strtotime($pedido['creado_en'])) ?></span>
                                             </div>
+                                            <?php if (isset($direccion_pedido) && $direccion_pedido): ?>
+                                            <div class="client-row">
+                                                <span class="client-label">Dirección de Envío:</span>
+                                                <span class="client-value"><?= htmlspecialchars($direccion_pedido) ?></span>
+                                            </div>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
 
