@@ -125,7 +125,7 @@ $total_final = max(0, $totales['total'] - $descuento_cupon);
                 </svg>
                 Volver al carrito
             </a>
-            <h1 class="text-4xl font-bold text-white mb-2">🛒 Finalizar Compra</h1>
+            <h1 class="text-4xl font-bold text-white mb-2"> Finalizar Compra</h1>
             <p class="text-white/80">Revisa tu pedido y confirma los datos de envío</p>
         </div>
 

@@ -189,7 +189,7 @@ $totales['total'] = max($totales['subtotal'] - $total_descuentos, 0);
                     </table>
                 <?php else: ?>
                     <div style="text-align: center; padding: 40px; color: #7f8c8d;">
-                        <div style="font-size: 3rem; margin-bottom: 15px;">🛒</div>
+                        <div style="font-size: 3rem; margin-bottom: 15px;"></div>
                         <p style="font-size: 1.1rem;">No hay productos en el carrito.</p>
                         <a href="<?= url('producto/index') ?>" style="display: inline-block; margin-top: 15px; padding: 10px 20px; background: #3498db; color: white; text-decoration: none; border-radius: 5px;">Ver productos</a>
                     </div>

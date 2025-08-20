@@ -6,7 +6,7 @@
         <div class="footer-content">
             <!-- Información principal -->
             <div class="footer-header">
-                <h5 class="footer-title">Tienda Bytebox</h5>
+                <h5 class="footer-title">BYTEBOX</h5>
                 <p class="footer-subtitle">Tu tienda online de confianza para productos tecnológicos y novedades</p>
             </div>
 

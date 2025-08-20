@@ -49,7 +49,7 @@ $userRole = \Core\Helpers\SessionHelper::getRole();
             </div>
             <div>
                 <h1 class="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                    TecnoVedades
+                    ByteBox
                 </h1>
                 <p class="text-xs text-gray-500">Panel de Control</p>
             </div>
@@ -210,6 +210,18 @@ $userRole = \Core\Helpers\SessionHelper::getRole();
             </a>
         <?php endif; ?>
 
+        <!-- Banners -->
+        <?php if (hasPermission('promociones') || hasPermission('banners')): ?>
+            <a href="<?= url('/banner') ?>" class="nav-link group flex items-center p-3 text-gray-700 hover:bg-white/60 rounded-xl transition-all duration-200 backdrop-blur-sm border border-transparent hover:border-blue-200">
+                <div class="w-10 h-10 bg-gradient-to-br from-rose-400 to-rose-600 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7M3 7l6 6 4-4 8 8"></path>
+                    </svg>
+                </div>
+                <span class="font-medium">Banners</span>
+            </a>
+        <?php endif; ?>
+
         <!-- Carga Masiva -->
         <?php if (hasPermission('productos')): ?>
             <a href="<?= url('/cargamasiva') ?>" class="nav-link group flex items-center p-3 text-gray-700 hover:bg-white/60 rounded-xl transition-all duration-200 backdrop-blur-sm border border-transparent hover:border-blue-200">
@@ -242,7 +254,6 @@ $userRole = \Core\Helpers\SessionHelper::getRole();
     <div class="p-4 border-t border-blue-100 bg-white/30 backdrop-blur-sm flex-shrink-0 space-y-4">
             <a href="<?= url('/home/index') ?>" class="nav-link group flex items-center p-2 text-gray-600 hover:bg-white/60 rounded-lg transition-all duration-200 backdrop-blur-sm border border-gray-300 hover:border-blue-400">
                 <div class="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center mr-2 group-hover:scale-105 transition-transform">
-                    🛒
                 </div>
                 <span class="text-xs font-medium">Listado de Productos</span>
             </a>
@@ -262,6 +273,18 @@ $userRole = \Core\Helpers\SessionHelper::getRole();
                 </p>
             </div>
         </div>
+        <!-- Debug de permisos (solo en desarrollo) -->
+        <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs">
+                <p class="font-semibold text-yellow-800 mb-1">🔍 Debug Permisos</p>
+                <p><strong>Permisos:</strong></p>
+                <ul class="list-disc list-inside ml-2">
+                    <?php foreach (\Core\Helpers\SessionHelper::getPermissions() as $permission): ?>
+                        <li><?= htmlspecialchars($permission) ?></li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+        <?php endif; ?>
     </div>
 </aside>
 
