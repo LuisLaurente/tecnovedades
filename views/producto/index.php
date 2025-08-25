@@ -74,10 +74,10 @@ if (isset($_SESSION['carrito'])) {
                     </head>
 
                     <body data-base-url="<?= url('') ?>">
-                        <!-- Lista -->
                         <h1>Listado de Productos</h1>
 
                         <a href="<?= url('cargaMasiva/descargarPlantilla') ?>">📥 Descargar Plantilla CSV</a><br>
+                        <a href="<?= url('cargaMasiva/gestionImagenes') ?>">📸 Gestión Masiva de Imágenes</a><br>
                         <!-- Carrito -->
                         <a href="<?= url('carrito/ver') ?>" class="boton-carrito"> Ver Carrito<?php if ($cantidadEnCarrito > 0): ?>
                             <span style="
