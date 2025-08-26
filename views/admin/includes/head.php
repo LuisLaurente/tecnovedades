@@ -1,12 +1,12 @@
     <?php
-    $metaTitle = $metaTitle ?? 'Tienda Tecnovedades';
+    $metaTitle = $metaTitle ?? 'BYTEBOX';
     $metaDescription = $metaDescription ?? 'Compra tecnología y novedades al mejor precio.';
     $metaImage = $metaImage ?? url('images/default-share.png');
     $canonical = $canonical ?? url('');
     ?>
     <!-- Favicon -->
-    <link rel="icon" href="<?= url('image/favicon.ico') ?>" type="image/x-icon">
-    <link rel="icon" type="image/png" sizes="32x32" href="<?= url('image/favicon.png') ?>">
+    <link rel="icon" href="<?= url('image/faviconT.ico') ?>" type="image/x-icon">
+    <link rel="icon" type="image/png" sizes="32x32" href="<?= url('image/faviconT.png') ?>">
 
     <!-- Web Manifest -->
     <link rel="manifest" href="<?= url('manifest.webmanifest') ?>">

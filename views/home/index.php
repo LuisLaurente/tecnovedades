@@ -1,6 +1,6 @@
 <?php
 // views/home/index.php (versión corregida)
-$metaTitle = "Bienvenido a Tienda Tecnovedades - Tecnología y Novedades";
+$metaTitle = "Bienvenido a BYTEBOX - Tecnología y Novedades";
 $metaDescription = "Descubre lo último en tecnología, novedades y accesorios al mejor precio.";
 
 if (session_status() === PHP_SESSION_NONE) session_start();

@@ -34,7 +34,22 @@ $showPct     = $porcentajeVisible && $showTachado && ($descuentoPct > 0);
 // ------- Ejemplo de ruta de categoría (breadcrumb) -------
 // Esto debería venir de tu base de datos o lógica de categorías
 // Ejemplo: $breadcrumb = ['Tecnología', 'Celulares', 'iPhone'];
-$breadcrumb = isset($producto['breadcrumb']) ? $producto['breadcrumb'] : ['Inicio', 'Productos'];
+$breadcrumb = [
+    ['label' => 'Inicio', 'url' => url('/')],
+];
+
+// Si el producto tiene categorías, las usamos como rutas intermedias
+if (!empty($producto['categorias']) && is_array($producto['categorias'])) {
+    foreach ($producto['categorias'] as $categoria) {
+        // Puedes personalizar cómo se genera el slug de la categoría aquí
+        $slug = strtolower(str_replace(' ', '-', $categoria));
+        $breadcrumb[] = ['label' => $categoria, 'url' => url('/')];
+    }
+}
+
+// Finalmente, agregamos el nombre del producto como breadcrumb actual (sin URL)
+$breadcrumb[] = ['label' => $producto['nombre']];
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -53,17 +68,16 @@ $breadcrumb = isset($producto['breadcrumb']) ? $producto['breadcrumb'] : ['Inici
         <!-- Ruta de categoría (Breadcrumb) -->
         <div class="breadcrumb-container">
             <nav class="breadcrumb" aria-label="Ruta de navegación">
-                <?php foreach ($breadcrumb as $index => $categoria): ?>
-                    <?php if ($index === count($breadcrumb) - 1): ?>
-                        <!-- Último elemento (actual) -->
-                        <span class="breadcrumb-current"><?= htmlspecialchars($categoria) ?></span>
-                    <?php else: ?>
-                        <!-- Elementos navegables -->
-                        <a href="<?= url('categoria/' . strtolower(str_replace(' ', '-', $categoria))) ?>"><?= htmlspecialchars($categoria) ?></a>
-                        <span class="breadcrumb-separator">›</span>
-                    <?php endif; ?>
-                <?php endforeach; ?>
-            </nav>
+        <?php foreach ($breadcrumb as $index => $item): ?>
+            <?php if (isset($item['url']) && $index < count($breadcrumb) - 1): ?>
+                <a href="<?= htmlspecialchars($item['url']) ?>"><?= htmlspecialchars($item['label']) ?></a>
+                <span class="breadcrumb-separator">›</span>
+            <?php else: ?>
+                <span class="breadcrumb-current"><?= htmlspecialchars($item['label']) ?></span>
+            <?php endif; ?>
+        <?php endforeach; ?>
+    </nav>
+
         </div>
 
         <section class="producto-main">
