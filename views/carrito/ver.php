@@ -1,26 +1,25 @@
 <?php if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
+
+
 $cantidadEnCarrito = 0;
 if (isset($_SESSION['carrito'])) {
     foreach ($_SESSION['carrito'] as $item) {
         $cantidadEnCarrito += $item['cantidad'];
     }
-} ?> <div class="header-container"> <?php include_once __DIR__ . '/../admin/includes/header.php'; ?> </div>
+} ?> 
+<!-- Favicon -->
+    <link rel="icon" href="<?= url('image/faviconT.ico') ?>" type="image/x-icon">
+    <link rel="icon" type="image/png" sizes="32x32" href="<?= url('image/faviconT.png') ?>">
+    
+    <div class="header-container"> <?php include_once __DIR__ . '/../admin/includes/header.php'; ?> </div>
 <h2>Carrito de Compras</h2>
 
 <!-- Estilos y botón de volver -->
 <link rel="stylesheet" href="<?= url('css/carrito.css') ?>">
-<a href="<?= url('/') ?>" class="boton-volver">🛒 Volver</a>
-<?php if (isset($_SESSION['usuario'])): ?>
-    
-    <?php if (!empty($_SESSION['carrito']) && count($_SESSION['carrito']) > 0): ?>
-        <a href="<?= url('pedido/checkout') ?>" class="boton-checkout">Finalizar compra</a> 
-    <?php endif; ?>
 
-<?php else: ?>
-    <a href="<?= url('pedido/precheckout') ?>" class="boton-checkout">Continuar compra</a>
-<?php endif; ?>
 
 
 <!-- Contenido del carrito -->
@@ -180,19 +179,21 @@ if (isset($_SESSION['carrito'])) {
         </svg>
         Volver
     </a>
-    <?php if (isset($_SESSION['usuario'])): ?>
-        <a href="<?= url('pedido/checkout') ?>" class="boton-checkout">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Finalizar compra
-        </a>
-    <?php else: ?>
-        <a href="<?= url('pedido/precheckout') ?>" class="boton-checkout">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-            Continuar compra
-        </a>
+    <?php if (!empty($_SESSION['carrito']) && count($_SESSION['carrito']) > 0): ?>
+        <?php if (isset($_SESSION['usuario'])): ?>
+            <a href="<?= url('pedido/checkout') ?>" class="boton-checkout">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Finalizar compra
+            </a>
+        <?php else: ?>
+            <a href="<?= url('pedido/precheckout') ?>" class="boton-checkout">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+                Continuar compra
+            </a>
+        <?php endif; ?>
     <?php endif; ?>
 </div>

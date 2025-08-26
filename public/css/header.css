@@ -103,11 +103,13 @@
 .logo-image {
     height: 50px;
     width: auto;
-    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.1));
+    filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.6))
+            drop-shadow(0 0 4px rgba(0, 0, 0, 0.6))
+            drop-shadow(0 0 8px rgba(0, 0, 0, 0.3));
     transition: var(--transition);
 }
 
-.logo-link:hover .logo-image {
+.logo-link:hover {
     filter: drop-shadow(2px 2px 8px rgba(42, 193, 219, 0.3));
 }
 
@@ -527,10 +529,6 @@
         gap: 1rem;
     }
     
-    .logo-image {
-        height: 40px;
-    }
-    
     .search-input {
         height: 44px;
         padding: 0.75rem 3.5rem 0.75rem 1rem;
@@ -588,9 +586,6 @@
         gap: 0.75rem;
     }
     
-    .logo-image {
-        height: 35px;
-    }
     
     .main-nav {
         max-width: 250px;
