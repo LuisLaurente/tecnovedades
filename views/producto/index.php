@@ -190,6 +190,7 @@ if (isset($_SESSION['carrito'])) {
                                     <thead>
                                         <tr>
                                             <th>ID</th>
+                                            <th>Sku</th>
                                             <th>Nombre</th>
                                             <th>Descripción</th>
                                             <th>Precio Final</th>
@@ -205,6 +206,7 @@ if (isset($_SESSION['carrito'])) {
                                         <?php foreach ($productos as $producto): ?>
                                             <tr>
                                                 <td><?= $producto['id'] ?></td>
+                                                <td><?= htmlspecialchars($producto['sku']) ?></td>
                                                 <td><?= htmlspecialchars($producto['nombre']) ?></td>
                                                 <td><?= htmlspecialchars($producto['descripcion']) ?></td>
                                                 <td>S/ <?= number_format($producto['precio'], 2) ?></td>

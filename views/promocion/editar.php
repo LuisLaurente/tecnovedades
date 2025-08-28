@@ -69,6 +69,12 @@
                                             value="<?= $promocion['fecha_fin'] ?>" required>
                                     </div>
 
+                                    <div class="form-group">
+                                    <label for="codigo" class="form-label">Código *</label>
+                                    <input type="text" id="codigo" name="codigo" class="form-input"
+                                        value="<?= htmlspecialchars($promocion['codigo']) ?>" required>
+                                </div>
+
                                     <!-- Configuración de la promoción -->
                                     <div class="form-section">
                                         <h3 class="section-title">⚙️ Configuración</h3>
