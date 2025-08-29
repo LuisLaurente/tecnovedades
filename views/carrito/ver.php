@@ -113,24 +113,56 @@ if (isset($_SESSION['carrito'])) {
                     <div class="resumen-valor">S/ <?= number_format($totales['descuento'] ?? 0, 2) ?></div>
                 </div>
 
-                <?php if (isset($totales['cupon_aplicado'])): ?>
-                    <div class="resumen-item cupon-aplicado">
+                <!-- Sección para aplicar cupones -->
+                <div class="resumen-item cupon-seccion">
+                    <div class="cupon-titulo">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M9 9h1.023M9 13h1.023M9 17h1.023M7.5 4.218v15.564m0 0a2 2 0 100 2.196 2 2 0 000-2.196zM16.5 4.218v15.564m0 0a2 2 0 100 2.196 2 2 0 000-2.196z" />
+                        </svg>
+                        ¿Tienes un cupón?
+                    </div>
+                    <div class="cupon-input-container">
+                        <input type="text" 
+                               id="codigo-cupon" 
+                               placeholder="Ingresa tu código" 
+                               value="<?= $_SESSION['cupon_aplicado']['codigo'] ?? '' ?>" 
+                               <?= isset($_SESSION['cupon_aplicado']) ? 'readonly' : '' ?>>
+                        <?php if (isset($_SESSION['cupon_aplicado'])): ?>
+                            <button type="button" id="btn-remover-cupon" class="btn-cupon btn-remover">Remover</button>
+                        <?php else: ?>
+                            <button type="button" id="btn-aplicar-cupon" class="btn-cupon btn-aplicar">Aplicar</button>
+                        <?php endif; ?>
+                    </div>
+                    <div id="mensaje-cupon" class="cupon-mensaje">
+                        <?php if (isset($_SESSION['cupon_aplicado'])): ?>
+                            <span class="cupon-exito">
+                                ✓ Cupón aplicado: <strong><?= htmlspecialchars($_SESSION['cupon_aplicado']['codigo']) ?></strong>
+                            </span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <?php if (isset($_SESSION['cupon_aplicado']) && isset($totales['descuento_cupon'])): ?>
+                    <div class="resumen-item cupon-aplicado-detalle">
                         <div class="resumen-label">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M9 9h1.023M9 13h1.023M9 17h1.023M7.5 4.218v15.564m0 0a2 2 0 100 2.196 2 2 0 000-2.196zM16.5 4.218v15.564m0 0a2 2 0 100 2.196 2 2 0 000-2.196z" />
                             </svg>
-                            Cupón aplicado:
+                            Descuento cupón:
                         </div>
                         <div class="resumen-valor">
-                            <strong><?= htmlspecialchars($totales['cupon_aplicado']['codigo']) ?></strong>
-                            <?php if (!empty($totales['cupon_aplicado']['usuarios_autorizados'])): ?>
-                                <span class="cupon-restringido">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                    </svg>
-                                    Restringido
-                                </span>
-                            <?php endif; ?>
+                            <?php 
+                            $cupon = $_SESSION['cupon_aplicado'];
+                            $descuento_cupon = $totales['descuento_cupon'];
+                            
+                            if ($cupon['tipo'] === 'descuento_porcentaje') {
+                                echo '- S/ ' . number_format($descuento_cupon, 2) . ' (' . $cupon['valor'] . '%)';
+                            } elseif ($cupon['tipo'] === 'descuento_fijo') {
+                                echo '- S/ ' . number_format($descuento_cupon, 2);
+                            } elseif ($cupon['tipo'] === 'envio_gratis') {
+                                echo '🚚 Envío gratis';
+                            }
+                            ?>
                         </div>
                     </div>
                 <?php endif; ?>
@@ -142,7 +174,13 @@ if (isset($_SESSION['carrito'])) {
                         </svg>
                         Total:
                     </div>
-                    <div class="resumen-valor">S/ <?= number_format($totales['total'] ?? 0, 2) ?></div>
+                    <div class="resumen-valor">
+                        <?php 
+                        // Usar el total calculado por el CarritoController
+                        $total_final = $totales['total'] ?? 0;
+                        ?>
+                        S/ <?= number_format($total_final, 2) ?>
+                    </div>
                 </div>
             </div>
 
@@ -197,3 +235,241 @@ if (isset($_SESSION['carrito'])) {
         <?php endif; ?>
     <?php endif; ?>
 </div>
+
+<!-- Script para funcionalidad de cupones -->
+<script>
+// Función para aplicar cupón
+function aplicarCupon() {
+    const codigo = document.getElementById('codigo-cupon').value;
+    const mensaje = document.getElementById('mensaje-cupon');
+    
+    if (!codigo.trim()) {
+        mensaje.innerHTML = '<span class="cupon-error">Por favor ingresa un código de cupón</span>';
+        return;
+    }
+
+    // Crear formulario para enviar por POST
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '<?= url("carrito/aplicarCupon") ?>';
+    
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'codigo';
+    input.value = codigo;
+    
+    form.appendChild(input);
+    document.body.appendChild(form);
+    form.submit();
+}
+
+// Función para remover cupón
+function removerCupon() {
+    if (!confirm('¿Estás seguro de que quieres remover el cupón?')) {
+        return;
+    }
+
+    window.location.href = '<?= url("carrito/quitarCupon") ?>';
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    const btnAplicar = document.getElementById('btn-aplicar-cupon');
+    const btnRemover = document.getElementById('btn-remover-cupon');
+    const inputCupon = document.getElementById('codigo-cupon');
+
+    if (btnAplicar) {
+        btnAplicar.addEventListener('click', aplicarCupon);
+    }
+
+    if (btnRemover) {
+        btnRemover.addEventListener('click', removerCupon);
+    }
+
+    // Permitir aplicar cupón con Enter
+    if (inputCupon) {
+        inputCupon.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && btnAplicar) {
+                aplicarCupon();
+            }
+        });
+    }
+
+    // Mostrar mensajes de cupón si existen
+    <?php if (isset($_SESSION['mensaje_cupon_exito'])): ?>
+        const mensajeExito = document.getElementById('mensaje-cupon');
+        if (mensajeExito) {
+            mensajeExito.innerHTML = '<span class="cupon-exito">✓ <?= htmlspecialchars($_SESSION['mensaje_cupon_exito']) ?></span>';
+        }
+        <?php unset($_SESSION['mensaje_cupon_exito']); ?>
+    <?php endif; ?>
+
+    <?php if (isset($_SESSION['mensaje_cupon_error'])): ?>
+        const mensajeError = document.getElementById('mensaje-cupon');
+        if (mensajeError) {
+            mensajeError.innerHTML = '<span class="cupon-error">✗ <?= htmlspecialchars($_SESSION['mensaje_cupon_error']) ?></span>';
+        }
+        <?php unset($_SESSION['mensaje_cupon_error']); ?>
+    <?php endif; ?>
+});
+</script>
+
+<!-- Estilos para la sección de cupones -->
+<style>
+/* Variables de colores del proyecto */
+:root {
+    --color-primary: #2AC1DB;
+    --color-dark: #1B1B1B;
+    --color-white: #FFFFFF;
+    --color-secondary: #363993;
+    --color-primary-light: rgba(42, 193, 219, 0.1);
+    --color-primary-hover: rgba(42, 193, 219, 0.8);
+    --color-secondary-light: rgba(54, 57, 147, 0.1);
+    --color-gray-light: #f8f9fa;
+    --color-border: rgba(27, 27, 27, 0.1);
+    --color-shadow: rgba(27, 27, 27, 0.1);
+}
+
+.cupon-seccion {
+    background: var(--color-white);
+    border: 1px solid rgba(42, 193, 219, 0.2);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 15px 0;
+    box-shadow: 0 4px 15px rgba(27, 27, 27, 0.05);
+    transition: all 0.3s ease;
+}
+
+.cupon-seccion:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 6px 25px rgba(42, 193, 219, 0.1);
+}
+
+.cupon-titulo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Orbitron', monospace;
+    font-weight: 600;
+    color: var(--color-dark);
+    margin-bottom: 15px;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.cupon-input-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+#codigo-cupon {
+    flex: 1;
+    padding: 12px 15px;
+    border: 2px solid rgba(42, 193, 219, 0.3);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'Outfit', sans-serif;
+    transition: all 0.3s ease;
+}
+
+#codigo-cupon:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(42, 193, 219, 0.1);
+}
+
+#codigo-cupon:read-only {
+    background-color: rgba(42, 193, 219, 0.05);
+    color: var(--color-dark);
+    font-weight: 500;
+}
+
+.btn-cupon {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'Outfit', sans-serif;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-aplicar {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    color: var(--color-white);
+}
+
+.btn-aplicar:hover {
+    background: linear-gradient(135deg, var(--color-secondary), var(--color-primary));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(42, 193, 219, 0.3);
+}
+
+.btn-remover {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+    color: var(--color-white);
+}
+
+.btn-remover:hover {
+    background: linear-gradient(135deg, #ee5a52, #ff6b6b);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(238, 90, 82, 0.3);
+}
+
+.cupon-mensaje {
+    min-height: 24px;
+    font-size: 14px;
+    font-family: 'Outfit', sans-serif;
+    margin-top: 5px;
+}
+
+.cupon-exito {
+    color: var(--color-primary);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.cupon-error {
+    color: #ee5a52;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.cupon-loading {
+    color: var(--color-secondary);
+    font-style: italic;
+    font-weight: 500;
+}
+
+.cupon-advertencia {
+    color: #ff9800;
+    font-weight: 500;
+}
+
+.cupon-aplicado-detalle {
+    background: linear-gradient(135deg, rgba(42, 193, 219, 0.05), rgba(54, 57, 147, 0.05));
+    border-left: 4px solid var(--color-primary);
+    padding: 15px 20px;
+    border-radius: 0 8px 8px 0;
+    margin: 10px 0;
+}
+
+.cupon-aplicado-detalle .resumen-label {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.cupon-aplicado-detalle .resumen-valor {
+    color: var(--color-primary);
+    font-weight: 700;
+}
+</style>

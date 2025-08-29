@@ -215,19 +215,33 @@ class PedidoController
                 $cupon_aplicado = $_SESSION['cupon_aplicado'] ?? null;
                 $descuento_cupon = 0;
                 $cupon_id = null;
+                $cupon_codigo = null;
                 
                 if ($cupon_aplicado) {
                     $aplicacion = CuponHelper::aplicarCupon($cupon_aplicado['codigo'], $usuario['id'], $carrito);
                     if ($aplicacion['exito']) {
                         $descuento_cupon = $aplicacion['descuento'];
                         $cupon_id = $aplicacion['cupon']['id'];
+                        $cupon_codigo = $aplicacion['cupon']['codigo'];
                         $totales['descuento'] += $descuento_cupon;
                         $totales['total'] = max($totales['subtotal'] - $totales['descuento'], 0);
                     }
                 }
 
-                // Crear pedido (sin dirección en la tabla pedidos)
-                $pedido_id = $this->pedidoModel->crear($usuario['id'], $totales['total']);
+                // Preparar datos del cupón para el pedido
+                $cupon_data = null;
+                if ($cupon_id) {
+                    $cupon_data = [
+                        'cupon_id' => $cupon_id,
+                        'cupon_codigo' => $cupon_codigo,
+                        'descuento_cupon' => $descuento_cupon,
+                        'subtotal' => $totales['subtotal'],
+                        'descuento_promocion' => $totales['descuento'] - $descuento_cupon
+                    ];
+                }
+
+                // Crear pedido con información de cupón
+                $pedido_id = $this->pedidoModel->crear($usuario['id'], $totales['total'], 'pendiente', $cupon_data);
                 if (!$pedido_id) {
                     throw new Exception('No se pudo crear el pedido');
                 }

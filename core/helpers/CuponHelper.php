@@ -9,7 +9,7 @@ class CuponHelper
     /**
      * Validar y aplicar un cupón al carrito
      */
-    public static function aplicarCupon($codigo, $cliente_id, $carrito)
+    public static function aplicarCupon($codigo, $cliente_id, $carrito, $productos = [])
     {
         $cuponModel = new Cupon();
         $cupon = $cuponModel->obtenerPorCodigo($codigo);
@@ -27,8 +27,8 @@ class CuponHelper
             $subtotal += $item['precio'] * $item['cantidad'];
         }
 
-        // Usar el método de validación del modelo
-        $validacion = $cuponModel->puedeUsarCupon($cupon['id'], $cliente_id, $subtotal);
+        // Usar el método de validación del modelo con productos
+        $validacion = $cuponModel->puedeUsarCupon($cupon['id'], $cliente_id, $subtotal, $productos);
         
         if (!$validacion['valido']) {
             return [
@@ -37,11 +37,17 @@ class CuponHelper
             ];
         }
 
+        // Verificar acumulación con promociones
+        if (!$cupon['acumulable_promociones'] && isset($_SESSION['promocion_aplicada'])) {
+            // Remover promoción existente
+            unset($_SESSION['promocion_aplicada']);
+        }
+
         // Calcular descuento
         $descuento = 0;
-        if ($cupon['tipo'] === 'porcentaje') {
+        if ($cupon['tipo'] === 'porcentaje' || $cupon['tipo'] === 'descuento_porcentaje') {
             $descuento = $subtotal * ($cupon['valor'] / 100);
-        } else {
+        } elseif ($cupon['tipo'] === 'descuento_fijo') {
             $descuento = min($cupon['valor'], $subtotal); // El descuento no puede ser mayor al subtotal
         }
 

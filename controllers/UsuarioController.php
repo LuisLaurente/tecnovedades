@@ -417,11 +417,16 @@ class UsuarioController extends BaseController
             $pedidoDireccionModel = new \Models\PedidoDireccion();
             
             foreach ($pedidos as &$pedido) {
-                // Obtener detalles del pedido
+                // Obtener detalles del pedido con información de productos
                 try {
-                    $pedido['detalles'] = $detalleModel->obtenerPorPedido($pedido['id']);
+                    $pedido['detalles'] = $detalleModel->obtenerPorPedidoConProductos($pedido['id']);
                 } catch (\Exception $e) {
-                    $pedido['detalles'] = [];
+                    // Fallback al método original si hay error
+                    try {
+                        $pedido['detalles'] = $detalleModel->obtenerPorPedido($pedido['id']);
+                    } catch (\Exception $e2) {
+                        $pedido['detalles'] = [];
+                    }
                 }
                 
                 // Calcular total si no está presente o es 0

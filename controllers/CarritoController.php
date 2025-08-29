@@ -5,6 +5,7 @@ namespace Controllers;
 use Models\Producto;
 use Models\Promocion;
 use Core\Helpers\PromocionHelper; // Importamos el helper de promociones
+use Core\Helpers\CuponHelper; // Importamos el helper de cupones
 
 class CarritoController
 {
@@ -59,6 +60,11 @@ class CarritoController
         $usuario = $_SESSION['usuario'] ?? null;
         $_SESSION['promociones'] = PromocionHelper::evaluar($_SESSION['carrito'] ?? [], $usuario);
 
+        // Si el carrito quedó vacío, limpiar cupón
+        if (empty($_SESSION['carrito'])) {
+            CuponHelper::limpiarCuponSesion();
+        }
+
         header('Location: ' . url('carrito/ver'));
         exit;
     }
@@ -68,22 +74,43 @@ class CarritoController
         $productosDetallados = [];
         $carrito = $_SESSION['carrito'] ?? [];
         $usuario = $_SESSION['usuario'] ?? null;
+        
         // Evaluar promociones siempre que se cargue el carrito
         $promociones = PromocionHelper::evaluar($carrito, $usuario);
         $totales = PromocionHelper::calcularTotales($carrito, $promociones);
 
-        // Verificar si hay un cupón aplicado y agregarlo al descuento
-        $cupon_aplicado = \Core\Helpers\CuponHelper::obtenerCuponAplicado();
-        if ($cupon_aplicado) {
-            $descuento_cupon = 0;
-            if ($cupon_aplicado['tipo'] === 'porcentaje') {
-                $descuento_cupon = $totales['subtotal'] * ($cupon_aplicado['valor'] / 100);
-            } else {
-                $descuento_cupon = min($cupon_aplicado['valor'], $totales['subtotal']);
+        // Verificar si hay un cupón aplicado usando CuponHelper
+        $cupon_aplicado = CuponHelper::obtenerCuponAplicado();
+        $descuento_cupon = 0;
+        
+        if ($cupon_aplicado && !empty($carrito)) {
+            // Obtener información de los productos para la validación completa
+            $productosParaValidacion = [];
+            foreach ($carrito as $item) {
+                $producto = Producto::obtenerPorId($item['producto_id']);
+                if ($producto) {
+                    $productosParaValidacion[] = $producto;
+                }
             }
-            $totales['descuento'] += $descuento_cupon;
-            $totales['total'] = max($totales['subtotal'] - $totales['descuento'], 0);
-            $totales['cupon_aplicado'] = $cupon_aplicado;
+            
+            // Usar CuponHelper para validar y calcular el descuento
+            $cliente_id = $usuario['id'] ?? 1; // Usar ID del usuario o valor por defecto
+            $aplicacionCupon = CuponHelper::aplicarCupon(
+                $cupon_aplicado['codigo'], 
+                $cliente_id, 
+                $carrito, 
+                $productosParaValidacion
+            );
+            
+            if ($aplicacionCupon['exito']) {
+                $descuento_cupon = $aplicacionCupon['descuento'];
+                $totales['descuento_cupon'] = $descuento_cupon;
+                $totales['total'] = max($totales['subtotal'] - $totales['descuento'] - $descuento_cupon, 0);
+            } else {
+                // Si el cupón ya no es válido, removerlo
+                CuponHelper::limpiarCuponSesion();
+                $cupon_aplicado = null;
+            }
         }
 
         if (!empty($carrito)) {
@@ -136,6 +163,67 @@ class CarritoController
         $usuario = $_SESSION['usuario'] ?? null;
         $_SESSION['promociones'] = PromocionHelper::evaluar($_SESSION['carrito'] ?? [], $usuario);
 
+        // Si el carrito quedó vacío, limpiar cupón
+        if (empty($_SESSION['carrito'])) {
+            CuponHelper::limpiarCuponSesion();
+        }
+
+        header('Location: ' . url('carrito/ver'));
+        exit;
+    }
+
+    // Métodos para manejar cupones en el carrito
+    public function aplicarCupon()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . url('carrito/ver'));
+            exit;
+        }
+
+        $codigo = trim($_POST['codigo'] ?? '');
+        $carrito = $_SESSION['carrito'] ?? [];
+        
+        if (empty($codigo)) {
+            $_SESSION['mensaje_cupon_error'] = 'Código de cupón requerido';
+            header('Location: ' . url('carrito/ver'));
+            exit;
+        }
+
+        if (empty($carrito)) {
+            $_SESSION['mensaje_cupon_error'] = 'El carrito está vacío';
+            header('Location: ' . url('carrito/ver'));
+            exit;
+        }
+
+        $usuario = $_SESSION['usuario'] ?? null;
+        $cliente_id = $usuario['id'] ?? 1;
+        
+        // Obtener productos detallados para validación
+        $productosParaValidacion = [];
+        foreach ($carrito as $item) {
+            $producto = Producto::obtenerPorId($item['producto_id']);
+            if ($producto) {
+                $productosParaValidacion[] = $producto;
+            }
+        }
+        
+        $resultado = CuponHelper::aplicarCupon($codigo, $cliente_id, $carrito, $productosParaValidacion);
+        
+        if ($resultado['exito']) {
+            $_SESSION['cupon_aplicado'] = $resultado['cupon'];
+            $_SESSION['mensaje_cupon_exito'] = $resultado['mensaje'];
+        } else {
+            $_SESSION['mensaje_cupon_error'] = $resultado['mensaje'];
+        }
+
+        header('Location: ' . url('carrito/ver'));
+        exit;
+    }
+
+    public function quitarCupon()
+    {
+        CuponHelper::limpiarCuponSesion();
+        $_SESSION['mensaje_cupon_exito'] = 'Cupón removido correctamente';
         header('Location: ' . url('carrito/ver'));
         exit;
     }
