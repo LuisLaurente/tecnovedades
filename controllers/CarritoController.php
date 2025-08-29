@@ -9,46 +9,89 @@ use Core\Helpers\CuponHelper; // Importamos el helper de cupones
 
 class CarritoController
 {
-    public function agregar()
-    {
-        $producto_id = $_POST['producto_id'];
-        $talla = $_POST['talla'] ?? null;
-        $color = $_POST['color'] ?? null;
-        $cantidad = $_POST['cantidad'] ?? 1;
+public function agregar()
+{
+    if (session_status() === PHP_SESSION_NONE) session_start();
 
-        // Obtener el precio actual del producto
-        $producto = Producto::obtenerPorId($producto_id);
-        $precio = $producto && isset($producto['precio']) ? $producto['precio'] : 0;
+    // Sanitizar entrada
+    $producto_id = isset($_POST['producto_id']) ? (int) $_POST['producto_id'] : 0;
+    $talla = isset($_POST['talla']) ? trim((string) $_POST['talla']) : null;
+    $color = isset($_POST['color']) ? trim((string) $_POST['color']) : null;
+    $cantidad = isset($_POST['cantidad']) ? (int) $_POST['cantidad'] : 1;
 
-        $clave = $producto_id . '_' . $talla . '_' . $color;
+    $referer = $_SERVER['HTTP_REFERER'] ?? url('carrito/ver');
 
-        if (!isset($_SESSION['carrito'])) {
-            $_SESSION['carrito'] = [];
-        }
-
-        if (isset($_SESSION['carrito'][$clave])) {
-            $_SESSION['carrito'][$clave]['cantidad'] += $cantidad;
-        } else {
-            $_SESSION['carrito'][$clave] = [
-                'producto_id' => $producto_id,
-                'talla' => $talla,
-                'color' => $color,
-                'cantidad' => $cantidad,
-                'precio' => $precio
-            ];
-        }
-
-        // Evaluar promociones y actualizar sesión
-        $usuario = $_SESSION['usuario'] ?? null;
-        $_SESSION['promociones'] = PromocionHelper::evaluar($_SESSION['carrito'], $usuario);
-
-        // Guardar mensaje en sesión
-        $_SESSION['mensaje_carrito'] = '✅ Agregado con éxito.';
-
-        // Redirigir a la página anterior
-        header('Location: ' . $_SERVER['HTTP_REFERER']);
-        exit;
+    // Validaciones
+    if ($producto_id <= 0) {
+        $_SESSION['flash_error'] = 'Producto inválido.';
+        header('Location: ' . $referer); exit;
     }
+    if ($cantidad <= 0) {
+        $_SESSION['flash_error'] = 'La cantidad debe ser al menos 1.';
+        header('Location: ' . $referer); exit;
+    }
+
+    // Obtener producto
+    $producto = \Models\Producto::obtenerPorId($producto_id);
+    if (!$producto) {
+        $_SESSION['flash_error'] = 'Producto no encontrado.';
+        header('Location: ' . $referer); exit;
+    }
+    $precio = isset($producto['precio']) ? (float)$producto['precio'] : 0.0;
+    $stock = isset($producto['stock']) && is_numeric($producto['stock']) ? (int)$producto['stock'] : null;
+
+    if (!isset($_SESSION['carrito']) || !is_array($_SESSION['carrito'])) $_SESSION['carrito'] = [];
+
+    $clave = $producto_id . '_' . ($talla ?? '') . '_' . ($color ?? '');
+    $cantidadActual = isset($_SESSION['carrito'][$clave]['cantidad']) ? (int)$_SESSION['carrito'][$clave]['cantidad'] : 0;
+    $nuevaCantidad = $cantidadActual + $cantidad;
+
+    // Stock check
+    if ($stock !== null && $stock >= 0) {
+        if ($cantidadActual >= $stock) {
+            $_SESSION['flash_error'] = 'No hay stock disponible para agregar más unidades.';
+            header('Location: ' . $referer); exit;
+        }
+        if ($nuevaCantidad > $stock) {
+            $cantidad = $stock - $cantidadActual;
+            if ($cantidad <= 0) {
+                $_SESSION['flash_error'] = 'No hay suficiente stock disponible.';
+                header('Location: ' . $referer); exit;
+            }
+            $_SESSION['flash_warning'] = "Se agregaron solamente {$cantidad} unidades (stock limitado).";
+            $nuevaCantidad = $cantidadActual + $cantidad;
+        }
+    }
+
+    // Guardar en sesión (asegurando tipos)
+    if (isset($_SESSION['carrito'][$clave])) {
+        $_SESSION['carrito'][$clave]['cantidad'] = $nuevaCantidad;
+    } else {
+        $_SESSION['carrito'][$clave] = [
+            'producto_id' => $producto_id,
+            'talla' => $talla,
+            'color' => $color,
+            'cantidad' => $cantidad,
+            'precio' => $precio
+        ];
+    }
+
+    // Evaluar promociones si existe el helper (proteger fallos)
+    try {
+        if (class_exists('PromocionHelper')) {
+            $_SESSION['promociones'] = PromocionHelper::evaluar($_SESSION['carrito'], $_SESSION['usuario'] ?? null);
+        } elseif (class_exists('\Core\Helpers\PromocionHelper')) {
+            $_SESSION['promociones'] = \Core\Helpers\PromocionHelper::evaluar($_SESSION['carrito'], $_SESSION['usuario'] ?? null);
+        }
+    } catch (\Throwable $e) {
+        error_log('PromocionHelper::evaluar error: ' . $e->getMessage());
+    }
+
+    $_SESSION['mensaje_carrito'] = '✅ Agregado con éxito.';
+    header('Location: ' . $referer);
+    exit;
+}
+
 
     public function eliminar($clave)
     {

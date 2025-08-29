@@ -43,13 +43,30 @@ function isClienteHeader()
 ?>
 <link rel="stylesheet" href="<?= url('css/header.css') ?>">
 
+<div class="top-bar">
+  <div class="top-bar-content">
+    <nav class="top-links">
+      <a href="#" class="top-link">Empresa</a>
+      <a href="#" class="top-link">Novedades</a>
+      <a href="#" class="top-link">Atención al Cliente</a>
+      <a href="#" class="top-link">Contacto</a>
+    </nav>
+    <div class="social-icons">
+      <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+      <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+      <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+      <a href="#" class="social-icon"><i class="fab fa-youtube"></i></a>
+    </div>
+  </div>
+</div>
+
 <header class="main-header">
   <div class="header-content">
 
     <!-- Left: logo -->
     <div class="header-left">
       <a href="<?= url('home/index') ?>" class="logo-link" aria-label="Bytebox home">
-        <img src="<?= url('images/logoBitebox.png') ?>" alt="Bytebox" class="logo-image">
+        <img src="<?= url('images/image-logobytebox.png') ?>" alt="Bytebox" class="logo-image">
       </a>
     </div>
 
@@ -154,7 +171,54 @@ function isClienteHeader()
 
     </div>
   </div>
+  <div class="categories-bar">
+    <div class="categories-content">
+      <div class="all-categories-dropdown-container">
+        <button class="all-categories-button" id="allCategoriesButton" aria-haspopup="true" aria-expanded="false">
+          Todas las Categorías
+          <svg class="dropdown-arrow-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+        <div class="categories-dropdown" id="categoriesDropdown" role="menu" aria-hidden="true">
+          <div class="category-column">
+            <a href="#" class="category-item">Placa Madre</a>
+            <a href="#" class="category-item">Procesadores</a>
+            <a href="#" class="category-item">Tarjetas Gráficas</a>
+            <a href="#" class="category-item">Memoria RAM</a>
+            <a href="#" class="category-item">Almacenamiento</a>
+          </div>
+          <div class="category-column">
+            <a href="#" class="category-item">Fuentes de Poder</a>
+            <a href="#" class="category-item">Gabinetes</a>
+            <a href="#" class="category-item">Refrigeración</a>
+            <a href="#" class="category-item">Monitores</a>
+            <a href="#" class="category-item">Periféricos</a>
+          </div>
+          <div class="category-column">
+            <a href="#" class="category-item">Laptops</a>
+            <a href="#" class="category-item">Desktops Pre-ensamblados</a>
+            <a href="#" class="category-item">Redes</a>
+            <a href="#" class="category-item">Software</a>
+            <a href="#" class="category-item">Accesorios</a>
+          </div>
+        </div>
+      </div>
+      <nav class="category-links">
+        <a href="#" class="category-link">PLACA MADRE</a>
+        <a href="#" class="category-link">CASES</a>
+        <a href="#" class="category-link">PROCESADORES</a>
+        <a href="#" class="category-link">PERIFÉRICOS</a>
+        <a href="#" class="category-link">MONITORES</a>
+        <a href="#" class="category-link">LAPTOPS</a>
+        <a href="#" class="category-link">MEMORIAS RAM</a>
+        <a href="#" class="category-link">PLACA MADRE</a>
+      </nav>
+    </div>
+  </div>
 </header>
+
+
 
 <!-- Exponer BASE_URL para JS -->
 <script>
@@ -278,6 +342,43 @@ function isClienteHeader()
           profileContainer.classList.remove('open');
           profileDropdown.setAttribute('aria-hidden', 'true');
           document.getElementById('userProfileButton').setAttribute('aria-expanded', 'false');
+        }, 200);
+      });
+    }
+
+    /* ---------- Categories dropdown open/close with small delay ---------- */
+    const allCategoriesButton = document.getElementById('allCategoriesButton');
+    const categoriesDropdown = document.getElementById('categoriesDropdown');
+    let categoriesCloseTimeout = null;
+
+    if (allCategoriesButton && categoriesDropdown) {
+      allCategoriesButton.addEventListener('mouseenter', () => {
+        clearTimeout(categoriesCloseTimeout);
+        categoriesDropdown.classList.add('open');
+        allCategoriesButton.setAttribute('aria-expanded', 'true');
+        categoriesDropdown.setAttribute('aria-hidden', 'false');
+      });
+
+      allCategoriesButton.addEventListener('mouseleave', () => {
+        categoriesCloseTimeout = setTimeout(() => {
+          categoriesDropdown.classList.remove('open');
+          allCategoriesButton.setAttribute('aria-expanded', 'false');
+          categoriesDropdown.setAttribute('aria-hidden', 'true');
+        }, 200);
+      });
+
+      categoriesDropdown.addEventListener('mouseenter', () => {
+        clearTimeout(categoriesCloseTimeout);
+        categoriesDropdown.classList.add('open');
+        allCategoriesButton.setAttribute('aria-expanded', 'true');
+        categoriesDropdown.setAttribute('aria-hidden', 'false');
+      });
+
+      categoriesDropdown.addEventListener('mouseleave', () => {
+        categoriesCloseTimeout = setTimeout(() => {
+          categoriesDropdown.classList.remove('open');
+          allCategoriesButton.setAttribute('aria-expanded', 'false');
+          categoriesDropdown.setAttribute('aria-hidden', 'true');
         }, 200);
       });
     }
