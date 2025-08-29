@@ -222,29 +222,47 @@
     margin-top: 15px;
     padding-top: 15px;
     border-top: 1px solid var(--color-border);
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
+/* CONTENEDOR DE CANTIDAD - IDÉNTICO A carrito.css */
 .cantidad-container {
     display: flex;
     align-items: center;
-    gap: 10px;
-    background: var(--color-primary-light);
-    padding: 10px 20px;
+    gap: 0.5rem;
+    background: var(--color-gray-light);
     border-radius: 8px;
-    border: 1px solid rgba(42, 193, 219, 0.3);
+    padding: 0.5rem;
+    width: fit-content;
 }
 
-.cantidad-label {
-    font-weight: 500;
-    color: var(--color-dark);
-    font-size: 0.9rem;
+.btn-cantidad {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: var(--color-primary);
+    color: var(--color-white);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-cantidad:hover {
+    background: var(--color-primary-hover);
+    transform: scale(1.1);
 }
 
 .cantidad-numero {
-    font-weight: 700;
-    color: var(--color-primary);
-    font-size: 1.1rem;
-    min-width: 25px;
+    font-family: 'Orbitron', monospace;
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--color-dark);
+    min-width: 30px;
     text-align: center;
 }
 
@@ -259,9 +277,64 @@
 }
 
 .precio-total {
+    font-family: 'Orbitron', monospace;
     font-weight: 700;
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     color: var(--color-primary);
+}
+
+.acciones-producto {
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
+}
+
+/* BOTÓN ELIMINAR - IDÉNTICO A carrito.css */
+.btn-eliminar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(220, 53, 69, 0.2);
+}
+
+.btn-eliminar:hover {
+    background: #dc3545;
+    color: var(--color-white);
+    transform: scale(1.1);
+}
+
+.btn-cantidad:active {
+    transform: scale(0.95) !important;
+}
+
+.btn-eliminar:active {
+    transform: scale(0.95) !important;
+}
+
+/* Efecto de hover mejorado para los productos */
+.producto-item:hover .btn-cantidad,
+.producto-item:hover .btn-eliminar {
+    opacity: 1;
+    visibility: visible;
+}
+
+.btn-cantidad,
+.btn-eliminar {
+    opacity: 0.7;
+    visibility: visible;
+    transition: all 0.3s ease;
+}
+
+.btn-cantidad:hover,
+.btn-eliminar:hover {
+    opacity: 1;
 }
 
 /* Carrito vacío */
@@ -581,16 +654,6 @@
     color: var(--color-success);
 }
 
-.resumen-item.envio .envio-gratis {
-    color: var(--color-success);
-    font-weight: 700;
-    font-size: 0.9rem;
-    background: rgba(34, 197, 94, 0.1);
-    padding: 4px 12px;
-    border-radius: 20px;
-    border: 1px solid rgba(34, 197, 94, 0.3);
-}
-
 .resumen-divider {
     border: none;
     height: 2px;
@@ -783,9 +846,19 @@
         align-items: stretch;
         gap: 15px;
     }
+
+    .cantidad-container {
+        justify-content: center;
+    }
     
     .precio-subtotal {
-        text-align: left;
+        text-align: center;
+    }
+
+    .acciones-producto {
+        justify-content: center;
+        margin-left: 0;
+        margin-top: 10px;
     }
     
     .form-options {
@@ -833,5 +906,24 @@
     .btn-social {
         padding: 12px 15px;
         font-size: 0.9rem;
+    }
+    
+    .btn-cantidad {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .btn-eliminar {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .cantidad-container {
+        padding: 0.75rem;
+    }
+    
+    .cantidad-numero {
+        font-size: 1.1rem;
+        min-width: 35px;
     }
 }

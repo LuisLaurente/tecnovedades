@@ -78,12 +78,31 @@ if (isset($_SESSION['carrito'])) {
                                         </div>
                                         <div class="cantidad-precio">
                                             <div class="cantidad-container">
-                                                <span class="cantidad-label">Cantidad:</span>
+                                                <a href="<?= url('carrito/disminuir/' . urlencode($item['clave'])) ?>" class="btn-cantidad btn-disminuir" title="Disminuir cantidad">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 12H6" />
+                                                    </svg>
+                                                </a>
                                                 <span class="cantidad-numero"><?= $item['cantidad'] ?></span>
+                                                <a href="<?= url('carrito/aumentar/' . urlencode($item['clave'])) ?>" class="btn-cantidad btn-aumentar" title="Aumentar cantidad">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                                    </svg>
+                                                </a>
                                             </div>
                                             <div class="precio-subtotal">
                                                 <div class="precio-unitario">S/ <?= number_format($item['precio'], 2) ?> c/u</div>
                                                 <div class="precio-total">S/ <?= number_format($item['subtotal'], 2) ?></div>
+                                            </div>
+                                            <div class="acciones-producto">
+                                                <a href="<?= url('carrito/eliminar/' . urlencode($item['clave'])) ?>"
+                                                    class="btn-eliminar"
+                                                    title="Eliminar producto"
+                                                    onclick="return confirm('¿Eliminar este producto del carrito?')">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="18" height="18">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                </a>
                                             </div>
                                         </div>
                                     </div>
@@ -213,11 +232,6 @@ if (isset($_SESSION['carrito'])) {
                                 </div>
                             <?php endif; ?>
 
-                            <div class="resumen-item envio">
-                                <span class="resumen-label">Envío:</span>
-                                <span class="resumen-valor envio-gratis">GRATIS</span>
-                            </div>
-
                             <hr class="resumen-divider">
 
                             <div class="resumen-item total-final">
@@ -302,6 +316,29 @@ if (isset($_SESSION['carrito'])) {
         // Observar elementos para animación
         document.querySelectorAll('.producto-item, .auth-card, .resumen-compra').forEach(el => {
             observer.observe(el);
+        });
+
+        // Mejorar la experiencia de los botones de cantidad
+        document.querySelectorAll('.btn-cantidad').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                // Añadir efecto visual
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 150);
+            });
+        });
+
+        // Confirmación para eliminar productos
+        document.querySelectorAll('.btn-eliminar').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const productoNombre = this.closest('.producto-item').querySelector('.producto-nombre').textContent;
+                
+                if (confirm(`¿Eliminar "${productoNombre}" del carrito?`)) {
+                    window.location.href = this.href;
+                }
+            });
         });
     </script>
 </body>
