@@ -9,6 +9,19 @@ use Core\Helpers\CuponHelper; // Importamos el helper de cupones
 
 class CarritoController
 {
+/**
+ * NUEVA FUNCIONALIDAD: Carrito con Login Integrado
+ * 
+ * Cuando un usuario no tiene sesión iniciada, el método ver() 
+ * automáticamente redirige a verSinSesion() que muestra:
+ * - Lista de productos del carrito
+ * - Formulario de login integrado 
+ * - Botones de registro y redes sociales
+ * - Resumen de compra en columna derecha
+ * 
+ * Esto elimina la necesidad de usar precheckout.php y mejora 
+ * la experiencia de usuario manteniendo todo en una sola vista.
+ */
 public function agregar()
 {
     if (session_status() === PHP_SESSION_NONE) session_start();
@@ -114,6 +127,11 @@ public function agregar()
 
     public function ver()
     {
+        // Si no hay sesión iniciada, mostrar vista especial con login
+        if (!isset($_SESSION['usuario'])) {
+            return $this->verSinSesion();
+        }
+
         $productosDetallados = [];
         $carrito = $_SESSION['carrito'] ?? [];
         $usuario = $_SESSION['usuario'] ?? null;
@@ -175,6 +193,91 @@ public function agregar()
         // Hacemos disponibles las variables en la vista
         $promocionesAplicadas = $promociones;
         require __DIR__ . '/../views/carrito/ver.php';
+    }
+
+    /**
+     * Vista del carrito cuando no hay sesión iniciada
+     * Muestra productos del carrito + formulario de login integrado
+     */
+    public function verSinSesion()
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        $productosDetallados = [];
+        $carrito = $_SESSION['carrito'] ?? [];
+        $usuario = null; // Usuario no autenticado
+        
+        // Evaluar promociones para mostrar precios correctos
+        $promociones = PromocionHelper::evaluar($carrito, $usuario);
+        $totales = PromocionHelper::calcularTotales($carrito, $promociones);
+
+        // Los cupones no se aplican sin sesión, pero verificamos si hay alguno guardado
+        $cupon_aplicado = CuponHelper::obtenerCuponAplicado();
+        $descuento_cupon = 0;
+        
+        // Si hay un cupón en sesión pero no hay usuario, lo limpiamos
+        if ($cupon_aplicado && !$usuario) {
+            CuponHelper::limpiarCuponSesion();
+            $cupon_aplicado = null;
+        }
+
+        // Obtener detalles de los productos del carrito
+        if (!empty($carrito)) {
+            $productoModel = new Producto();
+
+            foreach ($carrito as $clave => $item) {
+                $producto = $productoModel->obtenerPorId($item['producto_id']);
+                if ($producto) {
+                    $producto['cantidad'] = $item['cantidad'];
+                    $producto['talla'] = $item['talla'];
+                    $producto['color'] = $item['color'];
+                    $producto['clave'] = $clave;
+                    $producto['subtotal'] = $producto['precio'] * $item['cantidad'];
+                    $productosDetallados[] = $producto;
+                }
+            }
+        }
+
+        // Obtener mensajes de error si los hay (desde login fallido)
+        $error = $_SESSION['auth_error'] ?? null;
+        if ($error) {
+            unset($_SESSION['auth_error']);
+        }
+
+        // Hacemos disponibles las variables en la vista
+        $promocionesAplicadas = $promociones;
+        require __DIR__ . '/../views/carrito/ver-sin-sesion.php';
+    }
+
+    /**
+     * Procesar finalizar compra - redirige a login o checkout según sesión
+     */
+    public function finalizarCompra()
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        $carrito = $_SESSION['carrito'] ?? [];
+        
+        // Verificar que hay productos en el carrito
+        if (empty($carrito)) {
+            $_SESSION['flash_error'] = 'Tu carrito está vacío.';
+            header('Location: ' . url('/'));
+            exit;
+        }
+
+        // Si hay sesión, ir directamente al checkout
+        if (isset($_SESSION['usuario'])) {
+            header('Location: ' . url('pedido/checkout'));
+            exit;
+        }
+
+        // Si no hay sesión, mostrar la vista con login
+        header('Location: ' . url('carrito/ver'));
+        exit;
     }
 
     public function aumentar($clave)
