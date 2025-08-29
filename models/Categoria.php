@@ -38,22 +38,41 @@ class Categoria
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public static function crear($nombre, $id_padre = null)
+    /**
+     * Crear categoría (imagen opcional)
+     * @param string $nombre
+     * @param int|null $id_padre
+     * @param string|null $imagen nombre de archivo guardado o null
+     */
+    public static function crear($nombre, $id_padre = null, $imagen = null)
     {
         self::validar(null, $nombre, $id_padre, false);
 
         $db = Database::getInstance()->getConnection();
-        $stmt = $db->prepare("INSERT INTO categorias (nombre, id_padre) VALUES (?, ?)");
-        $stmt->execute([$nombre, $id_padre]);
+        $stmt = $db->prepare("INSERT INTO categorias (nombre, id_padre, imagen) VALUES (?, ?, ?)");
+        $stmt->execute([$nombre, $id_padre, $imagen]);
     }
 
-    public static function actualizar($id, $nombre, $id_padre = null)
+    /**
+     * Actualizar categoría. Si $imagen !== null, reemplaza el campo imagen; si es null, mantiene la actual.
+     * @param int $id
+     * @param string $nombre
+     * @param int|null $id_padre
+     * @param string|null $imagen
+     */
+    public static function actualizar($id, $nombre, $id_padre = null, $imagen = null)
     {
         self::validar($id, $nombre, $id_padre, true);
 
         $db = Database::getInstance()->getConnection();
-        $stmt = $db->prepare("UPDATE categorias SET nombre = ?, id_padre = ? WHERE id = ?");
-        $stmt->execute([$nombre, $id_padre, $id]);
+
+        if ($imagen !== null) {
+            $stmt = $db->prepare("UPDATE categorias SET nombre = ?, id_padre = ?, imagen = ? WHERE id = ?");
+            $stmt->execute([$nombre, $id_padre, $imagen, $id]);
+        } else {
+            $stmt = $db->prepare("UPDATE categorias SET nombre = ?, id_padre = ? WHERE id = ?");
+            $stmt->execute([$nombre, $id_padre, $id]);
+        }
     }
 
     public static function eliminar($id)
@@ -79,7 +98,6 @@ class Categoria
         return $stmt->fetchColumn() > 0;
     }
 
-    // ✅ Validación completa
     private static function validar($id, $nombre, $id_padre, $esActualizacion = false)
     {
         $db = Database::getInstance()->getConnection();
@@ -143,5 +161,54 @@ class Categoria
         }
 
         return false;
+    }
+    public static function obtenerPadres()
+    {
+        $db = Database::getInstance()->getConnection();
+
+        $sql = "SELECT c.*,
+                   EXISTS (SELECT 1 FROM categorias sub WHERE sub.id_padre = c.id) AS tiene_hijos
+            FROM categorias c
+            WHERE c.id_padre IS NULL OR c.id_padre = 0
+            ORDER BY c.nombre ASC";
+
+        $stmt = $db->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Devuelve la cadena de ancestros de una categoría (desde el raíz hasta la propia categoría).
+     * Por ejemplo: [ ['id'=>1,'nombre'=>'Electrónica'], ['id'=>3,'nombre'=>'Celulares'], ['id'=>7,'nombre'=>'Smartphones'] ]
+     *
+     * @param int $categoriaId
+     * @return array
+     */
+    public static function obtenerAncestros(int $categoriaId): array
+    {
+        $db = Database::getInstance()->getConnection();
+        $ancestros = [];
+
+        $current = $categoriaId;
+        $safetyCounter = 0;
+
+        while ($current && $safetyCounter < 50) { // to avoid infinite loops in case of ciclos
+            $stmt = $db->prepare("SELECT id, nombre, id_padre FROM categorias WHERE id = ?");
+            $stmt->execute([$current]);
+            $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+            if (!$row) break;
+
+            // insert at the beginning to build root->...->current order
+            array_unshift($ancestros, $row);
+
+            // prepare next iteration
+            $parent = $row['id_padre'] ?? null;
+            // normalize: if id_padre is 0 or '' -> treat as null
+            if ($parent === null || $parent === '' || (int)$parent === 0) break;
+            $current = (int)$parent;
+
+            $safetyCounter++;
+        }
+
+        return $ancestros;
     }
 }

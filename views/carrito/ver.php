@@ -20,8 +20,6 @@ if (isset($_SESSION['carrito'])) {
 <!-- Estilos y botón de volver -->
 <link rel="stylesheet" href="<?= url('css/carrito.css') ?>">
 
-
-
 <!-- Contenido del carrito -->
 <div class="clearfix"></div>
 <?php if (!empty($productosDetallados)): ?>
@@ -173,27 +171,12 @@ if (isset($_SESSION['carrito'])) {
 <?php endif; ?>
 
 <div class="acciones-carrito">
-    <a href="<?= url('/') ?>" class="boton-volver">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-        Volver
-    </a>
-    <?php if (!empty($_SESSION['carrito']) && count($_SESSION['carrito']) > 0): ?>
+    <a href="<?= url('/') ?>" class="boton-volver">🛒 Volver</a>
+    <?php if (!empty($cantidadEnCarrito) && $cantidadEnCarrito > 0): ?>
         <?php if (isset($_SESSION['usuario'])): ?>
-            <a href="<?= url('pedido/checkout') ?>" class="boton-checkout">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Finalizar compra
-            </a>
+            <a href="<?= url('pedido/checkout') ?>" class="boton-checkout">Finalizar compra</a>
         <?php else: ?>
-            <a href="<?= url('pedido/precheckout') ?>" class="boton-checkout">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-                Continuar compra
-            </a>
+            <a href="<?= url('pedido/precheckout') ?>" class="boton-checkout">Continuar compra</a>
         <?php endif; ?>
     <?php endif; ?>
 </div>

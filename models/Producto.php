@@ -209,8 +209,82 @@ class Producto
         $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare("SELECT * FROM productos WHERE id = ?");
         $stmt->execute([$id]);
-        return $stmt->fetch();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$row) return false;
+
+        // --- Especificaciones: mantenemos texto y también array por líneas ---
+        $rawEspecificaciones = $row['especificaciones'] ?? '';
+        $row['especificaciones'] = $rawEspecificaciones; // texto para el admin
+        $row['especificaciones_array'] = [];
+        if (trim($rawEspecificaciones) !== '') {
+            $row['especificaciones_array'] = preg_split("/\r\n|\n|\r/", trim($rawEspecificaciones));
+        }
+
+        // --- Productos relacionados: soporta JSON ["1",2] o CSV "1,2,3" o array ---
+        $rowIds = $row['productos_relacionados'] ?? '';
+        $ids = [];
+
+        if (is_array($rowIds)) {
+            $ids = $rowIds;
+        } elseif (is_string($rowIds)) {
+            $raw = trim($rowIds);
+            if ($raw !== '') {
+                $decoded = json_decode($raw, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $ids = $decoded;
+                } else {
+                    $ids = array_map('trim', explode(',', $raw));
+                }
+            }
+        }
+
+        // normaliza
+        $row['productos_relacionados'] = array_values(array_filter(array_map('intval', $ids), fn($v) => $v > 0));
+
+        return $row;
     }
+
+    /**
+     * Obtener varios productos por un array de IDs.
+     * Devuelve productos preparados (prepararProductoParaVista) pero **sin** cargar todas las imágenes (la vista puede esperar 'imagenes').
+     *
+     * @param array $ids
+     * @return array
+     */
+    public function obtenerPorIds(array $ids): array
+    {
+        $ids = array_values(array_filter(array_map('intval', $ids), function ($v) {
+            return $v > 0;
+        }));
+        if (empty($ids)) return [];
+
+        // placeholders
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+
+        $sql = "SELECT p.* FROM productos p WHERE p.id IN ($placeholders) AND p.visible = 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($ids);
+
+        $productos = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        foreach ($productos as &$p) {
+            // formato de precios, flags, etc.
+            $p = $this->prepararProductoParaVista($p);
+            // dejamos la carga de 'imagenes' al controlador/imagen model para flexibilidad
+        }
+        unset($p);
+
+        // mantener el orden según $ids
+        $byId = [];
+        foreach ($productos as $p) $byId[(int)$p['id']] = $p;
+        $ordered = [];
+        foreach ($ids as $id) {
+            if (isset($byId[$id])) $ordered[] = $byId[$id];
+        }
+
+        return $ordered;
+    }
+
+
 
     public static function actualizar(
         $id,
@@ -223,65 +297,70 @@ class Producto
         $porcentaje_visible,
         $stock,
         $visible,
-        $destacado
+        $destacado,
+        $especificaciones = null,
+        $productos_relacionados_json = null
     ) {
         try {
             $db = Database::getInstance()->getConnection();
 
             $sql = "
-            UPDATE productos
-            SET
-                nombre = :nombre,
-                descripcion = :descripcion,
-                precio = :precio,
-                precio_tachado = :precio_tachado,
-                porcentaje_descuento = :porcentaje_descuento,
-                precio_tachado_visible = :precio_tachado_visible,
-                porcentaje_visible = :porcentaje_visible,
-                stock = :stock,
-                visible = :visible,
-                destacado = :destacado
-            WHERE id = :id
+        UPDATE productos
+        SET
+            nombre = :nombre,
+            descripcion = :descripcion,
+            precio = :precio,
+            precio_tachado = :precio_tachado,
+            porcentaje_descuento = :porcentaje_descuento,
+            precio_tachado_visible = :precio_tachado_visible,
+            porcentaje_visible = :porcentaje_visible,
+            stock = :stock,
+            visible = :visible,
+            destacado = :destacado,
+            especificaciones = :especificaciones,
+            productos_relacionados = :productos_relacionados
+        WHERE id = :id
         ";
 
             $stmt = $db->prepare($sql);
 
-            // binds
             $stmt->bindValue(':nombre', $nombre, \PDO::PARAM_STR);
             $stmt->bindValue(':descripcion', $descripcion, \PDO::PARAM_STR);
-
-            // precio puede ser decimal: lo pasamos tal cual (PDO no tiene FLOAT const)
             $stmt->bindValue(':precio', $precio);
-
-            // precio_tachado puede ser NULL
             if ($precio_tachado === null || $precio_tachado === '') {
                 $stmt->bindValue(':precio_tachado', null, \PDO::PARAM_NULL);
             } else {
                 $stmt->bindValue(':precio_tachado', $precio_tachado);
             }
-
-            // porcentaje entero
             $stmt->bindValue(':porcentaje_descuento', (int)$porcentaje_descuento, \PDO::PARAM_INT);
-
             $stmt->bindValue(':precio_tachado_visible', (int)$precio_tachado_visible, \PDO::PARAM_INT);
             $stmt->bindValue(':porcentaje_visible', (int)$porcentaje_visible, \PDO::PARAM_INT);
             $stmt->bindValue(':stock', (int)$stock, \PDO::PARAM_INT);
             $stmt->bindValue(':visible', (int)$visible, \PDO::PARAM_INT);
             $stmt->bindValue(':destacado', (int)$destacado, \PDO::PARAM_INT);
 
+            // especificaciones puede ser NULL o string
+            if ($especificaciones === null || $especificaciones === '') {
+                $stmt->bindValue(':especificaciones', null, \PDO::PARAM_NULL);
+            } else {
+                $stmt->bindValue(':especificaciones', $especificaciones, \PDO::PARAM_STR);
+            }
+
+            // productos_relacionados: ya lo dejamos como JSON string o NULL
+            if ($productos_relacionados_json === null || $productos_relacionados_json === '') {
+                $stmt->bindValue(':productos_relacionados', null, \PDO::PARAM_NULL);
+            } else {
+                $stmt->bindValue(':productos_relacionados', $productos_relacionados_json, \PDO::PARAM_STR);
+            }
+
             $stmt->bindValue(':id', (int)$id, \PDO::PARAM_INT);
 
-            $ok = $stmt->execute();
-
-            return (bool)$ok;
+            return (bool)$stmt->execute();
         } catch (\PDOException $e) {
-            // Log para que puedas revisar el error exacto en los logs del servidor
-            error_log("[Producto::actualizar] Error PDO: " . $e->getMessage() . " -- SQL: " . $e->getTraceAsString());
+            error_log("[Producto::actualizar] Error PDO: " . $e->getMessage());
             return false;
         }
     }
-
-
 
     public static function eliminar($id)
     {
@@ -534,5 +613,54 @@ class Producto
         $whereSql = count($where) ? " WHERE " . implode(" AND ", $where) : "";
 
         return [$whereSql, $params];
+    }
+    /**
+     * ==================================================================
+     *  NUEVO MÉTODO PARA OBTENER PRODUCTOS DESTACADOS (VERSIÓN CORREGIDA)
+     * ==================================================================
+     * Este método ahora une la tabla de imágenes directamente en la consulta
+     * para obtener la primera imagen de forma más eficiente y segura.
+     *
+     * @param int $limit El número máximo de productos destacados a devolver.
+     * @return array Lista de productos destacados.
+     */
+    public function obtenerDestacados(int $limit = 12): array
+    {
+        // Consulta SQL mejorada:
+        // - Usa un LEFT JOIN para unir la tabla de imágenes.
+        // - Usa una subconsulta para obtener SOLO la primera imagen (la de menor ID) para cada producto.
+        // - Agrupa por ID de producto para evitar duplicados si un producto tiene varias imágenes.
+        $sql = "
+        SELECT 
+            p.*, 
+            (SELECT ip.nombre_imagen 
+             FROM imagenes_producto ip 
+             WHERE ip.producto_id = p.id 
+             ORDER BY ip.id ASC 
+             LIMIT 1) AS imagen_principal
+        FROM productos p
+        WHERE p.destacado = 1 AND p.visible = 1
+        GROUP BY p.id
+        ORDER BY p.id DESC
+        LIMIT :limit
+    ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Ahora, en lugar de llamar a otro modelo, la imagen ya viene en la consulta.
+        // Solo necesitamos preparar los datos para la vista.
+        foreach ($productos as &$producto) {
+            // Asignamos la imagen principal a la clave 'imagen' que espera tu parcial _products_grid.php
+            $producto['imagen'] = $producto['imagen_principal'] ?? null;
+
+            // Reutilizamos tu método existente para formatear precios, etc.
+            $producto = $this->prepararProductoParaVista($producto);
+        }
+
+        return $productos;
     }
 }
