@@ -19,6 +19,28 @@
             <textarea name="descripcion" id="descripcion" required><?= htmlspecialchars($producto['descripcion']) ?></textarea>
         </div>
 
+        <!-- Especificaciones (texto libre, cada línea -> lista) -->
+        <div class="form-row">
+            <label for="especificaciones">Especificaciones (una por línea)</label>
+            <textarea name="especificaciones" id="especificaciones" rows="5"><?= htmlspecialchars($producto['especificaciones'] ?? '') ?></textarea>
+        </div>
+
+        <!-- Productos relacionados (multiselect) -->
+        <div class="form-row">
+            <label for="productos_relacionados">Productos relacionados</label>
+            <select name="productos_relacionados[]" id="productos_relacionados" multiple style="min-height:120px;">
+                <?php foreach ($allProducts as $p): ?>
+                    <?php if (isset($producto['id']) && $p['id'] == $producto['id']) continue; // no enlazarse a sí mismo 
+                    ?>
+                    <option value="<?= (int)$p['id'] ?>"
+                        <?= in_array((int)$p['id'], $producto['productos_relacionados'] ?? []) ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($p['nombre']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            <small>Selecciona productos relacionados (mantén Ctrl/Cmd para múltiples).</small>
+        </div>
+
         <!-- Precio Original (tachado) -->
         <div class="form-group">
             <label for="precio_tachado">Precio Original (tachado) (S/.)</label>
