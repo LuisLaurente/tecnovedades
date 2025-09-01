@@ -3,301 +3,191 @@
 namespace Controllers;
 
 use Models\Producto;
-use Models\Promocion;
-use Core\Helpers\PromocionHelper; // Importamos el helper de promociones
-use Core\Helpers\CuponHelper; // Importamos el helper de cupones
+use Models\ImagenProducto;
+// Asegúrate de que los namespaces de tus helpers son correctos.
+// Si están en la raíz del namespace Core\Helpers, esta es la forma correcta.
+use Core\Helpers\PromocionHelper;
+use Core\Helpers\CuponHelper;
 
 class CarritoController
 {
-/**
- * NUEVA FUNCIONALIDAD: Carrito con Login Integrado
- * 
- * Cuando un usuario no tiene sesión iniciada, el método ver() 
- * automáticamente redirige a verSinSesion() que muestra:
- * - Lista de productos del carrito
- * - Formulario de login integrado 
- * - Botones de registro y redes sociales
- * - Resumen de compra en columna derecha
- * 
- * Esto elimina la necesidad de usar precheckout.php y mejora 
- * la experiencia de usuario manteniendo todo en una sola vista.
- */
-public function agregar()
-{
-    if (session_status() === PHP_SESSION_NONE) session_start();
+    // --- MÉTODOS PRIVADOS DE AYUDA PARA AJAX Y LÓGICA CENTRALIZADA ---
 
-    // Sanitizar entrada
-    $producto_id = isset($_POST['producto_id']) ? (int) $_POST['producto_id'] : 0;
-    $talla = isset($_POST['talla']) ? trim((string) $_POST['talla']) : null;
-    $color = isset($_POST['color']) ? trim((string) $_POST['color']) : null;
-    $cantidad = isset($_POST['cantidad']) ? (int) $_POST['cantidad'] : 1;
-
-    $referer = $_SERVER['HTTP_REFERER'] ?? url('carrito/ver');
-
-    // Validaciones
-    if ($producto_id <= 0) {
-        $_SESSION['flash_error'] = 'Producto inválido.';
-        header('Location: ' . $referer); exit;
-    }
-    if ($cantidad <= 0) {
-        $_SESSION['flash_error'] = 'La cantidad debe ser al menos 1.';
-        header('Location: ' . $referer); exit;
-    }
-
-    // Obtener producto
-    $producto = \Models\Producto::obtenerPorId($producto_id);
-    if (!$producto) {
-        $_SESSION['flash_error'] = 'Producto no encontrado.';
-        header('Location: ' . $referer); exit;
-    }
-    $precio = isset($producto['precio']) ? (float)$producto['precio'] : 0.0;
-    $stock = isset($producto['stock']) && is_numeric($producto['stock']) ? (int)$producto['stock'] : null;
-
-    if (!isset($_SESSION['carrito']) || !is_array($_SESSION['carrito'])) $_SESSION['carrito'] = [];
-
-    $clave = $producto_id . '_' . ($talla ?? '') . '_' . ($color ?? '');
-    $cantidadActual = isset($_SESSION['carrito'][$clave]['cantidad']) ? (int)$_SESSION['carrito'][$clave]['cantidad'] : 0;
-    $nuevaCantidad = $cantidadActual + $cantidad;
-
-    // Stock check
-    if ($stock !== null && $stock >= 0) {
-        if ($cantidadActual >= $stock) {
-            $_SESSION['flash_error'] = 'No hay stock disponible para agregar más unidades.';
-            header('Location: ' . $referer); exit;
-        }
-        if ($nuevaCantidad > $stock) {
-            $cantidad = $stock - $cantidadActual;
-            if ($cantidad <= 0) {
-                $_SESSION['flash_error'] = 'No hay suficiente stock disponible.';
-                header('Location: ' . $referer); exit;
-            }
-            $_SESSION['flash_warning'] = "Se agregaron solamente {$cantidad} unidades (stock limitado).";
-            $nuevaCantidad = $cantidadActual + $cantidad;
-        }
-    }
-
-    // Guardar en sesión (asegurando tipos)
-    if (isset($_SESSION['carrito'][$clave])) {
-        $_SESSION['carrito'][$clave]['cantidad'] = $nuevaCantidad;
-    } else {
-        $_SESSION['carrito'][$clave] = [
-            'producto_id' => $producto_id,
-            'talla' => $talla,
-            'color' => $color,
-            'cantidad' => $cantidad,
-            'precio' => $precio
-        ];
-    }
-
-    // Evaluar promociones si existe el helper (proteger fallos)
-    try {
-        if (class_exists('PromocionHelper')) {
-            $_SESSION['promociones'] = PromocionHelper::evaluar($_SESSION['carrito'], $_SESSION['usuario'] ?? null);
-        } elseif (class_exists('\Core\Helpers\PromocionHelper')) {
-            $_SESSION['promociones'] = \Core\Helpers\PromocionHelper::evaluar($_SESSION['carrito'], $_SESSION['usuario'] ?? null);
-        }
-    } catch (\Throwable $e) {
-        error_log('PromocionHelper::evaluar error: ' . $e->getMessage());
-    }
-
-    $_SESSION['mensaje_carrito'] = '✅ Agregado con éxito.';
-    header('Location: ' . $referer);
-    exit;
-}
-
-
-    public function eliminar($clave)
+    /**
+     * Verifica si la petición actual es una petición AJAX.
+     * Esencial para diferenciar entre una recarga de página y una llamada de JavaScript.
+     */
+    private function isAjaxRequest(): bool
     {
-        if (isset($_SESSION['carrito'][$clave])) {
-            unset($_SESSION['carrito'][$clave]);
-        }
-
-        // Recalcular promociones tras eliminar
-        $usuario = $_SESSION['usuario'] ?? null;
-        $_SESSION['promociones'] = PromocionHelper::evaluar($_SESSION['carrito'] ?? [], $usuario);
-
-        // Si el carrito quedó vacío, limpiar cupón
-        if (empty($_SESSION['carrito'])) {
-            CuponHelper::limpiarCuponSesion();
-        }
-
-        header('Location: ' . url('carrito/ver'));
-        exit;
-    }
-
-    public function ver()
-    {
-        // Si no hay sesión iniciada, mostrar vista especial con login
-        if (!isset($_SESSION['usuario'])) {
-            return $this->verSinSesion();
-        }
-
-        $productosDetallados = [];
-        $carrito = $_SESSION['carrito'] ?? [];
-        $usuario = $_SESSION['usuario'] ?? null;
-        
-        // Evaluar promociones siempre que se cargue el carrito
-        $promociones = PromocionHelper::evaluar($carrito, $usuario);
-        $totales = PromocionHelper::calcularTotales($carrito, $promociones);
-
-        // Verificar si hay un cupón aplicado usando CuponHelper
-        $cupon_aplicado = CuponHelper::obtenerCuponAplicado();
-        $descuento_cupon = 0;
-        
-        if ($cupon_aplicado && !empty($carrito)) {
-            // Obtener información de los productos para la validación completa
-            $productosParaValidacion = [];
-            foreach ($carrito as $item) {
-                $producto = Producto::obtenerPorId($item['producto_id']);
-                if ($producto) {
-                    $productosParaValidacion[] = $producto;
-                }
-            }
-            
-            // Usar CuponHelper para validar y calcular el descuento
-            $cliente_id = $usuario['id'] ?? 1; // Usar ID del usuario o valor por defecto
-            $aplicacionCupon = CuponHelper::aplicarCupon(
-                $cupon_aplicado['codigo'], 
-                $cliente_id, 
-                $carrito, 
-                $productosParaValidacion
-            );
-            
-            if ($aplicacionCupon['exito']) {
-                $descuento_cupon = $aplicacionCupon['descuento'];
-                $totales['descuento_cupon'] = $descuento_cupon;
-                $totales['total'] = max($totales['subtotal'] - $totales['descuento'] - $descuento_cupon, 0);
-            } else {
-                // Si el cupón ya no es válido, removerlo
-                CuponHelper::limpiarCuponSesion();
-                $cupon_aplicado = null;
-            }
-        }
-
-        if (!empty($carrito)) {
-            $productoModel = new Producto();
-
-            foreach ($carrito as $clave => $item) {
-                $producto = $productoModel->obtenerPorId($item['producto_id']);
-                if ($producto) {
-                    $producto['cantidad'] = $item['cantidad'];
-                    $producto['talla'] = $item['talla'];
-                    $producto['color'] = $item['color'];
-                    $producto['clave'] = $clave;
-                    $producto['subtotal'] = $producto['precio'] * $item['cantidad'];
-                    $productosDetallados[] = $producto;
-                }
-            }
-        }
-
-        // Hacemos disponibles las variables en la vista
-        $promocionesAplicadas = $promociones;
-        require __DIR__ . '/../views/carrito/ver.php';
+        return !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
     }
 
     /**
-     * Vista del carrito cuando no hay sesión iniciada
-     * Muestra productos del carrito + formulario de login integrado
+     * Prepara y envía una respuesta JSON estandarizada y finaliza la ejecución del script.
+     * Garantiza que todas las respuestas AJAX tengan un formato consistente.
      */
-    public function verSinSesion()
+    private function jsonResponse(bool $success, string $message, array $data = []): void
+    {
+        // Asegurarse de que no haya salida previa
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => $success,
+            'message' => $message,
+            'data'    => $data
+        ]);
+        exit; // ¡Crucial! Detiene el script para no enviar HTML extra.
+    }
+
+    /**
+     * Obtiene el estado completo y actualizado del carrito.
+     * Centraliza toda la lógica de cálculo (promociones, cupones, totales)
+     * para ser usada tanto por las vistas normales como por las respuestas AJAX.
+     */
+    private function getCartState(): array
     {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
 
-        $productosDetallados = [];
         $carrito = $_SESSION['carrito'] ?? [];
-        $usuario = null; // Usuario no autenticado
-        
-        // Evaluar promociones para mostrar precios correctos
+        $usuario = $_SESSION['usuario'] ?? null;
+
+        // 1. Evaluar promociones
         $promociones = PromocionHelper::evaluar($carrito, $usuario);
+        $_SESSION['promociones'] = $promociones;
+
+        // 2. Calcular totales base con promociones
         $totales = PromocionHelper::calcularTotales($carrito, $promociones);
 
-        // Los cupones no se aplican sin sesión, pero verificamos si hay alguno guardado
+        // 3. Aplicar cupón si existe y es válido
         $cupon_aplicado = CuponHelper::obtenerCuponAplicado();
         $descuento_cupon = 0;
-        
-        // Si hay un cupón en sesión pero no hay usuario, lo limpiamos
-        if ($cupon_aplicado && !$usuario) {
+
+        if ($cupon_aplicado && !empty($carrito) && $usuario) {
+            $productosParaValidacion = $this->getProductosDetalladosParaValidacion($carrito);
+            $aplicacionCupon = CuponHelper::aplicarCupon(
+                $cupon_aplicado['codigo'],
+                $usuario['id'],
+                $carrito,
+                $productosParaValidacion
+            );
+
+            if ($aplicacionCupon['exito']) {
+                $descuento_cupon = $aplicacionCupon['descuento'];
+            } else {
+                CuponHelper::limpiarCuponSesion();
+                $cupon_aplicado = null;
+            }
+        } elseif ($cupon_aplicado && !$usuario) {
+            // Limpiar cupón si no hay sesión
             CuponHelper::limpiarCuponSesion();
             $cupon_aplicado = null;
         }
 
-        // Obtener detalles de los productos del carrito
-        if (!empty($carrito)) {
-            $productoModel = new Producto();
+        // 4. Recalcular totales finales con el descuento del cupón
+        $totales['descuento_cupon'] = $descuento_cupon;
+        $totales['total'] = max(0, ($totales['subtotal'] ?? 0) - ($totales['descuento'] ?? 0) - $descuento_cupon);
 
+        // 5. Obtener detalles de los productos para la respuesta
+        $productosDetallados = [];
+        if (!empty($carrito)) {
             foreach ($carrito as $clave => $item) {
-                $producto = $productoModel->obtenerPorId($item['producto_id']);
+                $producto = Producto::obtenerPorId($item['producto_id']);
                 if ($producto) {
-                    $producto['cantidad'] = $item['cantidad'];
-                    $producto['talla'] = $item['talla'];
-                    $producto['color'] = $item['color'];
-                    $producto['clave'] = $clave;
-                    $producto['subtotal'] = $producto['precio'] * $item['cantidad'];
-                    $productosDetallados[] = $producto;
+                    // ✅ Traer primera imagen
+                    $primera = ImagenProducto::obtenerPrimeraPorProducto((int)$item['producto_id']);
+                    $imagenUrl = ($primera && !empty($primera['nombre_imagen']))
+                        ? url('uploads/' . $primera['nombre_imagen'])
+                        : null;
+                    // Preparamos un array limpio para la respuesta JSON
+                    $productosDetallados[$clave] = [
+                        'clave' => $clave,
+                        'producto_id' => $item['producto_id'],
+                        'nombre' => $producto['nombre'],
+                        'cantidad' => $item['cantidad'],
+                        'precio' => (float)$item['precio'],
+                        'subtotal' => (float)$item['precio'] * $item['cantidad'],
+                        'imagen'       => $imagenUrl, 
+                    ];
                 }
             }
         }
 
-        // Obtener mensajes de error si los hay (desde login fallido)
-        $error = $_SESSION['auth_error'] ?? null;
-        if ($error) {
-            unset($_SESSION['auth_error']);
-        }
-
-        // Hacemos disponibles las variables en la vista
-        $promocionesAplicadas = $promociones;
-        require __DIR__ . '/../views/carrito/ver-sin-sesion.php';
+        // 6. Devolver el estado completo
+        return [
+            'items' => array_values($productosDetallados), // Array indexado para iterar en JS
+            'itemDetails' => $productosDetallados,         // Array asociativo para búsquedas por clave
+            'totals' => $totales,
+            'promotions' => $promociones,
+            'coupon' => $cupon_aplicado,
+            'itemCount' => array_sum(array_column($carrito, 'cantidad'))
+        ];
     }
 
     /**
-     * Procesar finalizar compra - redirige a login o checkout según sesión
+     * Función auxiliar para obtener los modelos de producto para la validación de cupones.
      */
-    public function finalizarCompra()
+    private function getProductosDetalladosParaValidacion(array $carrito): array
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+        $productos = [];
+        if (empty($carrito)) return $productos;
 
-        $carrito = $_SESSION['carrito'] ?? [];
-        
-        // Verificar que hay productos en el carrito
-        if (empty($carrito)) {
-            $_SESSION['flash_error'] = 'Tu carrito está vacío.';
-            header('Location: ' . url('/'));
-            exit;
+        foreach ($carrito as $item) {
+            $producto = Producto::obtenerPorId($item['producto_id']);
+            if ($producto) {
+                $productos[] = $producto;
+            }
         }
-
-        // Si hay sesión, ir directamente al checkout
-        if (isset($_SESSION['usuario'])) {
-            header('Location: ' . url('pedido/checkout'));
-            exit;
-        }
-
-        // Si no hay sesión, mostrar la vista con login
-        header('Location: ' . url('carrito/ver'));
-        exit;
+        return $productos;
     }
 
+    // --- MÉTODOS PÚBLICOS DEL CONTROLADOR (ACCIONES) ---
+
+    /**
+     * Aumenta la cantidad de un producto.
+     * Responde con JSON si es AJAX, de lo contrario redirige.
+     */
     public function aumentar($clave)
     {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+
         if (isset($_SESSION['carrito'][$clave])) {
+            $item = $_SESSION['carrito'][$clave];
+            $producto = Producto::obtenerPorId($item['producto_id']);
+            $stock = isset($producto['stock']) && is_numeric($producto['stock']) ? (int)$producto['stock'] : null;
+
+            // Verificación de stock antes de aumentar
+            if ($stock !== null && $item['cantidad'] >= $stock) {
+                if ($this->isAjaxRequest()) {
+                    $this->jsonResponse(false, 'No hay más stock disponible para este producto.', $this->getCartState());
+                }
+                $_SESSION['flash_error'] = 'No hay más stock disponible para este producto.';
+                header('Location: ' . url('carrito/ver'));
+                exit;
+            }
+
             $_SESSION['carrito'][$clave]['cantidad']++;
         }
 
-        // Usuario puede ser null si es invitado
-        $usuario = $_SESSION['usuario'] ?? null;
-
-        // Calcular promociones para todos (invitados y logueados)
-        $_SESSION['promociones'] = PromocionHelper::evaluar($_SESSION['carrito'], $usuario);
+        if ($this->isAjaxRequest()) {
+            $this->jsonResponse(true, 'Cantidad aumentada.', $this->getCartState());
+        }
 
         header('Location: ' . url('carrito/ver'));
         exit;
     }
 
+    /**
+     * Disminuye la cantidad de un producto. Si llega a 0, lo elimina.
+     * Responde con JSON si es AJAX, de lo contrario redirige.
+     */
     public function disminuir($clave)
     {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+
         if (isset($_SESSION['carrito'][$clave])) {
             $_SESSION['carrito'][$clave]['cantidad']--;
             if ($_SESSION['carrito'][$clave]['cantidad'] <= 0) {
@@ -305,71 +195,249 @@ public function agregar()
             }
         }
 
-        // Recalcular promociones
-        $usuario = $_SESSION['usuario'] ?? null;
-        $_SESSION['promociones'] = PromocionHelper::evaluar($_SESSION['carrito'] ?? [], $usuario);
-
-        // Si el carrito quedó vacío, limpiar cupón
+        // Si el carrito queda vacío, limpiar el cupón
         if (empty($_SESSION['carrito'])) {
             CuponHelper::limpiarCuponSesion();
+        }
+
+        if ($this->isAjaxRequest()) {
+            $this->jsonResponse(true, 'Cantidad disminuida.', $this->getCartState());
         }
 
         header('Location: ' . url('carrito/ver'));
         exit;
     }
 
-    // Métodos para manejar cupones en el carrito
+    /**
+     * Elimina un producto del carrito.
+     * Responde con JSON si es AJAX, de lo contrario redirige.
+     */
+    public function eliminar($clave)
+    {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+
+        if (isset($_SESSION['carrito'][$clave])) {
+            unset($_SESSION['carrito'][$clave]);
+        }
+
+        // Si el carrito queda vacío, limpiar el cupón
+        if (empty($_SESSION['carrito'])) {
+            CuponHelper::limpiarCuponSesion();
+        }
+
+        if ($this->isAjaxRequest()) {
+            $this->jsonResponse(true, 'Producto eliminado.', $this->getCartState());
+        }
+
+        header('Location: ' . url('carrito/ver'));
+        exit;
+    }
+
+    /**
+     * Agrega un producto al carrito.
+     * Este método mantiene la redirección, ya que se suele llamar desde la página de un producto.
+     */
+    public function agregar()
+    {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+
+        $producto_id = isset($_POST['producto_id']) ? (int) $_POST['producto_id'] : 0;
+        $talla = isset($_POST['talla']) ? trim((string) $_POST['talla']) : null;
+        $color = isset($_POST['color']) ? trim((string) $_POST['color']) : null;
+        $cantidad = isset($_POST['cantidad']) ? (int) $_POST['cantidad'] : 1;
+        $referer = $_SERVER['HTTP_REFERER'] ?? url('carrito/ver');
+
+        if ($producto_id <= 0 || $cantidad <= 0) {
+            $_SESSION['flash_error'] = 'Datos de producto inválidos.';
+            header('Location: ' . $referer);
+            exit;
+        }
+
+        $producto = Producto::obtenerPorId($producto_id);
+        if (!$producto) {
+            $_SESSION['flash_error'] = 'Producto no encontrado.';
+            header('Location: ' . $referer);
+            exit;
+        }
+
+        $precio = (float)($producto['precio'] ?? 0.0);
+        $stock = is_numeric($producto['stock'] ?? null) ? (int)$producto['stock'] : null;
+        $clave = $producto_id . '_' . ($talla ?? '') . '_' . ($color ?? '');
+
+        if (!isset($_SESSION['carrito'])) $_SESSION['carrito'] = [];
+        $cantidadActual = $_SESSION['carrito'][$clave]['cantidad'] ?? 0;
+        $nuevaCantidad = $cantidadActual + $cantidad;
+
+        if ($stock !== null) {
+            if ($nuevaCantidad > $stock) {
+                $cantidad = max(0, $stock - $cantidadActual);
+                if ($cantidad > 0) {
+                    $_SESSION['flash_warning'] = "Stock limitado. Solo se agregaron {$cantidad} unidades.";
+                    $nuevaCantidad = $stock;
+                } else {
+                    $_SESSION['flash_error'] = 'No hay más stock disponible para este producto.';
+                    header('Location: ' . $referer);
+                    exit;
+                }
+            }
+        }
+
+        if (isset($_SESSION['carrito'][$clave])) {
+            $_SESSION['carrito'][$clave]['cantidad'] = $nuevaCantidad;
+        } else {
+            $_SESSION['carrito'][$clave] = [
+                'producto_id' => $producto_id,
+                'talla' => $talla,
+                'color' => $color,
+                'cantidad' => $cantidad,
+                'precio' => $precio
+            ];
+        }
+
+        $_SESSION['mensaje_carrito'] = '✅ Agregado con éxito.';
+        header('Location: ' . $referer);
+        exit;
+    }
+
+    /**
+     * Muestra la vista del carrito para usuarios con sesión iniciada.
+     */
+    public function ver()
+    {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        if (!isset($_SESSION['usuario'])) {
+            return $this->verSinSesion();
+        }
+
+        $cartState = $this->getCartState();
+        $productosDetallados = [];
+        $carrito = $_SESSION['carrito'] ?? [];
+
+        if (!empty($carrito)) {
+            foreach ($carrito as $clave => $item) {
+                $producto = Producto::obtenerPorId($item['producto_id']);
+                if ($producto) {
+                    $producto['cantidad'] = $item['cantidad'];
+                    $producto['talla'] = $item['talla'];
+                    $producto['color'] = $item['color'];
+                    $producto['clave'] = $clave;
+                    $producto['subtotal'] = $producto['precio'] * $item['cantidad'];
+
+                    $primera = ImagenProducto::obtenerPrimeraPorProducto((int)$item['producto_id']);
+                    $producto['imagen'] = ($primera && !empty($primera['nombre_imagen']))
+                        ? url('uploads/' . $primera['nombre_imagen'])
+                        : null;
+                    $productosDetallados[] = $producto;
+                }
+            }
+        }
+
+        $totales = $cartState['totals'];
+        $promocionesAplicadas = $cartState['promotions'];
+        $cupon_aplicado = $cartState['coupon'];
+
+        require __DIR__ . '/../views/carrito/ver.php';
+    }
+
+    /**
+     * Muestra la vista del carrito para usuarios sin sesión (invitados).
+     */
+    public function verSinSesion()
+    {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+
+        $cartState = $this->getCartState();
+        $productosDetallados = [];
+        $carrito = $_SESSION['carrito'] ?? [];
+
+        if (!empty($carrito)) {
+            foreach ($carrito as $clave => $item) {
+                $producto = Producto::obtenerPorId($item['producto_id']);
+                if ($producto) {
+                    $producto['cantidad'] = $item['cantidad'];
+                    $producto['talla'] = $item['talla'];
+                    $producto['color'] = $item['color'];
+                    $producto['clave'] = $clave;
+                    $producto['subtotal'] = $producto['precio'] * $item['cantidad'];
+                    $productosDetallados[] = $producto;
+                }
+            }
+        }
+
+        $totales = $cartState['totals'];
+        $promocionesAplicadas = $cartState['promotions'];
+        $error = $_SESSION['auth_error'] ?? null;
+        if ($error) unset($_SESSION['auth_error']);
+
+        require __DIR__ . '/../views/carrito/ver-sin-sesion.php';
+    }
+
+    /**
+     * Redirige al checkout o a la vista de login dependiendo del estado de la sesión.
+     */
+    public function finalizarCompra()
+    {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+
+        if (empty($_SESSION['carrito'])) {
+            $_SESSION['flash_error'] = 'Tu carrito está vacío.';
+            header('Location: ' . url('/'));
+            exit;
+        }
+
+        if (isset($_SESSION['usuario'])) {
+            header('Location: ' . url('pedido/checkout'));
+        } else {
+            header('Location: ' . url('carrito/ver'));
+        }
+        exit;
+    }
+
+    /**
+     * Aplica un cupón de descuento al carrito.
+     */
     public function aplicarCupon()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . url('carrito/ver'));
             exit;
         }
+        if (session_status() === PHP_SESSION_NONE) session_start();
 
         $codigo = trim($_POST['codigo'] ?? '');
         $carrito = $_SESSION['carrito'] ?? [];
-        
-        if (empty($codigo)) {
-            $_SESSION['mensaje_cupon_error'] = 'Código de cupón requerido';
-            header('Location: ' . url('carrito/ver'));
-            exit;
-        }
-
-        if (empty($carrito)) {
-            $_SESSION['mensaje_cupon_error'] = 'El carrito está vacío';
-            header('Location: ' . url('carrito/ver'));
-            exit;
-        }
-
         $usuario = $_SESSION['usuario'] ?? null;
-        $cliente_id = $usuario['id'] ?? 1;
-        
-        // Obtener productos detallados para validación
-        $productosParaValidacion = [];
-        foreach ($carrito as $item) {
-            $producto = Producto::obtenerPorId($item['producto_id']);
-            if ($producto) {
-                $productosParaValidacion[] = $producto;
-            }
-        }
-        
-        $resultado = CuponHelper::aplicarCupon($codigo, $cliente_id, $carrito, $productosParaValidacion);
-        
-        if ($resultado['exito']) {
-            $_SESSION['cupon_aplicado'] = $resultado['cupon'];
-            $_SESSION['mensaje_cupon_exito'] = $resultado['mensaje'];
+
+        if (empty($codigo)) {
+            $_SESSION['mensaje_cupon_error'] = 'Código de cupón requerido.';
+        } elseif (empty($carrito)) {
+            $_SESSION['mensaje_cupon_error'] = 'El carrito está vacío.';
+        } elseif (!$usuario) {
+            $_SESSION['mensaje_cupon_error'] = 'Debes iniciar sesión para aplicar un cupón.';
         } else {
-            $_SESSION['mensaje_cupon_error'] = $resultado['mensaje'];
+            $productosParaValidacion = $this->getProductosDetalladosParaValidacion($carrito);
+            $resultado = CuponHelper::aplicarCupon($codigo, $usuario['id'], $carrito, $productosParaValidacion);
+
+            if ($resultado['exito']) {
+                $_SESSION['cupon_aplicado'] = $resultado['cupon'];
+                $_SESSION['mensaje_cupon_exito'] = $resultado['mensaje'];
+            } else {
+                $_SESSION['mensaje_cupon_error'] = $resultado['mensaje'];
+            }
         }
 
         header('Location: ' . url('carrito/ver'));
         exit;
     }
 
+    /**
+     * Quita cualquier cupón aplicado del carrito.
+     */
     public function quitarCupon()
     {
+        if (session_status() === PHP_SESSION_NONE) session_start();
         CuponHelper::limpiarCuponSesion();
-        $_SESSION['mensaje_cupon_exito'] = 'Cupón removido correctamente';
+        $_SESSION['mensaje_cupon_exito'] = 'Cupón removido correctamente.';
         header('Location: ' . url('carrito/ver'));
         exit;
     }

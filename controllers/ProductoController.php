@@ -382,8 +382,8 @@ class ProductoController
         // 🔹 SEO dinámico
         $meta_title = $producto['nombre'] . ' | Tienda Tecnovedades';
         $meta_description = substr(strip_tags($producto['descripcion']), 0, 160);
-        $meta_image = !empty($producto['imagenes'][0]['nombre'])
-            ? url('uploads/' . $producto['imagenes'][0]['nombre'])
+        $meta_image = !empty($producto['imagenes'][0]['nombre_imagen'])
+            ? url('uploads/' . $producto['imagenes'][0]['nombre_imagen'])
             : url('images/default-share.png');
         $canonical = url('producto/ver/' . $producto['id']);
 

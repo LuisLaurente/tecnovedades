@@ -14,7 +14,11 @@
 
 body {
   font-family: var(--font-secondary);
-  background-color: var(--dark-color);
+  background-image: url('../images/celestel.jpg');
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: center center;
+  background-size: cover;
   color: var(--white-color);
   line-height: 1.6;
   overflow-x: hidden;
@@ -24,6 +28,9 @@ body {
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 2rem;
+}
+.contenedor2 {
+  background-image: url('../images/back.jpeg');
 }
 
 /* --- TÍTULOS DE SECCIÓN ESTILIZADOS --- */
@@ -91,29 +98,76 @@ body {
   background: transparent; /* sin degradados, como pediste */
 }
 
+
 /* Asegura que el track del carrusel se encuentre alineado y visible */
 .categories-carousel-track {
   display: flex;
   gap: 1rem;
-  align-items: center;
+  /*align-items: center;
   justify-content: space-between;
   overflow: hidden;
   width: 100%;
-  will-change: transform;
+  will-change: transform;*/
+}
+.categories-grid {
+  display: grid;
+  
+  gap: 1.5rem; /* Espacio entre las categorías */
+  padding: 0 1rem; /* Un poco de padding lateral para que no se pegue a los bordes */
+}
+/* ================================================================== */
+/*          ESTILOS PARA LAS CATEGORÍAS CON HOVER Y SOMBRA            */
+/* ================================================================== */
+
+.category-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  padding: 10px; /* Añadimos un poco de espacio interno */
+  border-radius: 12px; /* Bordes redondeados para que la sombra se vea bien */
+  
+  /* 
+   * Transición suave para todos los cambios (hover).
+   * Esto hace que el efecto no sea brusco, sino fluido.
+   */
+  transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Estilos del círculo de imagen (si ya los tienes en home.css, son compatibles) */
+/* --- 1. EFECTO HOVER --- */
+.category-box:hover {
+  /* Al pasar el cursor, el elemento se agranda ligeramente */
+  transform: translateY(-8px); /* Lo movemos 8px hacia arriba */
+  
+  /* Le damos un fondo sutil para destacarlo */
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Al pasar el cursor sobre la caja, el texto cambia de color */
+.category-box:hover .category-name {
+  color: var(--primary-color); /* Usamos tu color primario (cian) */
+}
+
+/* --- 2. SOMBRA NEGRA (aplicada a la imagen) --- */
 .category-image {
-  width: 84px;
-  height: 84px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   overflow: hidden;
-  border: 2px solid var(--primary);
+  border: 2px solid var(--primary-color); /* Usando tu variable de color */
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--white); /* fondo blanco dentro del círculo */
+  background: var(--white-color); /* Usando tu variable de color */
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.5);
+  transition: border-color 0.3s ease;
 }
+
+/* Opcional: Al hacer hover, el borde de la imagen se ilumina más */
+.category-box:hover .category-image {
+  border-color: #fff; /* Cambia el borde a blanco para más énfasis */
+}
+
 .category-image img {
   width: 100%;
   height: 100%;
@@ -121,14 +175,18 @@ body {
   display: block;
 }
 
-/* Nombre de la categoría */
+
 .category-name {
-  margin-top: 6px;
+  margin-top: 10px; 
   font-family: "Outfit", sans-serif;
-  color: var(--white);
+  color: var(--white-color); 
   font-size: 0.95rem;
   text-align: center;
+  font-weight: 500; 
+  transition: color 0.3s ease;
+  box-shadow: rgba(0, 0, 0, 0.5);
 }
+
 
 /* Ajustes responsive: en pantallas muy pequeñas reducimos altura del hero para evitar overflow */
 @media (max-height: 700px) {
