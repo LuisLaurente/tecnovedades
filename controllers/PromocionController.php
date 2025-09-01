@@ -44,53 +44,31 @@ class PromocionController
     public function guardar()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $nombre       = $_POST['nombre'] ?? '';
-            $prioridad    = $_POST['prioridad'] ?? 3;
-            $fecha_inicio = $_POST['fecha_inicio'] ?? '';
-            $fecha_fin    = $_POST['fecha_fin'] ?? '';
-            $activo       = isset($_POST['activo']) ? 1 : 0;
-            $acumulable   = isset($_POST['acumulable']) ? 1 : 0;
-            $exclusivo    = isset($_POST['exclusivo']) ? 1 : 0;
-            $tipo_accion  = $_POST['tipo_accion'] ?? '';
-            $valor_desc   = $_POST['valor_descuento'] ?? null;
-            $producto_gratis_id = $_POST['producto_gratis_id'] ?? null;
+            $datos = $this->validarDatos($_POST);
+            
+            if (!empty($datos['errores'])) {
+                require_once __DIR__ . '/../views/promocion/crear.php';
+                return;
+            }
 
-            // Generar la "condicion" y "accion" como JSON (más flexible)
-            $condicion = json_encode([
-                'min_monto'   => $_POST['min_monto'] ?? 0,
-                'tipo_usuario'=> $_POST['tipo_usuario'] ?? '',
-                'categoria_id'=> $_POST['categoria_id'] ?? null,
-                'producto_id' => $_POST['producto_id'] ?? null
-            ]);
+            $data = [
+                'nombre' => $datos['nombre'],
+                'descripcion' => $datos['descripcion'],
+                'tipo' => $datos['tipo'],
+                'valor' => $datos['valor'],
+                'condicion' => $this->procesarCondiciones($datos),
+                'accion' => $this->procesarAcciones($datos),
+                'fecha_inicio' => $datos['fecha_inicio'],
+                'fecha_fin' => $datos['fecha_fin'],
+                'activo' => isset($datos['activo']) ? 1 : 0
+            ];
 
-            $accion = json_encode([
-                'tipo'   => $tipo_accion,
-                'valor'  => $valor_desc,
-                'producto_gratis_id' => $producto_gratis_id
-            ]);
-
-            $promocion = new Promocion();
-            $resultado = $promocion->crear([
-                'nombre'       => $nombre,
-                'condicion'    => $condicion,
-                'accion'       => $accion,
-                'acumulable'   => $acumulable,
-                'exclusivo'    => $exclusivo,
-                'prioridad'    => $prioridad,
-                'activo'       => $activo,
-                'fecha_inicio' => $fecha_inicio,
-                'fecha_fin'    => $fecha_fin,
-                'tipo'         => 'general'
-            ]);
-
-            if ($resultado) {
-                $_SESSION['mensaje'] = "✅ Promoción creada correctamente.";
-                header("Location: " . url('promocion/index'));
+            if ($this->promocionModel->crear($data)) {
+                header('Location: ' . url('promocion') . '?success=created');
                 exit;
             } else {
-                $_SESSION['error'] = "❌ Hubo un problema al guardar la promoción.";
-                header("Location: " . url('promocion/crear'));
-                exit;
+                $datos['error'] = "Error al crear la promoción";
+                require_once __DIR__ . '/../views/promocion/crear.php';
             }
         }
     }
@@ -100,8 +78,17 @@ class PromocionController
      */
     public function editar($id)
     {
-        $promocion = $this->promocionModel->obtenerPorId($id);     
-        include __DIR__ . '/../views/promocion/editar.php';
+        $promocion = $this->promocionModel->obtenerPorId($id);
+        if (!$promocion) {
+            header('Location: ' . url('promocion') . '?error=not_found');
+            exit;
+        }
+        
+        // Decodificar JSON para mostrar en el formulario
+        $promocion['condiciones'] = json_decode($promocion['condicion'] ?? '{}', true);
+        $promocion['acciones'] = json_decode($promocion['accion'] ?? '{}', true);
+        
+        require_once __DIR__ . '/../views/promocion/editar.php';
     }
 
     /**
@@ -110,55 +97,39 @@ class PromocionController
     public function actualizar($id)
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $codigo       = $_POST['codigo'] ?? '';
-            $nombre       = $_POST['nombre'] ?? '';
-            $prioridad    = $_POST['prioridad'] ?? 3;
-            $fecha_inicio = $_POST['fecha_inicio'] ?? '';
-            $fecha_fin    = $_POST['fecha_fin'] ?? '';
-            $activo       = isset($_POST['activo']) ? 1 : 0;
-            $acumulable   = isset($_POST['acumulable']) ? 1 : 0;
-            $exclusivo    = isset($_POST['exclusivo']) ? 1 : 0;
-            $tipo_accion  = $_POST['tipo_accion'] ?? '';
-            $valor_desc   = $_POST['valor_descuento'] ?? null;
-            $producto_gratis_id = $_POST['producto_gratis_id'] ?? null;
+            $promocion = $this->promocionModel->obtenerPorId($id);
+            if (!$promocion) {
+                header('Location: ' . url('promocion') . '?error=not_found');
+                exit;
+            }
 
-            // Construir condicion y accion
-            $condicion = [
-                'min_monto'    => $_POST['min_monto'] ?? 0,
-                'tipo_usuario' => $_POST['tipo_usuario'] ?? '',
-                'categoria_id' => $_POST['categoria_id'] ?? null,
-                'producto_id'  => $_POST['producto_id'] ?? null
+            $datos = $this->validarDatos($_POST, $id);
+            
+            if (!empty($datos['errores'])) {
+                $datos['promocion'] = $promocion;
+                require_once __DIR__ . '/../views/promocion/editar.php';
+                return;
+            }
+
+            $data = [
+                'nombre' => $datos['nombre'],
+                'descripcion' => $datos['descripcion'],
+                'tipo' => $datos['tipo'],
+                'valor' => $datos['valor'],
+                'condicion' => $this->procesarCondiciones($datos),
+                'accion' => $this->procesarAcciones($datos),
+                'fecha_inicio' => $datos['fecha_inicio'],
+                'fecha_fin' => $datos['fecha_fin'],
+                'activo' => isset($datos['activo']) ? 1 : 0
             ];
 
-            $accion = [
-                'tipo'   => $tipo_accion,
-                'valor'  => $valor_desc,
-                'producto_id' => $producto_gratis_id
-            ];
-
-            $promocionModel = new Promocion();
-            $resultado = $promocionModel->actualizar($id, [
-                'codigo'       => $codigo,
-                'nombre'       => $nombre,
-                'condicion'    => $condicion,
-                'accion'       => $accion,
-                'acumulable'   => $acumulable,
-                'exclusivo'    => $exclusivo,
-                'prioridad'    => $prioridad,
-                'activo'       => $activo,
-                'fecha_inicio' => $fecha_inicio,
-                'fecha_fin'    => $fecha_fin,
-                'tipo'         => 'general'
-            ]);
-
-            if ($resultado) {
-                $_SESSION['mensaje'] = "✅ Promoción actualizada correctamente.";
-                header("Location: " . url('promocion/index'));
+            if ($this->promocionModel->actualizar($id, $data)) {
+                header('Location: ' . url('promocion') . '?success=updated');
                 exit;
             } else {
-                $_SESSION['error'] = "❌ Error al actualizar la promoción.";
-                header("Location: " . url('promocion/editar/' . $id));
-                exit;
+                $datos['error'] = "Error al actualizar la promoción";
+                $datos['promocion'] = $promocion;
+                require_once __DIR__ . '/../views/promocion/editar.php';
             }
         }
     }
@@ -181,12 +152,10 @@ class PromocionController
 
         if ($this->promocionModel->eliminar($id)) {
             header('Location: ' . url('promocion') . '?success=deleted');
-            exit;
         } else {
             header('Location: ' . url('promocion') . '?error=delete_failed');
-            exit;
         }
-        
+        exit;
     }
 
     /**
@@ -194,21 +163,23 @@ class PromocionController
      */
     public function toggleEstado($id)
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . url('promocion'));
             exit;
         }
 
-        $success = $this->promocionModel->toggleEstado($id);
-
-        if ($success) {
-            header('Location: ' . url('promocion') . '?success=estado_cambiado');
-            exit;
-        } else {
+        $promocion = $this->promocionModel->obtenerPorId($id);
+        if (!$promocion) {
             header('Location: ' . url('promocion') . '?error=not_found');
             exit;
         }
-        
+
+        if ($this->promocionModel->toggleEstado($id)) {
+            header('Location: ' . url('promocion') . '?success=status_changed');
+        } else {
+            header('Location: ' . url('promocion') . '?error=status_change_failed');
+        }
+        exit;
     }
 
     /**

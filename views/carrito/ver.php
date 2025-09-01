@@ -131,6 +131,7 @@ if (isset($_SESSION['carrito'])) {
                             <span class="resumen-valor" id="resumen-total">S/ <?= number_format($totales['total'] ?? 0, 2) ?></span>
                         </div>
                     </div>
+
                 </div>
             </div>
 
@@ -140,7 +141,6 @@ if (isset($_SESSION['carrito'])) {
                     <a href="<?= url(isset($_SESSION['usuario']) ? 'pedido/checkout' : 'pedido/precheckout') ?>" class="boton-checkout">Finalizar Compra</a>
                 <?php endif; ?>
             </div>
-
         <?php else: ?>
             <div class="carrito-vacio">
                 <div class="carrito-vacio-icon">
@@ -266,3 +266,4 @@ if (isset($_SESSION['carrito'])) {
 
 </body>
 </html>
+

@@ -58,14 +58,11 @@
                                     <label for="tipo">Tipo de Descuento *</label>
                                     <select id="tipo" name="tipo" required onchange="toggleValorInput()">
                                         <option value="">Seleccionar tipo</option>
-                                        <option value="descuento_porcentaje" <?= ($tipo ?? $cupon['tipo']) === 'descuento_porcentaje' ? 'selected' : '' ?>>
+                                        <option value="porcentaje" <?= ($tipo ?? $cupon['tipo']) === 'porcentaje' ? 'selected' : '' ?>>
                                             Porcentaje (%)
                                         </option>
-                                        <option value="descuento_fijo" <?= ($tipo ?? $cupon['tipo']) === 'descuento_fijo' ? 'selected' : '' ?>>
+                                        <option value="monto_fijo" <?= ($tipo ?? $cupon['tipo']) === 'monto_fijo' ? 'selected' : '' ?>>
                                             Monto Fijo (S/)
-                                        </option>
-                                        <option value="envio_gratis" <?= ($tipo ?? $cupon['tipo']) === 'envio_gratis' ? 'selected' : '' ?>>
-                                            Envío Gratis
                                         </option>
                                     </select>
                                     <?php if (isset($errores['tipo'])): ?>
@@ -195,79 +192,6 @@
                                 </small>
                             </div>
 
-                            <!-- Configuración de Aplicabilidad -->
-                            <h2>Configuración de Aplicabilidad</h2>
-
-                            <!-- Categorías aplicables -->
-                            <div class="form-group">
-                                <label>Aplicable a categorías:</label>
-                                <?php 
-                                $categoriasAplicablesActuales = [];
-                                if (!empty($cupon['categorias_aplicables'])) {
-                                    $categoriasAplicablesActuales = json_decode($cupon['categorias_aplicables'], true);
-                                }
-                                $todasCategorias = empty($categoriasAplicablesActuales);
-                                ?>
-                                <div class="checkbox-group" style="margin-bottom: 10px;">
-                                    <input type="checkbox" 
-                                        id="todas_categorias" 
-                                        name="aplicar_todas_categorias" 
-                                        value="1" 
-                                        <?= $todasCategorias ? 'checked' : '' ?>
-                                        onchange="toggleCategorias()">
-                                    <label for="todas_categorias">Todas las categorías</label>
-                                </div>
-                                <div id="categorias_container" style="<?= $todasCategorias ? 'display: none;' : '' ?>">
-                                    <select name="categorias_aplicables[]" class="form-control" multiple size="6">
-                                        <?php if (isset($categorias) && !empty($categorias)): ?>
-                                            <?php foreach ($categorias as $categoria): ?>
-                                                <option value="<?= $categoria['id'] ?>" 
-                                                    <?= is_array($categoriasAplicablesActuales) && in_array($categoria['id'], $categoriasAplicablesActuales) ? 'selected' : '' ?>>
-                                                    <?= htmlspecialchars($categoria['nombre']) ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        <?php endif; ?>
-                                    </select>
-                                    <small style="color: #666; font-size: 0.85rem;">
-                                        Mantén Ctrl presionado para seleccionar múltiples categorías
-                                    </small>
-                                </div>
-                            </div>
-
-                            <!-- Público objetivo -->
-                            <div class="form-group">
-                                <label for="publico_objetivo">Público objetivo:</label>
-                                <select name="publico_objetivo" id="publico_objetivo" class="form-control">
-                                    <option value="todos" <?= (isset($publico_objetivo) ? $publico_objetivo : $cupon['publico_objetivo'] ?? 'todos') === 'todos' ? 'selected' : '' ?>>
-                                        Todos los usuarios
-                                    </option>
-                                    <option value="nuevos" <?= (isset($publico_objetivo) ? $publico_objetivo : $cupon['publico_objetivo'] ?? 'todos') === 'nuevos' ? 'selected' : '' ?>>
-                                        Solo usuarios nuevos (sin pedidos previos)
-                                    </option>
-                                    <option value="usuarios_especificos" <?= (isset($publico_objetivo) ? $publico_objetivo : $cupon['publico_objetivo'] ?? 'todos') === 'usuarios_especificos' ? 'selected' : '' ?>>
-                                        Usuarios específicos (usar campo de usuarios autorizados)
-                                    </option>
-                                </select>
-                                <small style="color: #666; font-size: 0.85rem;">
-                                    Define a quién va dirigido este cupón
-                                </small>
-                            </div>
-
-                            <!-- Acumulable con promociones -->
-                            <div class="form-group">
-                                <div class="checkbox-group">
-                                    <input type="checkbox"
-                                        id="acumulable_promociones"
-                                        name="acumulable_promociones"
-                                        value="1"
-                                        <?= (isset($acumulable_promociones) && $acumulable_promociones) || (!isset($acumulable_promociones) && ($cupon['acumulable_promociones'] ?? 1)) ? 'checked' : '' ?>>
-                                    <label for="acumulable_promociones">Acumulable con otras promociones</label>
-                                </div>
-                                <small style="color: #666; font-size: 0.85rem;">
-                                    Si está marcado, se puede usar junto con otras promociones activas
-                                </small>
-                            </div>
-
                             <!-- Estado -->
                             <div class="form-group">
                                 <div class="checkbox-group">
@@ -356,11 +280,11 @@
             const valorLabel = document.getElementById('valor-label');
             const valorInput = document.getElementById('valor');
 
-            if (tipo === 'descuento_porcentaje') {
+            if (tipo === 'porcentaje') {
                 valorLabel.textContent = 'Porcentaje de Descuento (%) *';
                 valorInput.setAttribute('max', '100');
                 valorInput.setAttribute('placeholder', 'Ej: 20');
-            } else if (tipo === 'descuento_fijo') {
+            } else if (tipo === 'monto_fijo') {
                 valorLabel.textContent = 'Monto de Descuento (S/) *';
                 valorInput.removeAttribute('max');
                 valorInput.setAttribute('placeholder', 'Ej: 50.00');
@@ -368,23 +292,6 @@
                 valorLabel.textContent = 'Valor del Descuento *';
                 valorInput.removeAttribute('max');
                 valorInput.setAttribute('placeholder', '');
-            }
-        }
-
-        // Función para toggle de categorías
-        function toggleCategorias() {
-            const checkbox = document.getElementById('todas_categorias');
-            const container = document.getElementById('categorias_container');
-            const select = container.querySelector('select');
-            
-            if (checkbox.checked) {
-                container.style.display = 'none';
-                // Limpiar selecciones
-                for (let option of select.options) {
-                    option.selected = false;
-                }
-            } else {
-                container.style.display = 'block';
             }
         }
 
