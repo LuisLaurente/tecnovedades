@@ -1,15 +1,5 @@
 <?php
-// views/home/busqueda.php (VISTA FINAL BASADA EN MAQUETAS)
-// -----------------------------------------------------------------
-// Esta vista muestra la grilla completa de productos con filtros integrados y paginación.
-// Funciona sin necesidad de estar logueado.
-// Espera recibir del controlador las siguientes variables:
-// - $productos: El array de productos a mostrar.
-// - $categoriasDisponibles: Para el select de categorías en los filtros.
-// - $paginaActual, $totalPaginas, $currentQuery: Para la paginación.
-// - (Opcional) $termino: Si la vista se usa para resultados de una búsqueda por texto.
 
-// Iniciar sesión solo si no está iniciada (para CSRF y carrito)
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
