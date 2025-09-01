@@ -59,7 +59,7 @@ body {
 }
 
 .container {
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 0 2rem;
   justify-content: center;
@@ -271,6 +271,16 @@ img {
   transition: var(--transition-smooth);
   background: var(--primary-white);
 }
+
+/* Tablets grandes y laptops pequeñas */
+@media (max-width: 1200px) {
+  .container {
+    max-width: 800px;
+    padding: 0 1.5rem;
+  }
+  .hero-and-categories {
+    min-height: 70vh;
+  }
 
 .filter-group input:focus,
 .filter-group select:focus {

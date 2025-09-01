@@ -24,12 +24,48 @@ if (isset($_SESSION['carrito'])) {
 
     <div class="main-container">
         <div class="content-wrapper">
-            <!-- Título de resultados -->
-            <div class="welcome-section">
-                <h1 class="main-title">Resultados de búsqueda</h1>
-                <p class="main-subtitle">
-                    Buscaste: <strong><?= htmlspecialchars($termino ?? '', ENT_QUOTES, 'UTF-8') ?></strong>
-                </p>
+
+            <!-- ================================================================== -->
+            <!-- BREADCRUMB                                                         -->
+            <!-- ================================================================== -->
+            <nav class="breadcrumb">
+                <a href="<?= url('home') ?>">INICIO</a> /
+                <?php if (!empty($categoriaActual)): ?>
+                    <?= htmlspecialchars(strtoupper($categoriaActual['nombre'])) ?>
+                <?php else: ?>
+                    ELECTRÓNICOS
+                <?php endif; ?>
+            </nav>
+
+            <!-- ================================================================== -->
+            <!-- TÍTULO DE LA PÁGINA                                               -->
+            <!-- ================================================================== -->
+            <div class="page-header">
+                <?php if (!empty($termino)): ?>
+                    <h1 class="page-title">Resultados para: "<?= htmlspecialchars($termino, ENT_QUOTES, 'UTF-8') ?>"</h1>
+                    <p class="page-subtitle">
+                        <?= $totalEncontrados ?> productos encontrados
+                    </p>
+                <?php elseif (!empty($categoriaActual)): ?>
+                    <h1 class="page-title"><?= htmlspecialchars($categoriaActual['nombre'], ENT_QUOTES, 'UTF-8') ?></h1>
+                    <p class="page-subtitle">Mostrando productos <?= ($paginaActual - 1) * $productosPorPagina + 1 ?>-<?= min($paginaActual * $productosPorPagina, $totalEncontrados) ?> de <?= $totalEncontrados ?> en total</p>
+                <?php else: ?>
+                    <?php 
+    // Obtener el nombre de la categoría seleccionada desde el filtro
+    $categoriaNombre = 'Productos'; // Valor por defecto
+    if (!empty($_GET['categoria']) && !empty($categoriasDisponibles)) {
+        foreach ($categoriasDisponibles as $categoria) {
+            if ($categoria['id'] == $_GET['categoria']) {
+                $categoriaNombre = $categoria['nombre'];
+                break;
+            }
+        }
+    }
+    ?>
+    <h1 class="page-title"><?= htmlspecialchars($categoriaNombre, ENT_QUOTES, 'UTF-8') ?></h1>
+                    <p class="page-subtitle">Mostrando productos <?= ($paginaActual - 1) * $productosPorPagina + 1 ?>-<?= min($paginaActual * $productosPorPagina, $totalEncontrados) ?> de <?= $totalEncontrados ?> en total</p>
+                <?php endif; ?>
+
             </div>
 
             <!-- Productos -->
