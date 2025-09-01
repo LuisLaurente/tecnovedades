@@ -138,12 +138,21 @@ class ProductoController
             return;
         }
 
-        // Guardar producto incluyendo flags y destacado
+        /// Antes de la inserción, captura los campos:
+        $especificaciones = trim($_POST['especificaciones'] ?? '');
+        $productos_relacionados_input = $_POST['productos_relacionados'] ?? []; // array de ids
+        // Normalizar a array de ints
+        $productos_relacionados_input = array_map('intval', (array)$productos_relacionados_input);
+        $productos_relacionados_json = !empty($productos_relacionados_input) ? json_encode($productos_relacionados_input) : null;
+
+        // INSERT actualizando la query:
         $stmt = $db->prepare("INSERT INTO productos 
         (nombre, descripcion, precio, precio_tachado, porcentaje_descuento, 
-         precio_tachado_visible, porcentaje_visible, stock, visible, destacado) 
+     precio_tachado_visible, porcentaje_visible, stock, visible, destacado,
+     especificaciones, productos_relacionados) 
         VALUES (:nombre, :descripcion, :precio, :precio_tachado, :porcentaje_descuento, 
-                :precio_tachado_visible, :porcentaje_visible, :stock, :visible, :destacado)");
+        :precio_tachado_visible, :porcentaje_visible, :stock, :visible, :destacado,
+        :especificaciones, :productos_relacionados)");
 
         $stmt->execute([
             ':nombre' => $nombre,
@@ -155,7 +164,9 @@ class ProductoController
             ':porcentaje_visible' => $porcentaje_visible,
             ':stock' => $stock,
             ':visible' => $visible,
-            ':destacado' => $destacado
+            ':destacado' => $destacado,
+            ':especificaciones' => $especificaciones ?: null,
+            ':productos_relacionados' => $productos_relacionados_json
         ]);
 
         $producto_id = $db->lastInsertId();
@@ -190,6 +201,8 @@ class ProductoController
         $categoriasAsignadas = array_column($stmt->fetchAll(\PDO::FETCH_ASSOC), 'id_categoria');
 
         $imagenes = ImagenProducto::obtenerPorProducto($id);
+
+        $allProducts = (new Producto())->obtenerVisibles();
 
         require __DIR__ . '/../views/producto/editar.php';
     }
@@ -232,6 +245,12 @@ class ProductoController
         }
 
         // ✅ Actualizar producto con campo "destacado" agregado
+        // Recoger inputs
+        $especificaciones = trim($_POST['especificaciones'] ?? '');
+        $productos_relacionados_input = $_POST['productos_relacionados'] ?? [];
+        $productos_relacionados_input = array_map('intval', (array)$productos_relacionados_input);
+        $productos_relacionados_json = !empty($productos_relacionados_input) ? json_encode($productos_relacionados_input) : null;
+
         Producto::actualizar(
             $id,
             $nombre,
@@ -243,8 +262,11 @@ class ProductoController
             $porcentaje_visible,
             $stock,
             $visible,
-            $destacado // <-- 🔹 agregado aquí
+            $destacado,
+            $especificaciones,
+            $productos_relacionados_json
         );
+
 
         // ------- categorías -------
         $db->prepare("DELETE FROM producto_categoria WHERE id_producto = ?")->execute([$id]);
@@ -332,13 +354,62 @@ class ProductoController
         $producto['categorias'] = Producto::obtenerCategoriasPorProducto($producto['id']);
         $producto['imagenes'] = \Models\ImagenProducto::obtenerPorProducto($producto['id']);
 
-        // 🔹 Variables SEO dinámicas
+        // --- Breadcrumb ---
+        try {
+            $db = \Core\Database::getInstance()->getConnection();
+            $stmt = $db->prepare("SELECT id_categoria FROM producto_categoria WHERE id_producto = ?");
+            $stmt->execute([(int)$producto['id']]);
+            $catIds = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+
+            $bestChain = [];
+            foreach ($catIds as $cid) {
+                $chain = \Models\Categoria::obtenerAncestros((int)$cid);
+                if (count($chain) > count($bestChain)) {
+                    $bestChain = $chain;
+                }
+            }
+
+            $breadcrumb = !empty($bestChain)
+                ? array_column($bestChain, 'nombre')
+                : ['Inicio', 'Productos'];
+
+            $breadcrumb[] = $producto['nombre'];
+        } catch (\Throwable $e) {
+            error_log('ProductoController::ver - error construyendo breadcrumb: ' . $e->getMessage());
+            $breadcrumb = ['Inicio', 'Productos', $producto['nombre']];
+        }
+
+        // 🔹 SEO dinámico
         $meta_title = $producto['nombre'] . ' | Tienda Tecnovedades';
         $meta_description = substr(strip_tags($producto['descripcion']), 0, 160);
-        $meta_image = !empty($producto['imagenes']) && isset($producto['imagenes'][0]['nombre'])
-            ? url('uploads/' . $producto['imagenes'][0]['nombre'])
+        $meta_image = !empty($producto['imagenes'][0]['nombre_imagen'])
+            ? url('uploads/' . $producto['imagenes'][0]['nombre_imagen'])
             : url('images/default-share.png');
         $canonical = url('producto/ver/' . $producto['id']);
+
+        // ------------------- Relacionados -------------------
+        $relatedProducts = [];
+        $ids = $producto['productos_relacionados'] ?? [];
+
+        if (!empty($ids)) {
+            // evita incluirse a sí mismo por si acaso
+            $ids = array_values(array_diff(array_map('intval', $ids), [(int)$producto['id']]));
+
+            if (!empty($ids)) {
+                $relatedProducts = $productoModel->obtenerPorIds($ids);
+
+                // Carga primera imagen y expón clave 'imagen' que espera la vista
+                foreach ($relatedProducts as &$rp) {
+                    $rp['imagenes'] = \Models\ImagenProducto::obtenerPorProducto((int)$rp['id']);
+                    $rp['imagen'] = !empty($rp['imagenes'][0]['nombre_imagen'])
+                        ? $rp['imagenes'][0]['nombre_imagen']
+                        : null;
+                }
+                unset($rp);
+            }
+        }
+
+
 
         require_once __DIR__ . '/../views/producto/descripcion.php';
     }

@@ -17,11 +17,11 @@
                 </div>
                 <div class="flex-1 p-6 bg-gray-50 overflow-y-auto">
 
-                    <h1>Crear Nueva Categoría</h1>
+                    <h1 class="text-2xl font-semibold mb-4">Crear Nueva Categoría</h1>
 
                     <?php if (!empty($errores)): ?>
-                        <div style="color:red;">
-                            <ul>
+                        <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700">
+                            <ul class="list-disc pl-5">
                                 <?php foreach ($errores as $e): ?>
                                     <li><?= htmlspecialchars($e) ?></li>
                                 <?php endforeach; ?>
@@ -29,24 +29,57 @@
                         </div>
                     <?php endif; ?>
 
-                    <form method="POST" action="<?= url('categoria/crear') ?>">
-                        <label for="nombre">Nombre de la categoría:</label><br>
-                        <input type="text" name="nombre" id="nombre" value="<?= htmlspecialchars($nombre ?? '') ?>" required><br><br>
+                    <form method="POST" action="<?= url('categoria/guardar') ?>" enctype="multipart/form-data" class="space-y-4">
+                        <!-- (opcional) ayuda para navegador/servidor sobre tamaño máximo -->
+                        <input type="hidden" name="MAX_FILE_SIZE" value="2097152"> <!-- 2 MB -->
 
-                        <label for="id_padre">Categoría padre (opcional):</label><br>
-                        <select name="id_padre" id="id_padre">
-                            <option value="">-- Ninguna (Categoría principal) --</option>
-                            <?php foreach ($categorias as $cat): ?>
-                                <option value="<?= $cat['id'] ?>" <?= isset($id_padre) && $id_padre == $cat['id'] ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($cat['nombre']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select><br><br>
+                        <div>
+                            <label for="nombre" class="block font-medium">Nombre de la categoría:</label>
+                            <input
+                                type="text"
+                                name="nombre"
+                                id="nombre"
+                                value="<?= htmlspecialchars($nombre ?? '') ?>"
+                                required
+                                class="mt-1 block w-full border rounded px-3 py-2"
+                            >
+                        </div>
 
-                        <button type="submit">Guardar categoría</button>
+                        <div>
+                            <label for="id_padre" class="block font-medium">Categoría padre (opcional):</label>
+                            <select name="id_padre" id="id_padre" class="mt-1 block w-full border rounded px-3 py-2">
+                                <option value="">-- Ninguna (Categoría principal) --</option>
+                                <?php foreach ($categorias as $cat): ?>
+                                    <option value="<?= $cat['id'] ?>" <?= isset($id_padre) && $id_padre == $cat['id'] ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($cat['nombre']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="imagen" class="block font-medium">Imagen (opcional) — Tipo: jpg, png, webp, gif. Máx 2 MB</label>
+                            <input
+                                type="file"
+                                name="imagen"
+                                id="imagen"
+                                accept="image/*"
+                                class="mt-2"
+                            >
+                            <div id="preview-wrapper" class="mt-3" style="display:none;">
+                                <div class="text-sm text-gray-600 mb-1">Vista previa:</div>
+                                <img id="preview" src="#" alt="Vista previa de la imagen" style="max-width:200px; border-radius:6px; border:1px solid #e5e7eb;">
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                                Guardar categoría
+                            </button>
+                            <a href="<?= url('categoria') ?>" class="text-gray-700 hover:underline">← Volver al listado</a>
+                        </div>
                     </form>
 
-                    <p><a href="<?= url('categoria') ?>">← Volver al listado</a></p>
                 </div>
                 <div class="mt-4">
                     <?php include_once __DIR__ . '/../admin/includes/footer.php'; ?>
@@ -54,6 +87,42 @@
             </main>
         </div>
     </div>
+
+    <script>
+        // Preview simple para input file
+        (function(){
+            const input = document.getElementById('imagen');
+            const preview = document.getElementById('preview');
+            const wrapper = document.getElementById('preview-wrapper');
+
+            if (!input) return;
+
+            input.addEventListener('change', function(e){
+                const file = this.files && this.files[0];
+                if (!file) {
+                    wrapper.style.display = 'none';
+                    preview.src = '#';
+                    return;
+                }
+
+                // simple size check client-side (informativo, la validación principal es server-side)
+                const maxBytes = 2097152; // 2MB
+                if (file.size > maxBytes) {
+                    alert('El archivo supera el tamaño máximo de 2 MB.');
+                    this.value = '';
+                    wrapper.style.display = 'none';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    preview.src = ev.target.result;
+                    wrapper.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            });
+        })();
+    </script>
 </body>
 
 </html>
