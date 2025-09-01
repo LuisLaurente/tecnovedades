@@ -14,35 +14,10 @@ class Pedido
         $this->db = \Core\Database::getConexion();
     }
 
-    public function crear($usuario_id, $monto_total, $estado = 'pendiente', $cupon_data = null)
+    public function crear($usuario_id, $monto_total, $estado = 'pendiente')
     {
-        if ($cupon_data) {
-            $stmt = $this->db->prepare("
-                INSERT INTO pedidos (
-                    cliente_id, 
-                    monto_total, 
-                    estado, 
-                    cupon_id, 
-                    cupon_codigo, 
-                    descuento_cupon, 
-                    subtotal, 
-                    descuento_promocion
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ");
-            $stmt->execute([
-                $usuario_id, 
-                $monto_total, 
-                $estado,
-                $cupon_data['cupon_id'] ?? null,
-                $cupon_data['cupon_codigo'] ?? null,
-                $cupon_data['descuento_cupon'] ?? 0.00,
-                $cupon_data['subtotal'] ?? 0.00,
-                $cupon_data['descuento_promocion'] ?? 0.00
-            ]);
-        } else {
-            $stmt = $this->db->prepare("INSERT INTO pedidos (cliente_id, monto_total, estado) VALUES (?, ?, ?)");
-            $stmt->execute([$usuario_id, $monto_total, $estado]);
-        }
+        $stmt = $this->db->prepare("INSERT INTO pedidos (cliente_id, monto_total, estado) VALUES (?, ?, ?)");
+        $stmt->execute([$usuario_id, $monto_total, $estado]);
         return $this->db->lastInsertId();
     }
 

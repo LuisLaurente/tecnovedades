@@ -1,53 +1,26 @@
 <?php
-// views/home/busqueda.php (VISTA FINAL BASADA EN MAQUETAS)
-// -----------------------------------------------------------------
-// Esta vista muestra la grilla completa de productos con filtros integrados y paginación.
-// Funciona sin necesidad de estar logueado.
-// Espera recibir del controlador las siguientes variables:
-// - $productos: El array de productos a mostrar.
-// - $categoriasDisponibles: Para el select de categorías en los filtros.
-// - $paginaActual, $totalPaginas, $currentQuery: Para la paginación.
-// - (Opcional) $termino: Si la vista se usa para resultados de una búsqueda por texto.
-
-// Iniciar sesión solo si no está iniciada (para CSRF y carrito)
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Generar token CSRF si no existe
-if (!isset($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+$cantidadEnCarrito = 0;
+if (isset($_SESSION['carrito'])) {
+    foreach ($_SESSION['carrito'] as $item) {
+        $cantidadEnCarrito += $item['cantidad'];
+    }
 }
-
-// Calcular información de productos
-$totalProductos = isset($productos) ? count($productos) : 0;
-$productosPorPagina = 15; // Ajustar según tu configuración
-$totalEncontrados = $totalProductos; // Esto debería venir del controlador
 ?>
 <!DOCTYPE html>
 <html lang="es">
 
-<head>
-    <?php include_once __DIR__ . '/../admin/includes/head.php'; ?>
-    <!-- Meta tags para SEO -->
-    <meta name="description" content="<?= !empty($termino) ? 'Resultados de búsqueda para: ' . htmlspecialchars($termino) : 'Explora nuestro catálogo completo de productos electrónicos' ?>">
-    <meta name="keywords" content="electrónicos, tecnología, productos, tienda, búsqueda, catálogo">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- Estilos de noUiSlider -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css" />
-
-    <!-- Estilos -->
-    <link rel="stylesheet" href="<?= url('css/busqueda.css') ?>">
-    <link rel="stylesheet" href="<?= url('css/cards.css') ?>">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-    <!-- Preload para mejorar rendimiento -->
-    <link rel="preload" href="<?= url('css/busqueda.css') ?>" as="style">
-</head>
+<?php include_once __DIR__ . '/../admin/includes/head.php'; ?>
+<link rel="stylesheet" href="<?= url('css/home.css') ?>">
+<link rel="stylesheet" href="<?= url('css/cards.css') ?>">
 
 <body>
-    <?php include_once __DIR__ . '/../admin/includes/header.php'; ?>
+    <div class="header-container">
+        <?php include_once __DIR__ . '/../admin/includes/header.php'; ?>
+    </div>
 
     <div class="main-container">
         <div class="content-wrapper">
@@ -92,223 +65,79 @@ $totalEncontrados = $totalProductos; // Esto debería venir del controlador
     <h1 class="page-title"><?= htmlspecialchars($categoriaNombre, ENT_QUOTES, 'UTF-8') ?></h1>
                     <p class="page-subtitle">Mostrando productos <?= ($paginaActual - 1) * $productosPorPagina + 1 ?>-<?= min($paginaActual * $productosPorPagina, $totalEncontrados) ?> de <?= $totalEncontrados ?> en total</p>
                 <?php endif; ?>
+
             </div>
 
-            <!-- ================================================================== -->
-            <!-- BARRA DE FILTROS Y HERRAMIENTAS                                    -->
-            <!-- ================================================================== -->
-            <div class="toolbar">
-                <form id="filterForm" class="filter-form-container" method="GET" action="<?= url('home/busqueda') ?>">
-                    <h2 class="filters-title">Filtros</h2>
-                    <div class="filters-wrapper">
-                        <!-- Mantener término de búsqueda si existe -->
-                        <?php if (!empty($termino)): ?>
-                            <input type="hidden" name="termino" value="<?= htmlspecialchars($termino) ?>">
-                        <?php endif; ?>
+            <!-- Productos -->
+            <div class="products-content">
+                <div id="productsWrapper">
+                    <div class="products-grid">
+                        <?php if (!empty($resultados)): ?>
+                            <?php foreach ($resultados as $producto): ?>
+                                <?php
+                                    $precioFinal   = isset($producto['precio']) ? (float)$producto['precio'] : 0.0;
+                                    $precioTachado = (isset($producto['precio_tachado']) && $producto['precio_tachado'] !== '') ? (float)$producto['precio_tachado'] : null;
+                                    $showTachado = ($precioTachado !== null && $precioTachado > $precioFinal) && !empty($producto['precio_tachado_visible']);
+                                    
+                                    // Calcular porcentaje de descuento si hay precio tachado
+                                    $porcentajeDescuento = 0;
+                                    if ($showTachado && $precioTachado > 0) {
+                                        $porcentajeDescuento = round((($precioTachado - $precioFinal) / $precioTachado) * 100);
+                                    }
+                                    
+                                    $imgSrc = url('uploads/default-product.png');
+                                    if (!empty($producto['imagen'])) {
+                                        $imgSrc = url('uploads/' . $producto['imagen']);
+                                    }
+                                ?>
+                                <div class="product-card <?= !empty($producto['destacado']) ? 'is-featured' : '' ?>">
+                                    <?php if (!empty($producto['destacado'])): ?>
+                                        <div class="badge-featured">★</div>
+                                    <?php endif; ?>
+                                    
+                                    <?php if ($showTachado && $porcentajeDescuento > 0): ?>
+                                        <div class="badge-porcentaje">-<?= $porcentajeDescuento ?>%</div>
+                                    <?php endif; ?>
 
-                        <!-- Filtro por Categoría -->
-                        <div class="filter-group-inline">
-                            <label class="filter-label">CATEGORÍAS</label>
-                            <select name="categoria" class="filter-select">
-                                <option value="">Todas las categorías</option>
-                                <?php if (!empty($categoriasDisponibles)): ?>
-                                    <?php foreach ($categoriasDisponibles as $categoria): ?>
-                                        <option value="<?= (int)$categoria['id'] ?>"
-                                            <?= (($_GET['categoria'] ?? '') == $categoria['id']) ? 'selected' : '' ?>>
-                                            <?= htmlspecialchars($categoria['nombre']) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                            </select>
-                        </div>
+                                    <a href="<?= url('producto/ver/' . $producto['id']) ?>" class="product-link">
+                                        <div class="product-image-container">
+                                            <img src="<?= $imgSrc ?>" alt="<?= htmlspecialchars($producto['nombre']) ?>">
+                                        </div>
+                                        <div class="product-info">
+                                            <h3 class="product-title"><?= htmlspecialchars($producto['nombre']) ?></h3>
+                                            <p class="product-description"><?= htmlspecialchars($producto['descripcion']) ?></p>
+                                            <div class="product-price">
+                                                <span class="price-now">S/ <?= number_format($precioFinal, 2) ?></span>
+                                                <?php if ($showTachado): ?>
+                                                    <span class="price-old">S/ <?= number_format($precioTachado, 2) ?></span>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    </a>
 
-                        <!-- Filtro por Precio -->
-                        <div class="filter-group-inline price-filter">
-                            <label class="filter-label">PRECIOS</label>
-                            <div class="price-inputs-inline">
-                                <div class="price-inputs-group">
-                                    <input type="number" class="price-input-inline" name="min_price" value="<?= htmlspecialchars($_GET['min_price'] ?? '30') ?>" placeholder="Mín">
-                                    <input type="number" class="price-input-inline" name="max_price" value="<?= htmlspecialchars($_GET['max_price'] ?? '1000') ?>" placeholder="Máx">
+                                    <form method="POST" action="<?= url('carrito/agregar') ?>" class="add-to-cart-form" onClick="event.stopPropagation();">
+                                        <input type="hidden" name="producto_id" value="<?= $producto['id'] ?>">
+                                        <div class="quantity-section">
+                                            <input type="number" name="cantidad" value="1" min="1" class="quantity-input">
+                                            <button type="submit" class="add-button">Agregar</button>
+                                        </div>
+                                    </form>
                                 </div>
-                                <div id="price-slider" class="price-slider-container"></div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="empty-state">
+                                <div class="empty-icon">🔍</div>
+                                <h3 class="empty-title">No se encontraron resultados</h3>
+                                <p class="empty-description">Intenta con otra palabra clave.</p>
                             </div>
-                        </div>
-
-                        <!-- Botones de acción -->
-                        <div class="filter-actions-inline">
-                            <button type="submit" class="apply-filters-btn">
-                                <i class="fas fa-search"></i> BUSCAR
-                            </button>
-                            <a href="<?= url('home/busqueda') ?>" class="clear-filters-btn">
-                                Limpiar filtros
-                            </a>
-                        </div>
-
-                        <!-- Ordenamiento -->
-                        <div class="sort-section">
-                            <label class="sort-label">Ordenar:</label>
-                            <select class="sort-select" id="sortSelect" name="orden">
-                                <option value="">Ordenar por:</option>
-                                <option value="nombre_asc" <?= (($_GET['orden'] ?? '') === 'nombre_asc') ? 'selected' : '' ?>>Ordenar de A - Z</option>
-                                <option value="nombre_desc" <?= (($_GET['orden'] ?? '') === 'nombre_desc') ? 'selected' : '' ?>>Ordenar de Z - A</option>
-                                <option value="precio_asc" <?= (($_GET['orden'] ?? '') === 'precio_asc') ? 'selected' : '' ?>>Menor a mayor precio</option>
-                                <option value="precio_desc" <?= (($_GET['orden'] ?? '') === 'precio_desc') ? 'selected' : '' ?>>Mayor a menor precio</option>
-                            </select>
-                        </div>
+                        <?php endif; ?>
                     </div>
-                </form>
+                </div>
             </div>
-
-            <!-- ================================================================== -->
-            <!-- PAGINACIÓN (SUPERIOR)                                              -->
-            <!-- ================================================================== -->
-            <?php if (isset($totalPaginas) && $totalPaginas > 1): ?>
-                <?php include __DIR__ . '/_pagination.php'; ?>
-            <?php endif; ?>
-
-            <!-- ================================================================== -->
-            <!-- GRID DE PRODUCTOS                                                 -->
-            <!-- ================================================================== -->
-            <div id="products-container">
-                <?php include __DIR__ . '/_products_grid.php'; ?>
-            </div>
-
-            <!-- ================================================================== -->
-            <!-- PAGINACIÓN (INFERIOR)                                              -->
-            <!-- ================================================================== -->
-            <?php if (isset($totalPaginas) && $totalPaginas > 1): ?>
-                <?php include __DIR__ . '/_pagination.php'; ?>
-            <?php endif; ?>
         </div>
     </div>
 
     <?php include_once __DIR__ . '/../admin/includes/footer.php'; ?>
-
-
-    <!-- Librería noUiSlider (Añadir esta línea) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-
-            //================================================
-            // INICIALIZACIÓN DEL SLIDER DE PRECIOS (noUiSlider)
-            //================================================
-            const priceSlider = document.getElementById('price-slider');
-
-            if (priceSlider) {
-                const minPriceInput = document.querySelector('input[name="min_price"]');
-                const maxPriceInput = document.querySelector('input[name="max_price"]');
-
-                // Define un rango máximo realista para los productos. Ajústalo si es necesario.
-                const maxRange = 5000;
-
-                // Valores iniciales: toma los de los inputs o usa valores por defecto.
-                const initialMin = parseInt(minPriceInput.value, 10) || 0;
-                const initialMax = parseInt(maxPriceInput.value, 10) || maxRange;
-
-                noUiSlider.create(priceSlider, {
-                    start: [initialMin, initialMax], // Posición inicial de los círculos
-                    connect: true, // Rellena el espacio entre los círculos
-                    step: 10, // El valor se mueve en saltos de 10
-                    range: {
-                        'min': 0,
-                        'max': maxRange
-                    },
-                    format: { // Asegura que los valores sean números enteros
-                        to: function(value) {
-                            return Math.round(value);
-                        },
-                        from: function(value) {
-                            return Number(value);
-                        }
-                    }
-                });
-
-                // Evento: Cuando mueves el slider, actualiza los campos de texto (inputs)
-                priceSlider.noUiSlider.on('update', function(values, handle) {
-                    if (handle === 0) { // Círculo izquierdo (precio mínimo)
-                        minPriceInput.value = values[0];
-                    } else { // Círculo derecho (precio máximo)
-                        maxPriceInput.value = values[1];
-                    }
-                });
-
-                // Evento: Cuando cambias el valor en el input, mueve el slider
-                minPriceInput.addEventListener('change', function() {
-                    priceSlider.noUiSlider.set([this.value, null]);
-                });
-
-                maxPriceInput.addEventListener('change', function() {
-                    priceSlider.noUiSlider.set([null, this.value]);
-                });
-            }
-
-            //================================================
-            // MANEJO DEL FORMULARIO DE FILTROS Y ORDENAMIENTO
-            //================================================
-            const filterForm = document.getElementById('filterForm');
-            if (filterForm) {
-                // Envía el formulario automáticamente cuando se cambia el ordenamiento
-                document.getElementById('sortSelect').addEventListener('change', () => {
-                    filterForm.submit();
-                });
-            }
-
-            //================================================
-            // MANEJO DE BOTONES DE FAVORITOS
-            //================================================
-            document.addEventListener('click', function(e) {
-                // Busca si el clic fue en un botón de favoritos
-                const favoriteButton = e.target.closest('.favorite-button');
-                if (favoriteButton) {
-                    e.preventDefault();
-                    toggleFavorite(favoriteButton);
-                }
-            });
-        });
-
-        /**
-         * Cambia el estado visual de un botón de favorito.
-         * @param {HTMLElement} button El botón que fue presionado.
-         */
-        function toggleFavorite(button) {
-            const icon = button.querySelector('i');
-            const isActive = button.classList.contains('active');
-
-            if (isActive) {
-                button.classList.remove('active');
-                icon.className = 'far fa-heart'; // Corazón vacío
-            } else {
-                button.classList.add('active');
-                icon.className = 'fas fa-heart'; // Corazón lleno
-            }
-            // Aquí podrías añadir una llamada AJAX para guardar el estado en el servidor.
-        }
-
-        //================================================
-        // MANEJO DE FORMULARIOS DE "AGREGAR AL CARRITO"
-        //================================================
-        document.addEventListener('submit', function(e) {
-            // Verifica si el formulario enviado es para agregar al carrito
-            if (e.target.classList.contains('add-to-cart-form')) {
-                const button = e.target.querySelector('.add-to-cart-btn, .add-button'); // Compatible con ambos tipos de botón
-                if (button) {
-                    const originalText = button.innerHTML;
-
-                    // Muestra un estado de carga para dar feedback al usuario
-                    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> AGREGANDO...';
-                    button.disabled = true;
-
-                    // Simula un tiempo de espera y restaura el botón
-                    setTimeout(() => {
-                        button.innerHTML = originalText;
-                        button.disabled = false;
-                    }, 2000);
-                }
-            }
-        });
-    </script>
-
 </body>
 
 </html>

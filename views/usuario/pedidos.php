@@ -55,15 +55,7 @@
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-sm font-medium text-gray-600">Total Gastado</p>
-                                    <p class="text-2xl font-bold text-gray-900">S/ <?= number_format(array_sum(array_map(function($p) { 
-                                        $subtotal = $p['subtotal'] ?? 0;
-                                        $descuento_cupon = $p['descuento_cupon'] ?? 0;
-                                        $descuento_promocion = $p['descuento_promocion'] ?? 0;
-                                        if ($subtotal > 0) {
-                                            return $subtotal - $descuento_cupon - $descuento_promocion;
-                                        }
-                                        return $p['monto_total'] ?? $p['total'] ?? 0;
-                                    }, $pedidos)), 2) ?></p>
+                                    <p class="text-2xl font-bold text-gray-900">S/ <?= number_format(array_sum(array_column($pedidos, 'monto_total')), 2) ?></p>
                                 </div>
                                 <div class="p-3 bg-green-100 rounded-lg">
                                     <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,42 +135,18 @@
                                             <div class="flex items-center space-x-4">
                                                 <div class="text-right">
                                                     <?php 
-                                                    // Mostrar información de descuentos si existen
-                                                    $subtotal = $pedidozz['subtotal'] ?? 0;
-                                                    $descuento_cupon = $pedidozz['descuento_cupon'] ?? 0;
-                                                    $descuento_promocion = $pedidozz['descuento_promocion'] ?? 0;
-                                                    $cupon_codigo = $pedidozz['cupon_codigo'] ?? null;
-                                                    
                                                     // Calcular total del pedido
-                                                    if ($subtotal > 0) {
-                                                        // Si tenemos subtotal, calcular el total final con descuentos
-                                                        $totalPedido = $subtotal - $descuento_cupon - $descuento_promocion;
-                                                    } else {
-                                                        // Para pedidos antiguos sin subtotal, usar el total original
-                                                        $totalPedido = $pedidozz['total'] ?? $pedidozz['monto_total'] ?? 0;
-                                                        if ($totalPedido == 0 && isset($pedidozz['detalles']) && is_array($pedidozz['detalles'])) {
-                                                            foreach ($pedidozz['detalles'] as $detalle) {
-                                                                $precio = floatval($detalle['precio_unitario'] ?? 0);
-                                                                $cantidad = intval($detalle['cantidad'] ?? 0);
-                                                                $totalPedido += $precio * $cantidad;
-                                                            }
+                                                    $totalPedido = $pedidozz['total'] ?? $pedidozz['monto_total'] ?? 0;
+                                                    if ($totalPedido == 0 && isset($pedidozz['detalles']) && is_array($pedidozz['detalles'])) {
+                                                        foreach ($pedidozz['detalles'] as $detalle) {
+                                                            $precio = floatval($detalle['precio_unitario'] ?? 0);
+                                                            $cantidad = intval($detalle['cantidad'] ?? 0);
+                                                            $totalPedido += $precio * $cantidad;
+                                                            
                                                         }
                                                     }
-                                                    
-                                                    // Mostrar subtotal si hay descuentos
-                                                    if ($subtotal > 0 && ($descuento_cupon > 0 || $descuento_promocion > 0)): ?>
-                                                        <div class="text-sm text-gray-600">
-                                                            <div>Subtotal: S/ <?= number_format($subtotal, 2) ?></div>
-                                                            <?php if ($descuento_promocion > 0): ?>
-                                                                <div class="text-green-600">Desc. Promoción: -S/ <?= number_format($descuento_promocion, 2) ?></div>
-                                                            <?php endif; ?>
-                                                            <?php if ($descuento_cupon > 0 && $cupon_codigo): ?>
-                                                                <div class="text-blue-600">Cupón <?= htmlspecialchars($cupon_codigo) ?>: -S/ <?= number_format($descuento_cupon, 2) ?></div>
-                                                            <?php endif; ?>
-                                                        </div>
-                                                    <?php endif; ?>
-                                                    
-                                                    <p class="text-lg font-bold text-gray-900">S/ <?= number_format($totalPedido, 2) ?></p>
+                                                    ?>
+                                                    <p class="text-lg font-bold text-gray-900">$<?= number_format($totalPedido, 2) ?></p>
                                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
                                                         <?php 
                                                         switch($pedido['estado']) {
@@ -201,9 +169,18 @@
                                                         <?= ucfirst($pedido['estado']) ?>
                                                     </span>
                                                 </div>
-                                                <button onclick="mostrarDetallePedido(<?= $pedidozz['id'] ?>)" class="text-blue-600 hover:text-blue-800 font-medium">
+                                                <div style="display: flex; flex-direction: column; gap: 8px;">
+                                                <button onclick="mostrarDetallePedido(<?= $pedidozz['id'] ?>)" 
+                                                        class="text-blue-600 hover:text-blue-800 font-medium">
                                                     Ver detalles →
                                                 </button>
+                                                
+                                                <button onclick="abrirModalResena(<?= $pedidozz['id'] ?>)" 
+                                                    class="text-yellow-600 hover:text-yellow-800 font-medium">
+                                                Dejar reseña
+                                            </button>
+
+                                                </div>
                                             </div>
                                         </div>
                                         
@@ -269,6 +246,44 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal Reseña -->
+<div id="modalResena" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4 modal-backdrop"">
+    <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-lg">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">📝 Dejar Reseña</h2>
+
+        <form id="formResena" method="POST" action="<?= url('review/guardar') ?>">
+            <!-- <input type="hidden" name="producto_id" id="resenaProductoId"> -->
+            <input type="hidden" name="pedido_id" id="resenaOrdenId">
+
+            <!-- Estrellas -->
+            <div class="flex items-center gap-1 mb-4">
+                <?php for ($i = 1; $i <= 5; $i++): ?>
+                    <span class="estrella text-3xl cursor-pointer text-gray-300" data-value="<?= $i ?>">★</span>
+                <?php endfor; ?>
+            </div>
+            <input type="hidden" name="puntuacion" id="resenaPuntuacion" required>
+
+            <!-- Título -->
+            <div class="mb-3">
+                <label class="block text-sm font-medium">Título</label>
+                <input type="text" name="titulo" maxlength="255" class="w-full border rounded-lg p-2">
+            </div>
+
+            <!-- Comentario -->
+            <div class="mb-3">
+                <label class="block text-sm font-medium">Comentario</label>
+                <textarea name="texto" class="w-full border rounded-lg p-2" rows="3" required></textarea>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="cerrarModalResena()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">Cancelar</button>
+                <button type="submit" href="javascript:history.back()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Enviar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 
     <script>
         // Datos de pedidos disponibles (pasados desde PHP)
@@ -355,134 +370,34 @@
                 minute: '2-digit'
             });
 
-            // Información de descuentos
-            const subtotal = parseFloat(pedido.subtotal || 0);
-            const descuentoCupon = parseFloat(pedido.descuento_cupon || 0);
-            const descuentoPromocion = parseFloat(pedido.descuento_promocion || 0);
-
-            // Calcular total final correctamente
-            let totalCalculado;
-            if (subtotal > 0) {
-                // Si tenemos subtotal, calculamos el total restando descuentos
-                totalCalculado = subtotal - descuentoCupon - descuentoPromocion;
-            } else {
-                // Si no hay subtotal, verificar si hay descuentos disponibles
-                if (descuentoCupon > 0 || descuentoPromocion > 0) {
-                    // Si hay descuentos pero no subtotal, calcular desde detalles
-                    const totalDetalle = pedido.detalles && pedido.detalles.length > 0 
-                        ? pedido.detalles.reduce((sum, detalle) => {
-                            const precio = parseFloat(detalle.precio_unitario || 0);
-                            const cantidad = parseInt(detalle.cantidad || 0);
-                            return sum + (precio * cantidad);
-                          }, 0)
-                        : parseFloat(pedido.total || pedido.monto_total || 0);
-                    totalCalculado = totalDetalle - descuentoCupon - descuentoPromocion;
-                } else {
-                    // Para pedidos sin descuentos, usar el total original o calcular desde detalles
-                    totalCalculado = parseFloat(pedido.total || pedido.monto_total || 0);
-                    if (totalCalculado === 0 && pedido.detalles && pedido.detalles.length > 0) {
-                        totalCalculado = pedido.detalles.reduce((sum, detalle) => {
-                            const precio = parseFloat(detalle.precio_unitario || 0);
-                            const cantidad = parseInt(detalle.cantidad || 0);
-                            return sum + (precio * cantidad);
-                        }, 0);
-                    }
-                }
-            }
-            const cuponCodigo = pedido.cupon_codigo || null;
-
-            // HTML para mostrar desglose si hay descuentos
-            let desgloseHtml = '';
-            if (descuentoCupon > 0 || descuentoPromocion > 0) {
-                // Calcular el subtotal para mostrar (usar subtotal de BD o calcular desde detalles)
-                const subtotalParaMostrar = subtotal > 0 ? subtotal : 
-                    (pedido.detalles && pedido.detalles.length > 0 
-                        ? pedido.detalles.reduce((sum, detalle) => {
-                            const precio = parseFloat(detalle.precio_unitario || 0);
-                            const cantidad = parseInt(detalle.cantidad || 0);
-                            return sum + (precio * cantidad);
-                          }, 0)
-                        : parseFloat(pedido.total || pedido.monto_total || 0));
-                
-                desgloseHtml = `
-                    <div class="bg-green-50 p-4 rounded-lg mt-4">
-                        <h4 class="font-semibold text-green-900 mb-2">💰 Desglose de Precios</h4>
-                        <div class="space-y-1 text-sm">
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Subtotal:</span>
-                                <span>S/ ${subtotalParaMostrar.toFixed(2)}</span>
-                            </div>
-                            ${descuentoPromocion > 0 ? `
-                                <div class="flex justify-between text-green-600">
-                                    <span>Descuento Promoción:</span>
-                                    <span>-S/ ${descuentoPromocion.toFixed(2)}</span>
-                                </div>
-                            ` : ''}
-                            ${descuentoCupon > 0 && cuponCodigo ? `
-                                <div class="flex justify-between text-blue-600">
-                                    <span>Cupón ${cuponCodigo}:</span>
-                                    <span>-S/ ${descuentoCupon.toFixed(2)}</span>
-                                </div>
-                            ` : ''}
-                            <hr class="border-gray-300 my-2">
-                            <div class="flex justify-between font-bold text-lg">
-                                <span>Total Final:</span>
-                                <span class="text-green-600">S/ ${totalCalculado.toFixed(2)}</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-
-            let productosHtml = '';
-            if (pedido.detalles && pedido.detalles.length > 0) {
-                // Calcular subtotal total de todos los productos para aplicar descuentos proporcionalmente
-                const subtotalTotalProductos = pedido.detalles.reduce((sum, detalle) => {
+            // Calcular total desde los detalles si el total es 0 o no existe
+            let totalCalculado = parseFloat(pedido.total || 0);
+            if (totalCalculado === 0 && pedido.detalles && pedido.detalles.length > 0) {
+                totalCalculado = pedido.detalles.reduce((sum, detalle) => {
                     const precio = parseFloat(detalle.precio_unitario || 0);
                     const cantidad = parseInt(detalle.cantidad || 0);
                     return sum + (precio * cantidad);
                 }, 0);
-                
-                productosHtml = pedido.detalles.map(detalle => {
-                    const precioUnitario = parseFloat(detalle.precio_unitario || 0);
-                    const cantidad = parseInt(detalle.cantidad || 0);
-                    const subtotalProducto = precioUnitario * cantidad;
-                    
-                    // Calcular descuento proporcional para este producto si hay descuentos
-                    let precioFinalProducto = subtotalProducto;
-                    if ((descuentoCupon > 0 || descuentoPromocion > 0) && subtotalTotalProductos > 0) {
-                        const porcentajeProducto = subtotalProducto / subtotalTotalProductos;
-                        const descuentoTotalAplicable = descuentoCupon + descuentoPromocion;
-                        const descuentoProducto = descuentoTotalAplicable * porcentajeProducto;
-                        precioFinalProducto = subtotalProducto - descuentoProducto;
-                    }
-                    
-                    return `
-                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                            <div class="flex-1">
-                                <h4 class="font-medium text-gray-900">${detalle.producto_nombre || 'Producto sin nombre'}</h4>
-                                <p class="text-sm text-gray-600">
-                                    Cantidad: ${cantidad} × S/ ${precioUnitario.toFixed(2)}
-                                    ${((descuentoCupon > 0 || descuentoPromocion > 0) && subtotalTotalProductos > 0) ? 
-                                        `<span class="text-green-600 ml-2">(con descuento aplicado)</span>` : ''}
-                                </p>
-                                ${(detalle.variante_talla || detalle.variante_color) ? 
-                                    `<p class="text-xs text-gray-500">
-                                        ${detalle.variante_talla ? `Talla: ${detalle.variante_talla}` : ''}
-                                        ${(detalle.variante_talla && detalle.variante_color) ? ' - ' : ''}
-                                        ${detalle.variante_color ? `Color: ${detalle.variante_color}` : ''}
-                                    </p>` : ''}
-                            </div>
-                            <div class="text-right">
-                                ${((descuentoCupon > 0 || descuentoPromocion > 0) && subtotalTotalProductos > 0) ? 
-                                    `<p class="text-xs text-gray-500 line-through">S/ ${subtotalProducto.toFixed(2)}</p>` : ''}
-                                <p class="font-semibold text-gray-900">
-                                    S/ ${precioFinalProducto.toFixed(2)}
-                                </p>
-                            </div>
+            }
+
+            let productosHtml = '';
+            if (pedido.detalles && pedido.detalles.length > 0) {
+                productosHtml = pedido.detalles.map(detalle => `
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div class="flex-1">
+                            <h4 class="font-medium text-gray-900">${detalle.producto_nombre || 'Producto'}</h4>
+                            <p class="text-sm text-gray-600">
+                                Cantidad: ${detalle.cantidad} × $${parseFloat(detalle.precio_unitario || 0).toFixed(2)}
+                            </p>
+                            ${detalle.variante_nombre ? `<p class="text-xs text-gray-500">Variante: ${detalle.variante_nombre}</p>` : ''}
                         </div>
-                    `;
-                }).join('');
+                        <div class="text-right">
+                            <p class="font-semibold text-gray-900">
+                                $${(parseFloat(detalle.precio_unitario || 0) * parseInt(detalle.cantidad || 0)).toFixed(2)}
+                            </p>
+                        </div>
+                    </div>
+                `).join('');
             } else {
                 productosHtml = '<p class="text-gray-500 text-center py-4">No hay detalles de productos disponibles</p>';
             }
@@ -506,7 +421,7 @@
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-gray-600">Total:</span>
-                                    <span class="font-bold text-lg text-green-600">S/ ${totalCalculado.toFixed(2)}</span>
+                                    <span class="font-bold text-lg text-green-600">$${totalCalculado.toFixed(2)}</span>
                                 </div>
                             </div>
                         </div>
@@ -518,9 +433,6 @@
                                 ${pedido.direccion_envio || 'Dirección no disponible'}
                             </p>
                         </div>
-                        
-                        <!-- Desglose de precios si hay descuentos -->
-                        ${desgloseHtml}
                     </div>
 
                     <!-- Productos del pedido -->
@@ -533,7 +445,7 @@
                         <div class="mt-4 pt-4 border-t border-gray-200">
                             <div class="flex justify-between items-center">
                                 <span class="font-semibold text-gray-900">Total del Pedido:</span>
-                                <span class="font-bold text-xl text-green-600">S/ ${totalCalculado.toFixed(2)}</span>
+                                <span class="font-bold text-xl text-green-600">$${totalCalculado.toFixed(2)}</span>
                             </div>
                         </div>
                         ` : ''}
@@ -574,6 +486,35 @@
                 cerrarModal();
             }
         });
+
+
+        //script del modal reseña
+
+        function abrirModalResena(ordenId, productoId = null) {
+            document.getElementById('modalResena').classList.remove('hidden');
+            document.getElementById('resenaOrdenId').value = ordenId;
+            document.getElementById('resenaProductoId').value = productoId ?? 0;
+        }
+
+        function cerrarModalResena() {
+            document.getElementById('modalResena').classList.add('hidden');
+        }
+
+        // Manejo de estrellas
+        document.querySelectorAll('.estrella').forEach(star => {
+            star.addEventListener('click', function () {
+                let valor = this.dataset.value;
+                document.getElementById('resenaPuntuacion').value = valor;
+
+                // Resetear colores
+                document.querySelectorAll('.estrella').forEach(s => s.classList.remove('text-yellow-400'));
+                // Pintar hasta la seleccionada
+                for (let i = 0; i < valor; i++) {
+                    document.querySelectorAll('.estrella')[i].classList.add('text-yellow-400');
+                }
+            });
+        });
+
     </script>
 </body>
 </html>

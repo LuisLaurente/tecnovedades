@@ -13,7 +13,6 @@ class AuthMiddleware
         'home/index',
         'home/buscar',
         'home/detalleproducto',
-        'home/busqueda',
         'auth/login',
         'auth/authenticate',
         'auth/registro',
