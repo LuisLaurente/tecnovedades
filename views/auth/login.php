@@ -105,6 +105,12 @@
                         </span>
                         Iniciar Sesión
                     </button>
+                    <div class="text-center mt-4">
+                        <a href="<?= url('auth/registro?redirect=' . urlencode('pedido/checkout')) ?>"
+                        class="text-blue-600 hover:text-blue-500 font-medium text-sm">
+                            Regístrate en Bytebox
+                        </a>
+                    </div>
                 </div>
             </form>
 

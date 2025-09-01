@@ -142,6 +142,7 @@
                                                             $precio = floatval($detalle['precio_unitario'] ?? 0);
                                                             $cantidad = intval($detalle['cantidad'] ?? 0);
                                                             $totalPedido += $precio * $cantidad;
+                                                            
                                                         }
                                                     }
                                                     ?>
@@ -168,9 +169,18 @@
                                                         <?= ucfirst($pedido['estado']) ?>
                                                     </span>
                                                 </div>
-                                                <button onclick="mostrarDetallePedido(<?= $pedidozz['id'] ?>)" class="text-blue-600 hover:text-blue-800 font-medium">
+                                                <div style="display: flex; flex-direction: column; gap: 8px;">
+                                                <button onclick="mostrarDetallePedido(<?= $pedidozz['id'] ?>)" 
+                                                        class="text-blue-600 hover:text-blue-800 font-medium">
                                                     Ver detalles →
                                                 </button>
+                                                
+                                                <button onclick="abrirModalResena(<?= $pedidozz['id'] ?>)" 
+                                                    class="text-yellow-600 hover:text-yellow-800 font-medium">
+                                                Dejar reseña
+                                            </button>
+
+                                                </div>
                                             </div>
                                         </div>
                                         
@@ -236,6 +246,44 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal Reseña -->
+<div id="modalResena" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4 modal-backdrop"">
+    <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-lg">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">📝 Dejar Reseña</h2>
+
+        <form id="formResena" method="POST" action="<?= url('review/guardar') ?>">
+            <!-- <input type="hidden" name="producto_id" id="resenaProductoId"> -->
+            <input type="hidden" name="pedido_id" id="resenaOrdenId">
+
+            <!-- Estrellas -->
+            <div class="flex items-center gap-1 mb-4">
+                <?php for ($i = 1; $i <= 5; $i++): ?>
+                    <span class="estrella text-3xl cursor-pointer text-gray-300" data-value="<?= $i ?>">★</span>
+                <?php endfor; ?>
+            </div>
+            <input type="hidden" name="puntuacion" id="resenaPuntuacion" required>
+
+            <!-- Título -->
+            <div class="mb-3">
+                <label class="block text-sm font-medium">Título</label>
+                <input type="text" name="titulo" maxlength="255" class="w-full border rounded-lg p-2">
+            </div>
+
+            <!-- Comentario -->
+            <div class="mb-3">
+                <label class="block text-sm font-medium">Comentario</label>
+                <textarea name="texto" class="w-full border rounded-lg p-2" rows="3" required></textarea>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="cerrarModalResena()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">Cancelar</button>
+                <button type="submit" href="javascript:history.back()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Enviar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 
     <script>
         // Datos de pedidos disponibles (pasados desde PHP)
@@ -438,6 +486,35 @@
                 cerrarModal();
             }
         });
+
+
+        //script del modal reseña
+
+        function abrirModalResena(ordenId, productoId = null) {
+            document.getElementById('modalResena').classList.remove('hidden');
+            document.getElementById('resenaOrdenId').value = ordenId;
+            document.getElementById('resenaProductoId').value = productoId ?? 0;
+        }
+
+        function cerrarModalResena() {
+            document.getElementById('modalResena').classList.add('hidden');
+        }
+
+        // Manejo de estrellas
+        document.querySelectorAll('.estrella').forEach(star => {
+            star.addEventListener('click', function () {
+                let valor = this.dataset.value;
+                document.getElementById('resenaPuntuacion').value = valor;
+
+                // Resetear colores
+                document.querySelectorAll('.estrella').forEach(s => s.classList.remove('text-yellow-400'));
+                // Pintar hasta la seleccionada
+                for (let i = 0; i < valor; i++) {
+                    document.querySelectorAll('.estrella')[i].classList.add('text-yellow-400');
+                }
+            });
+        });
+
     </script>
 </body>
 </html>
