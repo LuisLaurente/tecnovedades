@@ -71,27 +71,19 @@ class AuthController extends BaseController
             
             // Verificar token CSRF
             $csrfToken = $_POST['csrf_token'] ?? '';
-            $redirect = $_POST['redirect'] ?? '';
-            
             if (empty($csrfToken) || !CsrfHelper::validateToken($csrfToken, 'login_form')) {
                 SecurityLogger::log(SecurityLogger::CSRF_ERROR, 'Token CSRF inválido en intento de login', [
                     'email' => $email ?? 'no proporcionado'
                 ]);
-                
-                // Si viene del carrito, redirigir con error en sesión
-                if (!empty($redirect) && $redirect === 'carrito/ver') {
-                    $_SESSION['auth_error'] = 'Error de seguridad: Token inválido o expirado. Por favor, intente nuevamente.';
-                    header('Location: ' . url('carrito/ver'));
-                } else {
-                    $error = urlencode('Error de seguridad: Token inválido o expirado. Por favor, intente nuevamente.');
-                    header('Location: ' . url("/auth/login?error=$error"));
-                }
+                $error = urlencode('Error de seguridad: Token inválido o expirado. Por favor, intente nuevamente.');
+                header('Location: ' . url("/auth/login?error=$error"));
                 exit;
             }
 
             $email = $_POST['email'] ?? '';
             $password = $_POST['password'] ?? '';
             $remember = isset($_POST['remember']);
+            $redirect = $_POST['redirect'] ?? '';
             
             // Verificar bloqueo por intentos fallidos (usando IP si el email no existe)
             $identifier = $email ?: $_SERVER['REMOTE_ADDR']; 
@@ -102,15 +94,8 @@ class AuthController extends BaseController
                     'email' => $email,
                     'remaining_time' => $blockInfo['remaining_seconds']
                 ]);
-                
-                // Si viene del carrito, redirigir con error en sesión
-                if (!empty($redirect) && $redirect === 'carrito/ver') {
-                    $_SESSION['auth_error'] = $blockInfo['message'];
-                    header('Location: ' . url('carrito/ver'));
-                } else {
-                    $error = urlencode($blockInfo['message']);
-                    header('Location: ' . url("/auth/login?error=$error"));
-                }
+                $error = urlencode($blockInfo['message']);
+                header('Location: ' . url("/auth/login?error=$error"));
                 exit;
             }
 
@@ -127,14 +112,8 @@ class AuthController extends BaseController
             }
 
             if (!empty($errores)) {
-                // Si viene del carrito, redirigir con error en sesión
-                if (!empty($redirect) && $redirect === 'carrito/ver') {
-                    $_SESSION['auth_error'] = implode(', ', $errores);
-                    header('Location: ' . url('carrito/ver'));
-                } else {
-                    $error = urlencode(implode(', ', $errores));
-                    header('Location: ' . url("/auth/login?error=$error"));
-                }
+                $error = urlencode(implode(', ', $errores));
+                header('Location: ' . url("/auth/login?error=$error"));
                 exit;
             }
 
@@ -150,14 +129,8 @@ class AuthController extends BaseController
                     'attempt_count' => $attempts['count']
                 ]);
                 
-                // Si viene del carrito, redirigir con error en sesión
-                if (!empty($redirect) && $redirect === 'carrito/ver') {
-                    $_SESSION['auth_error'] = 'Credenciales incorrectas';
-                    header('Location: ' . url('carrito/ver'));
-                } else {
-                    $error = urlencode('Credenciales incorrectas');
-                    header('Location: ' . url("/auth/login?error=$error"));
-                }
+                $error = urlencode('Credenciales incorrectas');
+                header('Location: ' . url("/auth/login?error=$error"));
                 exit;
             }
 
@@ -168,14 +141,8 @@ class AuthController extends BaseController
                     'user_id' => $usuario['id']
                 ]);
                 
-                // Si viene del carrito, redirigir con error en sesión
-                if (!empty($redirect) && $redirect === 'carrito/ver') {
-                    $_SESSION['auth_error'] = 'Tu cuenta está desactivada. Contacta al administrador.';
-                    header('Location: ' . url('carrito/ver'));
-                } else {
-                    $error = urlencode('Tu cuenta está desactivada. Contacta al administrador.');
-                    header('Location: ' . url("/auth/login?error=$error"));
-                }
+                $error = urlencode('Tu cuenta está desactivada. Contacta al administrador.');
+                header('Location: ' . url("/auth/login?error=$error"));
                 exit;
             }
 
@@ -190,14 +157,8 @@ class AuthController extends BaseController
                     'attempt_count' => $attempts['count']
                 ]);
                 
-                // Si viene del carrito, redirigir con error en sesión
-                if (!empty($redirect) && $redirect === 'carrito/ver') {
-                    $_SESSION['auth_error'] = 'Credenciales incorrectas';
-                    header('Location: ' . url('carrito/ver'));
-                } else {
-                    $error = urlencode('Credenciales incorrectas');
-                    header('Location: ' . url("/auth/login?error=$error"));
-                }
+                $error = urlencode('Credenciales incorrectas');
+                header('Location: ' . url("/auth/login?error=$error"));
                 exit;
             }
             
@@ -207,14 +168,8 @@ class AuthController extends BaseController
             // Obtener información del rol
             $rol = $this->rolModel->obtenerPorId($usuario['rol_id']);
             if (!$rol || !$rol['activo']) {
-                // Si viene del carrito, redirigir con error en sesión
-                if (!empty($redirect) && $redirect === 'carrito/ver') {
-                    $_SESSION['auth_error'] = 'Tu rol está desactivado. Contacta al administrador.';
-                    header('Location: ' . url('carrito/ver'));
-                } else {
-                    $error = urlencode('Tu rol está desactivado. Contacta al administrador.');
-                    header('Location: ' . url("/auth/login?error=$error"));
-                }
+                $error = urlencode('Tu rol está desactivado. Contacta al administrador.');
+                header('Location: ' . url("/auth/login?error=$error"));
                 exit;
             }
 

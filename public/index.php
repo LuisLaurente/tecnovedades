@@ -31,8 +31,6 @@ require_once __DIR__ . '/../Core/Helpers/SessionHelper.php';
 require_once __DIR__ . '/../Core/Helpers/AuthMiddleware.php';
 require_once __DIR__ . '/../Core/Helpers/Validator.php';
 require_once __DIR__ . '/../Core/Helpers/CsrfHelper.php';
-require_once __DIR__ . '/../Core/Helpers/CuponHelper.php';
-require_once __DIR__ . '/../Core/Helpers/PromocionHelper.php';
 
 // Activar errores en modo desarrollo
 ini_set('display_errors', 1);

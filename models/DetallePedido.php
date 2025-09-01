@@ -18,53 +18,9 @@ class DetallePedido {
     }
 
     public function obtenerPorPedido($pedido_id) {
-        // Método mejorado que incluye el nombre del producto
-        $sql = "SELECT 
-                    dp.*,
-                    p.nombre as producto_nombre,
-                    p.descripcion as producto_descripcion,
-                    vp.talla as variante_talla,
-                    vp.color as variante_color
-                FROM detalle_pedido dp
-                LEFT JOIN productos p ON dp.producto_id = p.id
-                LEFT JOIN variantes_producto vp ON dp.variante_id = vp.id
-                WHERE dp.pedido_id = ?
-                ORDER BY dp.id";
-        
-        $stmt = $this->db->prepare($sql);
+        $stmt = $this->db->prepare("SELECT * FROM detalle_pedido WHERE pedido_id = ?");
         $stmt->execute([$pedido_id]);
-        $resultado = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // Debug temporal
-        error_log("=== DEBUG obtenerPorPedido ===");
-        error_log("Pedido ID: " . $pedido_id);
-        error_log("Cantidad resultados: " . count($resultado));
-        if (!empty($resultado)) {
-            error_log("Primer resultado: " . json_encode($resultado[0]));
-        }
-        
-        return $resultado;
-    }
-
-    public function obtenerPorPedidoConProductos($pedido_id) {
-        $sql = "SELECT 
-                    dp.*,
-                    p.nombre as producto_nombre,
-                    p.descripcion as producto_descripcion,
-                    vp.talla as variante_talla,
-                    vp.color as variante_color
-                FROM detalle_pedido dp
-                LEFT JOIN productos p ON dp.producto_id = p.id
-                LEFT JOIN variantes_producto vp ON dp.variante_id = vp.id
-                WHERE dp.pedido_id = ?
-                ORDER BY dp.id";
-        
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$pedido_id]);
-        $resultado = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        
-        return $resultado;
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function eliminarPorPedido($pedido_id) {
