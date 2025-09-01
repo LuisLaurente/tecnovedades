@@ -79,7 +79,7 @@ $totalEncontrados = $totalProductos; // Esto debería venir del controlador
                 <?php else: ?>
                     <?php 
     // Obtener el nombre de la categoría seleccionada desde el filtro
-    $categoriaNombre = 'Electrónicos'; // Valor por defecto
+    $categoriaNombre = 'Productos'; // Valor por defecto
     if (!empty($_GET['categoria']) && !empty($categoriasDisponibles)) {
         foreach ($categoriasDisponibles as $categoria) {
             if ($categoria['id'] == $_GET['categoria']) {
