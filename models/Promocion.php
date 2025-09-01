@@ -5,7 +5,6 @@ namespace Models;
 use Core\Database; // Importamos la clase Database con su namespace correcto
 use PDO;
 
-
 class Promocion
 {
     private $db;
@@ -46,61 +45,34 @@ class Promocion
      */
     public function obtenerPorId($id)
     {
-        $stmt = $this->db->prepare("SELECT * FROM promociones WHERE id = :id");
-        $stmt->execute([':id' => $id]);
-        $promocion = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($promocion) {
-            // Decodificar JSON si existen
-            $promocion['condicion'] = $promocion['condicion'] ? json_decode($promocion['condicion'], true) : [];
-            $promocion['accion'] = $promocion['accion'] ? json_decode($promocion['accion'], true) : [];
-        }
-
-        return $promocion;
+        $sql = "SELECT * FROM promociones WHERE id = :id LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // 🔹 Generar el siguiente código automáticamente
-    private function generarCodigo()
-    {
-        // Obtener el último código registrado
-        $sql = "SELECT codigo FROM promociones ORDER BY id DESC LIMIT 1";
-        $stmt = $this->db->query($sql);
-        $ultimo = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($ultimo && preg_match('/PRM(\d{6})/', $ultimo['codigo'], $matches)) {
-            $num = (int)$matches[1] + 1;
-        } else {
-            $num = 1;
-        }
-
-        // Retornar en formato PRM000001
-        return 'PRM' . str_pad($num, 6, '0', STR_PAD_LEFT);
-    }
-
+    /**
+     * Crear una nueva promoción
+     */
     public function crear($data)
     {
-        // Generar código automáticamente
-        $codigo = $this->generarCodigo();
-
         $sql = "INSERT INTO promociones 
-                (codigo, nombre, condicion, accion, acumulable, exclusivo, prioridad, activo, fecha_inicio, fecha_fin, tipo) 
-                VALUES 
-                (:codigo, :nombre, :condicion, :accion, :acumulable, :exclusivo, :prioridad, :activo, :fecha_inicio, :fecha_fin, :tipo)";
-
+                (nombre, condicion, accion, acumulable, exclusivo, prioridad, activo, fecha_inicio, fecha_fin)
+                VALUES (:nombre, :condicion, :accion, :acumulable, :exclusivo, :prioridad, :activo, :fecha_inicio, :fecha_fin)";
         $stmt = $this->db->prepare($sql);
-        return $stmt->execute([
-            ':codigo'       => $codigo,
-            ':nombre'       => $data['nombre'],
-            ':condicion'    => $data['condicion'],
-            ':accion'       => $data['accion'],
-            ':acumulable'   => $data['acumulable'],
-            ':exclusivo'    => $data['exclusivo'],
-            ':prioridad'    => $data['prioridad'],
-            ':activo'       => $data['activo'],
-            ':fecha_inicio' => $data['fecha_inicio'],
-            ':fecha_fin'    => $data['fecha_fin'],
-            ':tipo'         => $data['tipo']
-        ]);
+
+        $stmt->bindValue(':nombre', $data['nombre']);
+        $stmt->bindValue(':condicion', json_encode($data['condicion']));
+        $stmt->bindValue(':accion', json_encode($data['accion']));
+        $stmt->bindValue(':acumulable', $data['acumulable'], PDO::PARAM_INT);
+        $stmt->bindValue(':exclusivo', $data['exclusivo'], PDO::PARAM_INT);
+        $stmt->bindValue(':prioridad', $data['prioridad'], PDO::PARAM_INT);
+        $stmt->bindValue(':activo', $data['activo'], PDO::PARAM_INT);
+        $stmt->bindValue(':fecha_inicio', $data['fecha_inicio']);
+        $stmt->bindValue(':fecha_fin', $data['fecha_fin']);
+
+        return $stmt->execute();
     }
 
     /**
@@ -109,7 +81,6 @@ class Promocion
     public function actualizar($id, $data)
     {
         $sql = "UPDATE promociones SET 
-                    codigo = :codigo,
                     nombre = :nombre,
                     condicion = :condicion,
                     accion = :accion,
@@ -118,26 +89,22 @@ class Promocion
                     prioridad = :prioridad,
                     activo = :activo,
                     fecha_inicio = :fecha_inicio,
-                    fecha_fin = :fecha_fin,
-                    tipo = :tipo
+                    fecha_fin = :fecha_fin
                 WHERE id = :id";
 
         $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':nombre', $data['nombre']);
+        $stmt->bindValue(':condicion', json_encode($data['condicion']));
+        $stmt->bindValue(':accion', json_encode($data['accion']));
+        $stmt->bindValue(':acumulable', $data['acumulable'], PDO::PARAM_INT);
+        $stmt->bindValue(':exclusivo', $data['exclusivo'], PDO::PARAM_INT);
+        $stmt->bindValue(':prioridad', $data['prioridad'], PDO::PARAM_INT);
+        $stmt->bindValue(':activo', $data['activo'], PDO::PARAM_INT);
+        $stmt->bindValue(':fecha_inicio', $data['fecha_inicio']);
+        $stmt->bindValue(':fecha_fin', $data['fecha_fin']);
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
 
-        return $stmt->execute([
-            ':codigo'       => $data['codigo'],
-            ':nombre'       => $data['nombre'],
-            ':condicion'    => json_encode($data['condicion']),
-            ':accion'       => json_encode($data['accion']),
-            ':acumulable'   => $data['acumulable'],
-            ':exclusivo'    => $data['exclusivo'],
-            ':prioridad'    => $data['prioridad'],
-            ':activo'       => $data['activo'],
-            ':fecha_inicio' => $data['fecha_inicio'],
-            ':fecha_fin'    => $data['fecha_fin'],
-            ':tipo'         => $data['tipo'],
-            ':id'           => $id
-        ]);
+        return $stmt->execute();
     }
 
     /**
@@ -148,9 +115,7 @@ class Promocion
         $sql = "DELETE FROM promociones WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-        $stmt->execute();
-
-        return $stmt->rowCount() > 0; // true si se eliminó al menos 1 fila
+        return $stmt->execute();
     }
 
     /**
@@ -194,79 +159,9 @@ class Promocion
      */
     public function toggleEstado($id)
     {
-         // Obtener el estado actual
-        $sql = "SELECT activo FROM promociones WHERE id = :id";
+        $sql = "UPDATE promociones SET activo = !activo WHERE id = :id";
         $stmt = $this->db->prepare($sql);
-        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-        $stmt->execute();
-        $promocion = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$promocion) return false;
-
-        // Alternar el estado
-        $nuevoEstado = $promocion['activo'] ? 0 : 1;
-
-        $sql = "UPDATE promociones SET activo = :activo WHERE id = :id";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindValue(':activo', $nuevoEstado, PDO::PARAM_INT);
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
         return $stmt->execute();
     }
-
-        /**
-     * Mapas para traducir condicion y accion a etiquetas legibles
-     */
-    private $condicionesMap = [
-        'minimo_compra' => 'Monto mínimo de compra (S/)',
-        'tipo_usuario'  => 'Tipo de Usuario',
-        'todos'         => 'Todos los usuarios',
-        'categoria'     => 'Categoría específica (ID)',
-        'producto'      => 'Producto específico (ID)'
-    ];
-
-    private $accionesMap = [
-        'descuento_porcentaje' => 'Descuento (%)',
-        'descuento_monto'      => 'Descuento fijo (S/)',
-        'envio_gratis'         => 'Envío Gratis',
-        'producto_gratis'      => 'Producto Gratis',
-    ];
-
-    /**
-     * Retorna la etiqueta legible de la condicion
-     */
-    public function getCondicionLabel($condicion)
-    {
-        // Si está guardado como JSON, lo decodificamos
-        if ($this->esJson($condicion)) {
-            $condicion = json_decode($condicion, true);
-            $condicion = $condicion['tipo'] ?? $condicion;
-        }
-
-        return $this->condicionesMap[$condicion] ?? $condicion;
-    }
-
-    /**
-     * Retorna la etiqueta legible de la acción
-     */
-    public function getAccionLabel($accion)
-    {
-        if ($this->esJson($accion)) {
-            $accion = json_decode($accion, true);
-            $accion = $accion['tipo'] ?? $accion;
-        }
-
-        return $this->accionesMap[$accion] ?? $accion;
-    }
-
-    /**
-     * Verifica si un string es JSON válido
-     */
-    private function esJson($string)
-    {
-        if (!is_string($string)) return false;
-        json_decode($string);
-        return (json_last_error() === JSON_ERROR_NONE);
-    }
-
 }
-

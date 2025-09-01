@@ -20,13 +20,17 @@ class Router
             require_once $controllerFile;
 
             if (class_exists($controllerClass)) {
-                $controllerInstance = new $controllerClass();
+        // Obtener instancia de DB
+        $dbInstance = Database::getInstance()->getConnection();
 
-                if (method_exists($controllerInstance, $methodName)) {
-                    call_user_func_array([$controllerInstance, $methodName], $params);
-                    return;
-                }
-            }
+        // Pasar al constructor
+        $controllerInstance = new $controllerClass($dbInstance);
+
+        if (method_exists($controllerInstance, $methodName)) {
+            call_user_func_array([$controllerInstance, $methodName], $params);
+            return;
+        }
+    }
         }
 
         // Si llega aquí, controlador o método no válidos → cargar ErrorController
