@@ -21,11 +21,11 @@ class Cupon
     }
 
     public function registrarUso($cupon_id, $cliente_id, $pedido_id) {
-        $sql = "INSERT INTO cupon_usado (cupon_id, usuario_id, pedido_id)
-                VALUES (:cupon_id, :usuario_id, :pedido_id)";
+        $sql = "INSERT INTO cupon_usado (cupon_id, cliente_id, pedido_id)
+                VALUES (:cupon_id, :cliente_id, :pedido_id)";
         $stmt = $this->db->prepare($sql);
         $stmt->bindValue(':cupon_id', $cupon_id);
-        $stmt->bindValue(':usuario_id', $cliente_id);
+        $stmt->bindValue(':cliente_id', $cliente_id);
         $stmt->bindValue(':pedido_id', $pedido_id);
         return $stmt->execute();
     }
@@ -33,11 +33,11 @@ class Cupon
     public function contarUsos($cupon_id, $cliente_id = null) {
         $sql = "SELECT COUNT(*) FROM cupon_usado WHERE cupon_id = :cupon_id";
         if ($cliente_id) {
-            $sql .= " AND usuario_id = :usuario_id";
+            $sql .= " AND cliente_id = :cliente_id";
         }
         $stmt = $this->db->prepare($sql);
         $stmt->bindValue(':cupon_id', $cupon_id);
-        if ($cliente_id) $stmt->bindValue(':usuario_id', $cliente_id);
+        if ($cliente_id) $stmt->bindValue(':cliente_id', $cliente_id);
         $stmt->execute();
         return $stmt->fetchColumn();
     }
@@ -71,8 +71,8 @@ class Cupon
     public function crear($data)
     {
         $sql = "INSERT INTO cupones 
-                (codigo, tipo, valor, monto_minimo, limite_uso, limite_por_usuario, usuarios_autorizados, activo, fecha_inicio, fecha_fin, categorias_aplicables, publico_objetivo, acumulable_promociones)
-                VALUES (:codigo, :tipo, :valor, :monto_minimo, :limite_uso, :limite_por_usuario, :usuarios_autorizados, :activo, :fecha_inicio, :fecha_fin, :categorias_aplicables, :publico_objetivo, :acumulable_promociones)";
+                (codigo, tipo, valor, monto_minimo, limite_uso, limite_por_usuario, usuarios_autorizados, activo, fecha_inicio, fecha_fin)
+                VALUES (:codigo, :tipo, :valor, :monto_minimo, :limite_uso, :limite_por_usuario, :usuarios_autorizados, :activo, :fecha_inicio, :fecha_fin)";
         $stmt = $this->db->prepare($sql);
 
         $stmt->bindValue(':codigo', $data['codigo']);
@@ -85,9 +85,6 @@ class Cupon
         $stmt->bindValue(':activo', $data['activo'], PDO::PARAM_INT);
         $stmt->bindValue(':fecha_inicio', $data['fecha_inicio']);
         $stmt->bindValue(':fecha_fin', $data['fecha_fin']);
-        $stmt->bindValue(':categorias_aplicables', $data['categorias_aplicables']);
-        $stmt->bindValue(':publico_objetivo', $data['publico_objetivo']);
-        $stmt->bindValue(':acumulable_promociones', $data['acumulable_promociones'], PDO::PARAM_INT);
 
         return $stmt->execute();
     }
@@ -107,10 +104,7 @@ class Cupon
                     usuarios_autorizados = :usuarios_autorizados,
                     activo = :activo,
                     fecha_inicio = :fecha_inicio,
-                    fecha_fin = :fecha_fin,
-                    categorias_aplicables = :categorias_aplicables,
-                    publico_objetivo = :publico_objetivo,
-                    acumulable_promociones = :acumulable_promociones
+                    fecha_fin = :fecha_fin
                 WHERE id = :id";
 
         $stmt = $this->db->prepare($sql);
@@ -124,9 +118,6 @@ class Cupon
         $stmt->bindValue(':activo', $data['activo'], PDO::PARAM_INT);
         $stmt->bindValue(':fecha_inicio', $data['fecha_inicio']);
         $stmt->bindValue(':fecha_fin', $data['fecha_fin']);
-        $stmt->bindValue(':categorias_aplicables', $data['categorias_aplicables']);
-        $stmt->bindValue(':publico_objetivo', $data['publico_objetivo']);
-        $stmt->bindValue(':acumulable_promociones', $data['acumulable_promociones'], PDO::PARAM_INT);
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
 
         return $stmt->execute();
@@ -211,7 +202,7 @@ class Cupon
     {
         $sql = "SELECT cu.*, u.nombre, u.email, p.monto_total
                 FROM cupon_usado cu
-                LEFT JOIN usuarios u ON cu.usuario_id = u.id
+                LEFT JOIN usuarios u ON cu.cliente_id = u.id
                 LEFT JOIN pedidos p ON cu.pedido_id = p.id
                 WHERE cu.cupon_id = :cupon_id
                 ORDER BY cu.fecha_uso DESC";
@@ -224,7 +215,7 @@ class Cupon
     /**
      * Validar si un cliente puede usar un cupón
      */
-    public function puedeUsarCupon($cupon_id, $cliente_id, $monto_carrito, $productos = [])
+    public function puedeUsarCupon($cupon_id, $cliente_id, $monto_carrito)
     {
         $cupon = $this->obtenerPorId($cupon_id);
         if (!$cupon || !$cupon['activo']) {
@@ -250,36 +241,6 @@ class Cupon
         // Verificar límite por usuario (solo si ya es un usuario registrado)
         if ($cliente_id && $cupon['limite_por_usuario'] && $this->contarUsos($cupon_id, $cliente_id) >= $cupon['limite_por_usuario']) {
             return ['valido' => false, 'mensaje' => 'Ya has usado este cupón el máximo de veces permitidas'];
-        }
-
-        // Verificar categorías aplicables
-        if (!empty($cupon['categorias_aplicables'])) {
-            $categoriasPermitidas = json_decode($cupon['categorias_aplicables'], true);
-            $tieneProductoValido = false;
-            
-            foreach ($productos as $producto) {
-                if (in_array($producto['categoria_id'], $categoriasPermitidas)) {
-                    $tieneProductoValido = true;
-                    break;
-                }
-            }
-            
-            if (!$tieneProductoValido) {
-                return ['valido' => false, 'mensaje' => 'Cupón no válido para los productos en tu carrito'];
-            }
-        }
-
-        // Verificar público objetivo (solo usuarios nuevos)
-        if ($cliente_id && $cupon['publico_objetivo'] === 'nuevos') {
-            $pedidosAnteriores = $this->db->prepare(
-                "SELECT COUNT(*) FROM pedidos WHERE cliente_id = ? AND estado != 'cancelado'"
-            );
-            $pedidosAnteriores->execute([$cliente_id]);
-            $totalPedidos = $pedidosAnteriores->fetchColumn();
-            
-            if ($totalPedidos > 0) {
-                return ['valido' => false, 'mensaje' => 'Este cupón es solo para usuarios nuevos'];
-            }
         }
 
         // NOTA: La validación de usuarios autorizados se hace en el PedidoController

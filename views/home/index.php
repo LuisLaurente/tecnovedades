@@ -1,200 +1,337 @@
 <?php
+// views/home/index.php (versión corregida)
 $metaTitle = "Bienvenido a BYTEBOX - Tecnología y Novedades";
 $metaDescription = "Descubre lo último en tecnología, novedades y accesorios al mejor precio.";
 
+if (session_status() === PHP_SESSION_NONE) session_start();
 
-$metaTitle = "Bytebox - Tu Tienda de Tecnología y Componentes";
-$metaDescription = "Descubre lo último en tecnología, componentes de PC, periféricos y más. Calidad y confianza en cada compra.";
-
-if (session_status() === PHP_SESSION_NONE) {
-  session_start();
-}
-
-// --- Fallback para categorías (Mantenido de tu código) ---
-if (!isset($categorias)) {
-  try {
-    if (class_exists('\Models\Categoria')) {
-      $categorias = method_exists('\Models\Categoria', 'obtenerPadres')
-        ? \Models\Categoria::obtenerPadres()
-        : [];
-    } else {
-      $categorias = [];
+// carrito count
+$cantidadEnCarrito = 0;
+if (isset($_SESSION["carrito"])) {
+    foreach ($_SESSION["carrito"] as $item) {
+        $cantidadEnCarrito += $item["cantidad"];
     }
-  } catch (\Throwable $e) {
-    error_log('[home/index] Error cargando categorias: ' . $e->getMessage());
-    $categorias = [];
-  }
 }
+
+// currentQuery (sin pagina/ajax) para la paginación
+$currentQuery = $_GET ?? [];
+unset($currentQuery['pagina'], $currentQuery['ajax']);
+
+// Aseguramos que las variables que usan los parciales existan (fallbacks seguros)
+if (!isset($paginaActual)) {
+    $paginaActual = isset($_GET['pagina']) && is_numeric($_GET['pagina']) && $_GET['pagina'] > 0
+        ? (int) $_GET['pagina'] : 1;
+}
+if (!isset($totalPaginas)) {
+    // Si el controlador no definió totalPaginas, intentamos calcular con variables auxiliares
+    if (isset($totalFiltrados) && isset($productosPorPagina) && $productosPorPagina > 0) {
+        $totalPaginas = (int) max(1, ceil($totalFiltrados / $productosPorPagina));
+    } else {
+        $totalPaginas = 1;
+    }
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
-
-<head>
-  <?php include_once __DIR__ . '/../admin/includes/head.php'; ?>
-
-  <!-- Estilos -->
-  <link rel="stylesheet" href="<?= url('css/home.css') ?>">
-  <link rel="stylesheet" href="<?= url('css/cards.css') ?>"> <!-- No se toca -->
-
-  <!-- Iconos y fuentes -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
-
-  <meta name="description" content="<?= htmlspecialchars($metaDescription) ?>">
-  <title><?= htmlspecialchars($metaTitle) ?></title>
-</head>
+<?php include_once __DIR__ . '/../admin/includes/head.php'; ?>
+<link rel="stylesheet" href="<?= url('css/home.css') ?>">
+<link rel="stylesheet" href="<?= url('css/cards.css') ?>">
 
 <body>
-  <?php include_once __DIR__ . '/../admin/includes/header.php'; ?>
+    <div class="header-container">
+        <?php include_once __DIR__ . '/../admin/includes/header.php'; ?>
+    </div>
 
-  <main>
-    <!-- ===================== HERO + CATEGORÍAS (UN CONTENEDOR 100vh) ===================== -->
-    <section class="hero-and-categories">
-      <div class="hero-banner-container">
-        <?php if (!empty($banners)): ?>
-          <?php foreach ($banners as $index => $ban): ?>
-            <div class="hero-slide <?= $index === 0 ? 'active' : '' ?>">
-              <img src="<?= url('uploads/banners/' . htmlspecialchars($ban['nombre_imagen'])) ?>" alt="Banner <?= $index + 1 ?>">
+    <!-- Banners -->
+    <?php if (!empty($banners)): ?>
+        <div class="hero-banner">
+            <div class="hero-track" id="heroTrack">
+                <?php foreach ($banners as $ban): ?>
+                    <div class="hero-slide">
+                        <img src="<?= url('uploads/banners/' . htmlspecialchars($ban['nombre_imagen'])) ?>" alt="banner">
+                    </div>
+                <?php endforeach; ?>
             </div>
-          <?php endforeach; ?>
-        <?php else: ?>
-          <div class="hero-content-static">
-            <div class="hero-text">
-              <h1 class="fade-text">GIRA, AJUSTA Y CREA 2 <span class="highlight">EL MONITOR PERFECTO</span></h1>
-              <p class="fade-text">Encuentra la configuración ideal para tu espacio de trabajo o gaming con nuestra selección de monitores de alto rendimiento.</p>
-            </div>
-            <div class="hero-image">
-              <img src="https://i.imgur.com/gYf2xS5.png" alt="Monitor Gamer de alto rendimiento">
-            </div>
-          </div>
-        <?php endif; ?>
-      </div>
+        </div>
+    <?php endif; ?>
 
-      <!-- Contenedor de categorías pegado al pie del hero (permanecerá dentro del mismo contenedor 100vh) -->
-      <div class="categories-carousel-container">
-        <div class="container">
-          <div class="section-title">
-            <h2 class="fade-text">Categorías</h2>
-            <div class="line"></div>
-          </div>
-
-          <div class="categories-carousel-track" aria-label="Carrusel de categorías">
-            <?php if (!empty($categorias)): ?>
-              <?php foreach ($categorias as $cat): ?>
-                <?php
-                $catId = $cat['id'] ?? '';
-                $catName = htmlspecialchars($cat['nombre'] ?? 'Categoría');
-                $catLink = $catId !== '' ? url('home/busqueda?categoria=' . $catId) : '#';
-                $imgFile = $cat['imagen'] ?? $cat['nombre_imagen'] ?? $cat['imagen_categoria'] ?? null;
-                $imgSrc = $imgFile ? url('uploads/categorias/' . $imgFile) : url('uploads/default-category.png');
-                ?>
-                <a class="category-box" href="<?= $catLink ?>" aria-label="<?= $catName ?>">
-                  <div class="category-image"><img src="<?= $imgSrc ?>" alt="<?= $catName ?>"></div>
-                  <div class="category-name"><?= $catName ?></div>
-                </a>
-              <?php endforeach; ?>
-            <?php else: ?>
-              <p style="text-align:center;">No hay categorías para mostrar.</p>
+    <div class="main-container">
+        <div class="content-wrapper">
+            <!-- Categorías -->
+            <?php if (!empty($categoriasDisponibles)): ?>
+                <section class="categories-strip">
+                    <?php foreach ($categoriasDisponibles as $cat):
+                        $catId = (int)($cat['id'] ?? 0);
+                        $catName = htmlspecialchars($cat['nombre'] ?? 'Categoría');
+                        $catImg = !empty($cat['imagen']) ? url('uploads/categorias/' . $cat['imagen']) : url('uploads/default-category.png');
+                    ?>
+                        <a class="category-pill" href="<?= url('home/index?categoria=' . $catId) ?>" title="<?= $catName ?>">
+                            <div class="category-image" style="background-image:url('<?= $catImg ?>');"></div>
+                            <div class="category-name"><?= $catName ?></div>
+                        </a>
+                    <?php endforeach; ?>
+                </section>
             <?php endif; ?>
-          </div>
+
+            <div class="main-content-area">
+                <!-- filtros -->
+                <aside class="filters-sidebar">
+                    <form id="filtroForm" method="GET" action="<?= url('home/index') ?>" class="vertical-filters">
+                        <div class="filter-group-title">
+                            <h3>🔍 Filtros</h3>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="min_price">Precio Mín</label>
+                            <input type="number" id="min_price" name="min_price" value="<?= htmlspecialchars($_GET['min_price'] ?? '') ?>" step="1" min="0" placeholder="Mín">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="max_price">Precio Máx</label>
+                            <input type="number" id="max_price" name="max_price" value="<?= htmlspecialchars($_GET['max_price'] ?? '') ?>" step="1" min="0" placeholder="Máx">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="categoria">Categoría</label>
+                            <select name="categoria" id="categoria">
+                                <option value="">Todas</option>
+                                <?php foreach ($categoriasDisponibles as $categoria): ?>
+                                    <option value="<?= (int)$categoria['id'] ?>" <?= (($_GET['categoria'] ?? '') == $categoria['id']) ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($categoria['nombre']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="orden">Ordenar</label>
+                            <select name="orden" id="orden">
+                                <option value="">--</option>
+                                <option value="precio_asc" <?= (($_GET['orden'] ?? '') === 'precio_asc')  ? 'selected' : '' ?>>Precio ↑</option>
+                                <option value="precio_desc" <?= (($_GET['orden'] ?? '') === 'precio_desc') ? 'selected' : '' ?>>Precio ↓</option>
+                                <option value="nombre_asc" <?= (($_GET['orden'] ?? '') === 'nombre_asc')  ? 'selected' : '' ?>>Nombre A-Z</option>
+                                <option value="nombre_desc" <?= (($_GET['orden'] ?? '') === 'nombre_desc') ? 'selected' : '' ?>>Nombre Z-A</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-actions">
+                            <button type="submit" class="filter-button">Filtrar</button>
+                            <a href="<?= url('home/index') ?>" class="clear-button">Limpiar Filtros</a>
+                        </div>
+                    </form>
+                </aside>
+
+                <!-- Productos area -->
+                <section class="products-content">
+                    <div class="products-header" style="display:flex; align-items:center; justify-content:space-between;">
+                        <!-- Paginador superior (izquierda) -->
+                        <div class="pagination-top">
+                            <?php
+                            // la parcial _pagination.php espera $paginaActual, $totalPaginas, $currentQuery
+                            // Los definimos (ya arriba) y luego incluimos la parcial
+                            include __DIR__ . '/_pagination.php';
+                            ?>
+                        </div>
+
+                        <div class="products-controls">
+                            <!-- Ej: "Mostrando X de Y" -->
+                            <?php if (isset($totalFiltrados) && isset($productosPorPagina)): ?>
+                                <?php
+                                $start = (($paginaActual - 1) * $productosPorPagina) + 1;
+                                $end = min($totalFiltrados, $paginaActual * $productosPorPagina);
+                                ?>
+                                <div class="results-info">Mostrando <?= $start ?>-<?= $end ?> de <?= $totalFiltrados ?></div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <!-- Productos (parcial) -->
+                    <?php include __DIR__ . '/_products_grid.php'; ?>
+
+                    <!-- Paginador inferior centrado -->
+                    <div class="pagination-bottom" style="margin-top:1.25rem; display:flex; justify-content:center;">
+                        <?php include __DIR__ . '/_pagination.php'; ?>
+                    </div>
+                </section>
+            </div>
         </div>
-      </div>
-    </section>
-    <!-- ===================== FIN HERO + CATEGORÍAS ===================== -->
-    <!-- PRODUCTOS DESTACADOS (CARRUSEL INFINITO) -->
-    <section class="featured-products">
-      <div class="container">
-        <div class="section-title">
-          <h2>Nuestros Destacados</h2>
-          <div class="line"></div>
-        </div>
-      </div>
-      <!-- Contenedor del carrusel de productos -->
-      <div class="products-carousel-container" aria-label="Carrusel de productos destacados">
-        <?php
-        if (!empty($productos)) {
-          // Tu parcial _products_grid.php se incluye aquí. El JS lo manipulará.
-          include __DIR__ . '/_products_grid.php';
-        } else {
-          echo '<p style="text-align:center;">No hay productos destacados disponibles.</p>';
-        }
-        ?>
-      </div>
-    </section>
+    </div>
 
-    <!-- WHY CHOOSE US -->
-    <section class="why-choose-us">
-      <div class="container">
-        <div class="section-title">
-          <h2>¿Por qué elegir Bytebox?</h2>
-          <div class="line"></div>
-        </div>
-        <div class="features-grid">
-          <div class="feature-box">
-            <i class="fa-solid fa-shield-halved"></i>
-            <h3>Calidad Garantizada</h3>
-            <p>Seleccionamos los mejores componentes y periféricos de marcas líderes para asegurar tu satisfacción y rendimiento.</p>
-          </div>
-          <div class="feature-box">
-            <i class="fa-solid fa-headset"></i>
-            <h3>Soporte Técnico Experto</h3>
-            <p>Nuestro equipo está listo para ayudarte con cualquier consulta, desde la compatibilidad de piezas hasta la configuración de tu equipo.</p>
-          </div>
-          <div class="feature-box">
-            <i class="fa-solid fa-truck-fast"></i>
-            <h3>Envíos a Nivel Nacional</h3>
-            <p>Recibe tus productos de forma rápida y segura en la puerta de tu casa, sin importar en qué parte del país te encuentres.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
+    <?php include_once __DIR__ . '/../admin/includes/footer.php'; ?>
 
-  <?php include_once __DIR__ . '/../admin/includes/footer.php'; ?>
-
-  <!-- SCRIPTS -->
-  <script>
-    // --- Banner simple fade ---
-    (function() {
-      const slides = document.querySelectorAll('.hero-slide');
-      if (slides.length <= 1) return;
-      let currentSlide = 0;
-
-      function showNextSlide() {
-        slides[currentSlide].classList.remove('active');
-        currentSlide = (currentSlide + 1) % slides.length;
-        slides[currentSlide].classList.add('active');
-      }
-      setInterval(showNextSlide, 12500);
-    })();
-
-    // --- Lógica de Carrusel Infinito (Reutilizable) ---
-    function setupInfiniteCarousel(containerSelector, trackSelector, itemsSelector) {
-      const container = document.querySelector(containerSelector);
-      if (!container) return;
-      const track = container.querySelector(trackSelector);
-      if (!track) return;
-
-      const items = Array.from(track.children);
-      if (items.length === 0) return;
-
-      // Clonar elementos para el bucle
-      items.forEach(item => {
-        const clone = item.cloneNode(true);
-        clone.setAttribute('aria-hidden', 'true');
-        track.appendChild(clone);
-      });
-
-      // Añadir clase para activar animación CSS
-      track.classList.add('scrolling');
+    <!-- Cookie banner (mantengo tu lógica previa si la tienes) -->
+    <?php
+    $mostrarBannerCookies = true;
+    if (isset($_COOKIE['cookies_consent'])) {
+        $mostrarBannerCookies = false;
     }
+    if ($mostrarBannerCookies): ?>
+        <div id="cookie-banner" class="cookie-banner">
+            <p>Usamos cookies para mejorar tu experiencia. ¿Aceptas su uso?</p>
+            <button id="accept-cookies">Aceptar</button>
+            <button id="reject-cookies">Rechazar</button>
+        </div>
+        <script>
+            document.getElementById('accept-cookies').addEventListener('click', () => {
+                document.cookie = 'cookies_consent=1; expires=' + new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toUTCString() + '; path=/';
+                document.getElementById('cookie-banner').style.display = 'none';
+            });
+            document.getElementById('reject-cookies').addEventListener('click', () => {
+                document.cookie = 'cookies_consent=0; expires=' + new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toUTCString() + '; path=/';
+                document.getElementById('cookie-banner').style.display = 'none';
+            });
 
-    // --- Inicializar ambos carruseles ---
-    document.addEventListener('DOMContentLoaded', function() {
-      //setupInfiniteCarousel('.categories-carousel-container', '.categories-carousel-track', '.category-box');
-      setupInfiniteCarousel('.products-carousel-container', '.products-grid', '.product-card');
-    });
-  </script>
+        </script>
+    <?php endif; ?>
+
+    <!-- AJAX Pagination & Filters (mejorado: soporta distintas formas de respuesta JSON) -->
+    <script>
+        (function() {
+            const baseUrl = '<?= url('home/index') ?>';
+            const filtroForm = document.getElementById('filtroForm');
+
+            // helper: construye href limpio (sin ajax param)
+            function cleanHref(href) {
+                try {
+                    const u = new URL(href, location.origin);
+                    u.searchParams.delete('ajax');
+                    return u.toString();
+                } catch (e) {
+                    return href;
+                }
+            }
+
+            async function fetchAndRender(href, push = true) {
+                try {
+                    // construimos la URL con ajax=1
+                    const urlObj = new URL(href, location.origin);
+                    urlObj.searchParams.set('ajax', '1');
+                    const ajaxUrl = urlObj.toString();
+
+                    const res = await fetch(ajaxUrl, {
+                        credentials: 'same-origin'
+                    });
+                    if (!res.ok) throw new Error('Petición fallida: ' + res.status);
+                    const data = await res.json();
+
+                    // productos HTML (compatible con varios nombres de campo)
+                    const productsHtml = data.products_html || data.productsHtml || data.products || '';
+                    // paginación: acepta pagination_html o pagination_top_html & pagination_bottom_html
+                    const paginationTop = data.pagination_top_html || data.pagination_html || data.paginationTopHtml || '';
+                    const paginationBottom = data.pagination_bottom_html || data.pagination_html || data.paginationBottomHtml || '';
+
+                    // Reemplazar DOM
+                    const productsWrapper = document.getElementById('productsWrapper');
+                    if (productsWrapper && productsHtml) {
+                        productsWrapper.innerHTML = productsHtml;
+                    } else if (!productsHtml) {
+                        // fallback: recarga completa si no hay HTML
+                        window.location.href = cleanHref(href);
+                        return;
+                    }
+
+                    // reemplazar paginadores (si vienen)
+                    const top = document.querySelector('.pagination-top');
+                    const bottom = document.querySelector('.pagination-bottom');
+                    if (top) top.innerHTML = paginationTop || data.pagination_html || top.innerHTML;
+                    if (bottom) bottom.innerHTML = paginationBottom || data.pagination_html || bottom.innerHTML;
+
+                    // actualizar URL sin ajax param
+                    if (push) {
+                        const pushUrl = cleanHref(href);
+                        history.pushState(null, '', pushUrl);
+                    }
+
+                    // scroll suave a productos
+                    const productsTop = document.querySelector('.products-content');
+                    if (productsTop) window.scrollTo({
+                        top: productsTop.getBoundingClientRect().top + window.scrollY - 80,
+                        behavior: 'smooth'
+                    });
+
+                } catch (err) {
+                    console.error('AJAX paginación error:', err);
+                    // fallback a navegación normal
+                    window.location.href = href;
+                }
+            }
+
+            // Delegación: interceptar clicks en links .page-link
+            document.addEventListener('click', function(e) {
+                const a = e.target.closest('.page-link');
+                if (!a) return;
+                const href = a.getAttribute('href');
+                if (!href) return;
+                // solo interceptamos enlaces internos de paginación
+                // evita interceptar enlaces externos
+                const url = new URL(href, location.origin);
+                if (url.origin !== location.origin) return;
+                e.preventDefault();
+                fetchAndRender(url.toString(), true);
+            });
+
+            // Interceptar cambios de filtros (submit y change)
+            if (filtroForm) {
+                filtroForm.addEventListener('submit', function(ev) {
+                    ev.preventDefault();
+                    const params = new URLSearchParams(new FormData(filtroForm));
+                    params.set('pagina', '1');
+                    const href = baseUrl + '?' + params.toString();
+                    fetchAndRender(href, true);
+                });
+
+                filtroForm.querySelectorAll('input, select').forEach(el => {
+                    el.addEventListener('change', () => {
+                        const params = new URLSearchParams(new FormData(filtroForm));
+                        params.set('pagina', '1');
+                        const href = baseUrl + '?' + params.toString();
+                        fetchAndRender(href, true);
+                    });
+                });
+            }
+
+            // Manejo de back/forward
+            window.addEventListener('popstate', function() {
+                // cargamos la URL actual por AJAX (no push)
+                fetchAndRender(location.href, false);
+            });
+
+            // Limpiar ajax=1 del query string al inicio si existe
+            if (location.search.includes('ajax=1')) {
+                const url = new URL(location.href);
+                url.searchParams.delete('ajax');
+                history.replaceState(null, '', url.toString());
+            }
+        })();
+    </script>
+
+    <!-- Slider (tu script) -->
+    <script>
+        (function() {
+            const track = document.getElementById('heroTrack');
+            if (!track) return;
+            const slides = Array.from(track.children);
+            if (slides.length <= 1) return;
+            slides.forEach(slide => track.appendChild(slide.cloneNode(true)));
+            let i = 0;
+            const totalSlides = track.children.length;
+
+            function avanzar() {
+                i++;
+                track.style.transition = "transform 0.6s ease";
+                track.style.transform = `translateX(-${i * 100}%)`;
+                if (i === totalSlides - slides.length) {
+                    setTimeout(() => {
+                        track.style.transition = "none";
+                        i = 0;
+                        track.style.transform = `translateX(0)`;
+                    }, 600);
+                }
+            }
+            setInterval(avanzar, 4500);
+        })();
+    </script>
 </body>
 
 </html>

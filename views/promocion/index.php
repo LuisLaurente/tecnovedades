@@ -115,8 +115,7 @@
                                     <table class="promotions-table">
                                         <thead>
                                             <tr>
-                                                <th>Codigo</th>
-                                                
+                                                <th>ID</th>
                                                 <th>Nombre</th>
                                                 <th>Tipo</th>
                                                 <th>Estado</th>
@@ -134,9 +133,7 @@
                                                 $esVigente = $ahora >= $promocion01['fecha_inicio'] && $ahora <= $promocion01['fecha_fin'];
                                                 ?>
                                                 <tr>
-                                                    <td><strong><?= $promocion01['codigo'] ?></strong></td>
-                                                   
-                                                    
+                                                    <td><strong>#<?= $promocion01['id'] ?></strong></td>
                                                     <td class="promotion-name">
                                                         <?= htmlspecialchars($promocion01['nombre']) ?>
                                                         <?php if ($promocion01['exclusivo']): ?>
@@ -196,23 +193,14 @@
                                                         <a href="<?= url('promocion/editar/' . $promocion01['id']) ?>" class="btn-action btn-edit">
                                                             Editar
                                                         </a>
-                                                        <a href="<?= url('promocion/toggleEstado/' . $promocion01['id']) ?>" 
-                                                            class="btn-action btn-toggle"
+                                                        <a href="<?= url('promocion/toggleEstado/' . $promocion01['id']) ?>" class="btn-action btn-toggle"
                                                             onclick="return confirm('¿Cambiar estado de esta promoción?')">
                                                             <?= $promocion01['activo'] ? 'Desactivar' : 'Activar' ?>
-                                                            </a>
-
-                                                        
-                                                        <form action="<?= url('promocion/eliminar/' . $promocion['id']) ?>" method="POST" 
-                                                            onsubmit="return confirm('¿Estás seguro de eliminar esta promoción?')" 
-                                                            style="display:inline;">
-                                                            <button type="submit" class="btn-action btn-delete">
-                                                                Eliminar
-                                                            </button>
-                                                        </form>
-
-                                                           
-  
+                                                        </a>
+                                                        <a href="<?= url('promocion/eliminar/' . $promocion01['id']) ?>" class="btn-action btn-delete"
+                                                            onclick="return confirm('¿Estás seguro de eliminar esta promoción?')">
+                                                            Eliminar
+                                                        </a>
                                                     </td>
                                                 </tr>
                                             <?php endforeach; ?>
