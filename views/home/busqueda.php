@@ -77,7 +77,19 @@ $totalEncontrados = $totalProductos; // Esto debería venir del controlador
                     <h1 class="page-title"><?= htmlspecialchars($categoriaActual['nombre'], ENT_QUOTES, 'UTF-8') ?></h1>
                     <p class="page-subtitle">Mostrando productos <?= ($paginaActual - 1) * $productosPorPagina + 1 ?>-<?= min($paginaActual * $productosPorPagina, $totalEncontrados) ?> de <?= $totalEncontrados ?> en total</p>
                 <?php else: ?>
-                    <h1 class="page-title">Electrónicos</h1>
+                    <?php 
+    // Obtener el nombre de la categoría seleccionada desde el filtro
+    $categoriaNombre = 'Electrónicos'; // Valor por defecto
+    if (!empty($_GET['categoria']) && !empty($categoriasDisponibles)) {
+        foreach ($categoriasDisponibles as $categoria) {
+            if ($categoria['id'] == $_GET['categoria']) {
+                $categoriaNombre = $categoria['nombre'];
+                break;
+            }
+        }
+    }
+    ?>
+    <h1 class="page-title"><?= htmlspecialchars($categoriaNombre, ENT_QUOTES, 'UTF-8') ?></h1>
                     <p class="page-subtitle">Mostrando productos <?= ($paginaActual - 1) * $productosPorPagina + 1 ?>-<?= min($paginaActual * $productosPorPagina, $totalEncontrados) ?> de <?= $totalEncontrados ?> en total</p>
                 <?php endif; ?>
             </div>
