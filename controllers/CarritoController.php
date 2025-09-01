@@ -97,6 +97,10 @@ class CarritoController
                     $producto['color'] = $item['color'];
                     $producto['clave'] = $clave;
                     $producto['subtotal'] = $producto['precio'] * $item['cantidad'];
+                    $primera = ImagenProducto::obtenerPrimeraPorProducto((int)$item['producto_id']);
+                    $producto['imagen'] = ($primera && !empty($primera['nombre_imagen']))
+                        ? url('uploads/' . $primera['nombre_imagen'])
+                        : null;
                     $productosDetallados[] = $producto;
                 }
             }

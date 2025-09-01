@@ -58,10 +58,14 @@ body {
   overflow-x: hidden;
 }
 
-a {
-  text-decoration: none;
-  color: inherit;
-  transition: var(--transition-smooth);
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  justify-content: center;
+}
+.contenedor2 {
+  background-image: url('../images/back.jpeg');
 }
 
 img {
@@ -127,9 +131,21 @@ img {
   padding: 0 1rem;
 }
 
-.content-wrapper {
+/* Asegura que el track del carrusel se encuentre alineado y visible */
+.categories-carousel-track {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+
   width: 100%;
+
+.categories-grid {
+  display: grid;
+  justify-content: center;
+  gap: 1.5rem; /* Espacio entre las categorías */
+  padding: 0 1rem; /* Un poco de padding lateral para que no se pegue a los bordes */
 }
+
 
 /* ===== CATEGORÍAS STRIP ===== */
 .categories-strip {
