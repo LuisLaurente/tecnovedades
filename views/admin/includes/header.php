@@ -227,7 +227,9 @@ function categoria_url($cat)
     </div>
 
   </div>
-  <div class="categories-bar">
+  
+</header>
+<div class="categories-bar">
     <div class="categories-content">
       <div class="all-categories-dropdown-container">
         <button class="all-categories-button" id="allCategoriesButton" aria-haspopup="true" aria-expanded="false">
@@ -304,7 +306,6 @@ function categoria_url($cat)
       </nav>
     </div>
   </div>
-</header>
 
 <!-- Exponer BASE_URL para JS -->
 <script>
