@@ -114,7 +114,7 @@ function producto_imagen_url($producto, $idx = 0)
                 </ol>
             </nav>
         </div>
-        
+
         <section class="product-info-grid">
             <div class="product-image-gallery">
                 <img id="main-product-image" src="<?= producto_imagen_url($producto, 0) ?>" alt="<?= htmlspecialchars($producto['nombre']) ?>" class="main-product-image">
@@ -136,7 +136,7 @@ function producto_imagen_url($producto, $idx = 0)
                     <?= htmlspecialchars($producto['descripcion'] ?? 'No hay descripción disponible.') ?>
                 </p>
                 <a href="#descripcion-section" class="read-more-link">Leer más</a>
-                
+
                 <div class="info-boxes">
                     <div class="info-box">
                         <img src="<?= url('images/delivery_icon.png') ?>" alt="Envíos">
@@ -232,44 +232,94 @@ function producto_imagen_url($producto, $idx = 0)
             <?php else: ?>
                 <p>No hay productos relacionados para mostrar.</p>
             <?php endif; ?>
-        </section>
-        <!-- Reviews -->
-        <h3 class="text-xl font-semibold mt-6 mb-3">Reseñas de clientes</h3>
-        <?php if (empty($reviews)): ?>
-            <p class="text-gray-500">Todavía no hay reseñas para este producto.</p>
-        <?php else: ?>
+<!-- ================================================== -->
+<!-- INICIO DE LA NUEVA SECCIÓN DE RESEÑAS CON ESTADÍSTICAS -->
+<!-- ================================================== -->
+<section id="reviews-section" class="reviews-container">
+    <h2 class="reviews-main-title">Comentarios de este producto</h2>
+
+    <?php
+    // --- Bloque de cálculo de estadísticas ---
+    $totalReviews = count($reviews);
+    $averageRating = 0;
+    $ratingCounts = [5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0];
+
+    if ($totalReviews > 0) {
+        $totalScore = 0;
+        foreach ($reviews as $review) {
+            $puntuacion = (int)$review['puntuacion'];
+            if (isset($ratingCounts[$puntuacion])) {
+                $ratingCounts[$puntuacion]++;
+            }
+            $totalScore += $puntuacion;
+        }
+        $averageRating = round($totalScore / $totalReviews, 1);
+    }
+    // --- Fin del bloque de cálculo ---
+    ?>
+
+    <?php if ($totalReviews > 0): ?>
+        <div class="reviews-summary">
+            <!-- Columna Izquierda: Puntuación General -->
+            <div class="overall-rating">
+                <div class="score">
+                    <span class="score-number"><?= htmlspecialchars($averageRating) ?></span>/5
+                </div>
+                <div class="stars-display">
+                    <?php for ($i = 1; $i <= 5; $i++): ?>
+                        <span class="<?= $i <= floor($averageRating) ? 'filled' : '' ?>">★</span>
+                    <?php endfor; ?>
+                </div>
+                <div class="total-reviews-count"><?= $totalReviews ?> comentario<?= $totalReviews > 1 ? 's' : '' ?></div>
+            </div>
+
+            <!-- Columna Derecha: Desglose de Puntuaciones -->
+            <div class="rating-breakdown">
+                <?php foreach ($ratingCounts as $star => $count): ?>
+                    <?php
+                    $percentage = ($totalReviews > 0) ? ($count / $totalReviews) * 100 : 0;
+                    ?>
+                    <div class="breakdown-row">
+                        <span class="star-label"><?= $star ?> ★</span>
+                        <div class="bar-container">
+                            <div class="bar" style="width: <?= $percentage ?>%;"></div>
+                        </div>
+                        <span class="count-label"><?= $count ?></span>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    <?php endif; ?>
+
+    <!-- Listado de Reseñas Individuales -->
+    <div class="individual-reviews">
+        <?php if ($totalReviews > 0): ?>
             <?php foreach ($reviews as $review): ?>
-                <div class="border-b py-3">
-                    <div class="flex items-center gap-2">
-                        <strong><?= htmlspecialchars($review['usuario_nombre']) ?></strong>
-                        <span class="text-sm text-gray-500"><?= date('d/m/Y', strtotime($review['created_at'])) ?></span>
+                <div class="review-item">
+                    <div class="review-header">
+                        <h3 class="review-title"><?= htmlspecialchars($review['titulo']) ?></h3>
+                        <div class="review-stars">
+                            <?php for ($i = 1; $i <= 5; $i++): ?>
+                                <span class="<?= $i <= $review['puntuacion'] ? 'filled' : '' ?>">★</span>
+                            <?php endfor; ?>
+                        </div>
                     </div>
-                    <div>
-                        <?php for ($i=1; $i<=5; $i++): ?>
-                            <span class="<?= $i <= $review['puntuacion'] ? 'text-yellow-400' : 'text-gray-300' ?>">★</span>
-                        <?php endfor; ?>
+                    <div class="review-author-date">
+                        <span class="review-author">por <?= htmlspecialchars($review['usuario_nombre']) ?></span>
+                        <span class="review-date"><?= date('d/m/Y', strtotime($review['created_at'])) ?></span>
                     </div>
-                    <p class="font-medium"><?= htmlspecialchars($review['titulo']) ?></p>
-                    <p><?= htmlspecialchars($review['texto']) ?></p>
+                    <p class="review-text"><?= nl2br(htmlspecialchars($review['texto'])) ?></p>
                 </div>
             <?php endforeach; ?>
+        <?php else: ?>
+            <p class="no-reviews-message">Todavía no hay comentarios para este producto.</p>
         <?php endif; ?>
-            <div class="individual-reviews">
-                <?php if (!empty($reviews)): ?>
-                    <?php foreach ($reviews as $r): ?>
-                        <div class="review-item">
-                            <p class="reviewer-name"><?= htmlspecialchars($r['autor'] ?? 'Anónimo') ?></p>
-                            <div class="review-stars"><?= str_repeat('★', max(0, min(5, (int)$r['puntuacion']))) ?></div>
-                            <p class="review-date"><?= htmlspecialchars($r['fecha'] ?? '') ?></p>
-                            <p class="review-text"><?= nl2br(htmlspecialchars($r['texto'] ?? '')) ?></p>
-                        </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <div class="review-item"><p class="reviewer-name">Norka</p><div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p class="review-date">hace 1 año</p><p class="review-text">El producto encantó; todo coincide con la descripción.</p></div>
-                    <div class="review-item"><p class="reviewer-name">Carlos</p><div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p class="review-date">hace 6 meses</p><p class="review-text">Excelente calidad y envío rápido.</p></div>
-                <?php endif; ?>
-            </div>
-        </section>
+    </div>
+</section>
+<!-- ================================================ -->
+<!-- FIN DE LA NUEVA SECCIÓN DE RESEÑAS -->
+<!-- ================================================ -->
+
     </main>
 
     <?php include_once __DIR__ . '/../admin/includes/footer.php'; ?>
@@ -314,19 +364,19 @@ function producto_imagen_url($producto, $idx = 0)
                 header.addEventListener('click', () => {
                     const section = header.closest('.collapsible-section');
                     if (section.classList.contains('partially-visible')) {
-                        return; 
+                        return;
                     }
 
                     header.classList.toggle('active');
                     const content = header.nextElementSibling;
                     const arrow = header.querySelector('.arrow');
-                    
+
                     if (header.classList.contains('active')) {
                         content.style.display = 'block';
-                        if(arrow) arrow.innerHTML = '&#9650;';
+                        if (arrow) arrow.innerHTML = '&#9650;';
                     } else {
                         content.style.display = 'none';
-                        if(arrow) arrow.innerHTML = '&#9660;';
+                        if (arrow) arrow.innerHTML = '&#9660;';
                     }
                 });
             });
@@ -336,14 +386,14 @@ function producto_imagen_url($producto, $idx = 0)
             if (specsSection) {
                 const viewMoreButton = specsSection.querySelector('.view-more-specs');
                 const header = specsSection.querySelector('.collapsible-header');
-                
+
                 const expandSpecs = function() {
                     specsSection.classList.remove('partially-visible');
-                    
+
                     if (!header.classList.contains('active')) {
                         header.classList.add('active');
                         const arrow = header.querySelector('.arrow');
-                        if(arrow) arrow.innerHTML = '&#9650;';
+                        if (arrow) arrow.innerHTML = '&#9650;';
                     }
                 };
 
@@ -357,12 +407,15 @@ function producto_imagen_url($producto, $idx = 0)
 
             // Enlaces con desplazamiento suave (smooth scroll)
             document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
+                anchor.addEventListener('click', function(e) {
                     e.preventDefault();
                     const targetId = this.getAttribute('href');
                     const targetElement = document.querySelector(targetId);
                     if (targetElement) {
-                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
                     }
                 });
             });
@@ -370,4 +423,5 @@ function producto_imagen_url($producto, $idx = 0)
         })();
     </script>
 </body>
+
 </html>
