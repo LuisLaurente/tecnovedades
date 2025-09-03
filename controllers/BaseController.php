@@ -1,9 +1,20 @@
 <?php
 namespace Controllers;
 
-class BaseController {
-    public function render($vista, $data = []) {
+class BaseController
+{
+    protected function render($view, $data = [])
+    {
+        // Extraer variables para usarlas en la vista
         extract($data);
-        include __DIR__ . '/../views/' . $vista . '.php';
+
+        // Ruta de la vista
+        $file = __DIR__ . '/../views/' . $view . '.php';
+
+        if (file_exists($file)) {
+            include_once $file;
+        } else {
+            echo "❌ Error: No se encontró la vista $file";
+        }
     }
 }
