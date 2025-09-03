@@ -445,8 +445,31 @@ class ProductoController extends BaseController
         $productoModel = new \Models\Producto();
         $resultados = $productoModel->buscarPorNombre($q);
 
-        // Definir $termino para que exista en la vista
+        // 🔹 Agregar imágenes a cada producto
+        foreach ($resultados as &$producto) {
+            $producto['imagenes'] = \Models\ImagenProducto::obtenerPorProducto($producto['id']);
+        }
+        unset($producto);
+
+        // 🔹 Variables que la vista necesita
         $termino = $q;
+        $productos = $resultados; // La vista espera $productos, no $resultados
+        $totalProductos = count($productos);
+        $totalEncontrados = $totalProductos;
+        
+        // Variables de paginación (valores por defecto)
+        $paginaActual = 1;
+        $productosPorPagina = 15;
+        $totalPaginas = 1;
+        
+        // Variables de categorías - obtener todas las categorías disponibles
+        $categoriaActual = null;
+        try {
+            $categoriaModel = new \Models\Categoria();
+            $categoriasDisponibles = $categoriaModel->obtenerTodas();
+        } catch (\Exception $e) {
+            $categoriasDisponibles = [];
+        }
 
         // 🔹 Variables SEO para resultados de búsqueda
         $metaTitle = 'Resultados para "' . htmlspecialchars($termino) . '" | Tienda Tecnovedades';

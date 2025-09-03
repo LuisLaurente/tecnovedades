@@ -41,6 +41,18 @@ $totalEncontrados = $totalProductos; // Esto debería venir del controlador
 
     <div class="main-container">
         <div class="content-wrapper">
+            <!-- Debug temporal - eliminar después -->
+            <?php if (false): // Cambia a true para activar debug ?>
+            <div style="background: #f0f0f0; padding: 10px; margin: 10px 0; border: 1px solid #ddd;">
+                <h3>Debug Variables:</h3>
+                <p><strong>termino:</strong> <?= isset($termino) ? htmlspecialchars($termino) : 'NO DEFINIDO' ?></p>
+                <p><strong>productos:</strong> <?= isset($productos) ? count($productos) . " productos encontrados" : 'NO DEFINIDO' ?></p>
+                <p><strong>totalEncontrados:</strong> <?= isset($totalEncontrados) ? $totalEncontrados : 'NO DEFINIDO' ?></p>
+                <?php if (isset($productos) && count($productos) > 0): ?>
+                    <p><strong>Primer producto:</strong> <?= htmlspecialchars($productos[0]['nombre'] ?? 'Sin nombre') ?></p>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
 
             <!-- ================================================================== -->
             <!-- BREADCRUMB                                                         -->
