@@ -190,7 +190,7 @@ if (!isset($categorias)) {
       track.classList.add('scrolling');
     }
 
-    // --- Funcionalidad de Arrastre para Productos (Versión Simplificada) ---
+    // --- Funcionalidad de Arrastre para Productos con Scroll Infinito ---
     function setupDragCarousel(containerSelector) {
       const container = document.querySelector(containerSelector);
       if (!container) return;
@@ -198,20 +198,55 @@ if (!isset($categorias)) {
       const track = container.querySelector('.products-grid');
       if (!track) return;
 
-      // Clonar elementos para scroll infinito
+      // Clonar elementos para scroll infinito (dos veces para asegurar suficientes elementos)
       const originalItems = Array.from(track.children);
       if (originalItems.length > 0) {
-        originalItems.forEach(item => {
-          const clone = item.cloneNode(true);
-          clone.setAttribute('aria-hidden', 'true');
-          track.appendChild(clone);
-        });
+        // Duplicamos los elementos para crear un ciclo completo
+        for (let i = 0; i < 2; i++) {
+          originalItems.forEach(item => {
+            const clone = item.cloneNode(true);
+            clone.setAttribute('aria-hidden', 'true');
+            track.appendChild(clone);
+          });
+        }
       }
 
       let isDragging = false;
       let startX = 0;
       let scrollLeft = 0;
       let currentX = 0;
+      
+      // Medidas importantes para el scroll infinito
+      let itemWidth = 0;
+      let totalItems = originalItems.length;
+      let totalWidth = 0;
+      let viewportWidth = 0;
+      let itemsInViewport = 0;
+      let threshold = 0;
+      
+      // Calcular dimensiones iniciales
+      function calculateDimensions() {
+        if (originalItems.length === 0) return;
+        
+        const firstItem = originalItems[0];
+        // Incluir margin/gap en el cálculo del ancho
+        const style = window.getComputedStyle(firstItem);
+        const marginRight = parseInt(style.marginRight) || 0;
+        itemWidth = firstItem.offsetWidth + marginRight;
+        
+        totalWidth = itemWidth * totalItems;
+        viewportWidth = container.offsetWidth;
+        itemsInViewport = Math.ceil(viewportWidth / itemWidth);
+        
+        // Umbral para activar el salto es cuando se ve 1/3 del siguiente conjunto de elementos
+        threshold = totalWidth - (itemWidth * Math.floor(itemsInViewport / 3));
+      }
+      
+      // Calcular dimensiones inicialmente
+      calculateDimensions();
+      
+      // Recalcular cuando cambie el tamaño de la ventana
+      window.addEventListener('resize', calculateDimensions);
 
       // Configuración inicial
       track.style.animation = 'none';
@@ -236,16 +271,8 @@ if (!isset($categorias)) {
         const walk = (x - startX) * 1.2;
         currentX = scrollLeft + walk;
         
-        // Límites básicos
-        const maxScroll = 0;
-        const minScroll = -(track.scrollWidth - container.offsetWidth);
-        
-        if (currentX > maxScroll) {
-          currentX = maxScroll + (currentX - maxScroll) * 0.3;
-        }
-        if (currentX < minScroll) {
-          currentX = minScroll + (currentX - minScroll) * 0.3;
-        }
+        // Aplicar scroll infinito en tiempo real
+        applyInfiniteScroll();
         
         track.style.transform = `translateX(${currentX}px)`;
       });
@@ -255,12 +282,8 @@ if (!isset($categorias)) {
         isDragging = false;
         container.classList.remove('dragging');
         
-        // Aplicar límites finales
-        const maxScroll = 0;
-        const minScroll = -(track.scrollWidth - container.offsetWidth);
-        
-        if (currentX > maxScroll) currentX = maxScroll;
-        if (currentX < minScroll) currentX = minScroll;
+        // Comprobar si debe activarse el scroll infinito
+        applyInfiniteScroll(true);
         
         track.style.transition = 'transform 0.3s ease-out';
         track.style.transform = `translateX(${currentX}px)`;
@@ -288,16 +311,8 @@ if (!isset($categorias)) {
         const walk = (x - startX) * 1.2;
         currentX = scrollLeft + walk;
         
-        // Límites básicos
-        const maxScroll = 0;
-        const minScroll = -(track.scrollWidth - container.offsetWidth);
-        
-        if (currentX > maxScroll) {
-          currentX = maxScroll + (currentX - maxScroll) * 0.3;
-        }
-        if (currentX < minScroll) {
-          currentX = minScroll + (currentX - minScroll) * 0.3;
-        }
+        // Aplicar scroll infinito en tiempo real
+        applyInfiniteScroll();
         
         track.style.transform = `translateX(${currentX}px)`;
       }, { passive: false });
@@ -307,12 +322,8 @@ if (!isset($categorias)) {
         isDragging = false;
         container.classList.remove('dragging');
         
-        // Aplicar límites finales
-        const maxScroll = 0;
-        const minScroll = -(track.scrollWidth - container.offsetWidth);
-        
-        if (currentX > maxScroll) currentX = maxScroll;
-        if (currentX < minScroll) currentX = minScroll;
+        // Comprobar si debe activarse el scroll infinito
+        applyInfiniteScroll(true);
         
         track.style.transition = 'transform 0.3s ease-out';
         track.style.transform = `translateX(${currentX}px)`;
@@ -320,6 +331,38 @@ if (!isset($categorias)) {
         // Reactivar scroll automático después de un tiempo
         setTimeout(restartAutoScroll, 3000);
       });
+      
+      // Función para aplicar el scroll infinito
+      function applyInfiniteScroll(withAnimation = false) {
+        if (totalItems === 0 || totalWidth === 0) return;
+        
+        // Cuando se arrastra hacia la derecha (inicio) y pasa el primer elemento
+        if (currentX > threshold / 2) {
+          // Saltar al final del primer ciclo
+          if (withAnimation) {
+            track.style.transition = 'none';
+          }
+          currentX = currentX - totalWidth;
+          track.style.transform = `translateX(${currentX}px)`;
+        }
+        
+        // Cuando se arrastra hacia la izquierda (final) y casi llega al final del primer ciclo
+        else if (Math.abs(currentX) > threshold) {
+          // Saltar al inicio del primer ciclo
+          if (withAnimation) {
+            track.style.transition = 'none';
+          }
+          currentX = currentX + totalWidth;
+          track.style.transform = `translateX(${currentX}px)`;
+        }
+        
+        // Reactivar la transición si fue desactivada
+        if (withAnimation) {
+          setTimeout(() => {
+            track.style.transition = 'transform 0.3s ease-out';
+          }, 10);
+        }
+      }
 
       function restartAutoScroll() {
         if (isDragging) return;

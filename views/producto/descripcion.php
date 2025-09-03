@@ -213,7 +213,8 @@ function producto_imagen_url($producto, $idx = 0)
                 <?php else: ?>
                     <p>No hay especificaciones detalladas.</p>
                 <?php endif; ?>
-                <button class="view-more-specs">VER MÁS ▼</button>
+                <button class="view-specs-toggle view-more-specs">VER MÁS ▼</button>
+                <button class="view-specs-toggle view-less-specs">VER MENOS ▲</button>
             </div>
         </section>
 
@@ -313,14 +314,15 @@ function producto_imagen_url($producto, $idx = 0)
             document.querySelectorAll('.collapsible-header').forEach(header => {
                 header.addEventListener('click', () => {
                     const section = header.closest('.collapsible-section');
+                    // Si es la de especificaciones y está parcialmente visible, no hacer nada aquí
                     if (section.classList.contains('partially-visible')) {
-                        return; 
+                        return;
                     }
 
                     header.classList.toggle('active');
                     const content = header.nextElementSibling;
                     const arrow = header.querySelector('.arrow');
-                    
+
                     if (header.classList.contains('active')) {
                         content.style.display = 'block';
                         if(arrow) arrow.innerHTML = '&#9650;';
@@ -335,23 +337,44 @@ function producto_imagen_url($producto, $idx = 0)
             const specsSection = document.querySelector('.partially-visible');
             if (specsSection) {
                 const viewMoreButton = specsSection.querySelector('.view-more-specs');
+                const viewLessButton = specsSection.querySelector('.view-less-specs');
                 const header = specsSection.querySelector('.collapsible-header');
-                
-                const expandSpecs = function() {
-                    specsSection.classList.remove('partially-visible');
-                    
-                    if (!header.classList.contains('active')) {
-                        header.classList.add('active');
+                const content = specsSection.querySelector('.collapsible-content');
+
+                const expandSpecs = function(e) {
+                    if (specsSection.classList.contains('partially-visible')) {
+                        specsSection.classList.remove('partially-visible');
+                        if (!header.classList.contains('active')) {
+                            header.classList.add('active');
+                        }
+                        if (content) content.style.display = 'block';
                         const arrow = header.querySelector('.arrow');
                         if(arrow) arrow.innerHTML = '&#9650;';
+                        if (e) e.stopPropagation();
+                    }
+                };
+
+                const collapseSpecs = function(e) {
+                    if (!specsSection.classList.contains('partially-visible')) {
+                        specsSection.classList.add('partially-visible');
+                        if (header.classList.contains('active')) {
+                            header.classList.remove('active');
+                        }
+                        if (content) content.style.display = '';
+                        const arrow = header.querySelector('.arrow');
+                        if(arrow) arrow.innerHTML = '&#9660;';
+                        if (e) e.stopPropagation();
                     }
                 };
 
                 if (viewMoreButton) {
                     viewMoreButton.addEventListener('click', expandSpecs);
                 }
+                if (viewLessButton) {
+                    viewLessButton.addEventListener('click', collapseSpecs);
+                }
                 if (header) {
-                    header.addEventListener('click', expandSpecs);
+                    header.addEventListener('click', expandSpecs, true);
                 }
             }
 
