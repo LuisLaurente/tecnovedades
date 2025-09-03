@@ -214,6 +214,8 @@
             <?php endif; ?>
 
             <p style="margin:8px 0 16px; color:#666;">Arrastra las filas con el ícono ☰ para cambiar el orden. Se guarda automáticamente.</p>
+            <p style="margin:8px 0 16px; color:#666;">Las imágenes deben tener dimensiones de 1920 x 640 píxeles.</p>
+
 
             <table class="admin-productos-table">
                 <thead>
