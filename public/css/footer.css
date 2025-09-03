@@ -79,7 +79,6 @@
     padding: 3rem 2rem 2rem;
     display: flex;
     flex-direction: column;
-    gap: 2.5rem;
 }
 
 /* Header del footer */
@@ -200,7 +199,11 @@
 
 /* Footer bottom */
 .footer-bottom {
-    border-top: 1px solid rgba(42, 193, 219, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
     padding-top: 2rem;
 }
 
@@ -242,39 +245,57 @@
     color: #999;
     font-weight: 400;
 }
-
-/* Enlace al libro de reclamaciones */
-.footer-reclamo {
-    text-align: center;
-    padding: 1rem 0;
-    border-top: 1px solid rgba(54, 57, 147, 0.2);
-    background: rgba(0, 0, 0, 0.2);
-    margin: 1rem -2rem 0;
-    border-radius: var(--border-radius) var(--border-radius) 0 0;
+.social-icons {
+    display: flex;
+    gap: 0.75rem;
 }
 
-.footer-reclamo a {
-    font-family: var(--font-secondary);
-    font-size: 0.9rem !important;
-    font-weight: 500;
-    color: #999 !important;
-    text-decoration: none !important;
+.social-icons a {
+    color: var(--muted);
+    font-size: 1.1rem;
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--footer-border);
+    border-radius: 50%;
+    transition: color 0.3s, border-color 0.3s, background-color 0.3s;
+}
+
+.social-icons a:hover {
+    color: var(--white-color);
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.version {
+    font-size: 0.8rem;
+    color: var(--primary-color);
+    background-color: rgba(42, 193, 219, 0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+}
+/* --- Libro de Reclamaciones --- */
+.footer-reclamo-wrapper {
+    text-align: center;
+    padding: 1.5rem 0;
+    margin-top: 2rem;
+    /* Se extiende fuera del padding del contenedor principal */
+    margin-left: -1rem;
+    margin-right: -1rem;
+}
+
+.footer-reclamo-link {
+    color: var(--muted);
+    text-decoration: none;
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    border-radius: var(--border-radius-lg);
-    transition: var(--transition);
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: color 0.3s;
 }
 
-.footer-reclamo a:hover {
-    color: var(--color-primary) !important;
-    background: rgba(42, 193, 219, 0.1);
-    border-color: rgba(42, 193, 219, 0.3);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
+.footer-reclamo-link:hover {
+    color: var(--primary-color);
 }
 
 /* Efectos adicionales */
@@ -445,6 +466,42 @@
     .date {
         color: #a0a0a0;
     }
+}
+/* --- Sección de Enlaces --- */
+.footer-links-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    justify-items: center;
+    border-top: 1px solid var(--footer-border);
+    border-bottom: 1px solid var(--footer-border);
+}
+
+.links-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--white-color);
+    margin-bottom: 1rem;
+    margin-top: 0;
+}
+
+.links-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.links-list a {
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.links-list a:hover {
+    color: var(--primary-color);
 }
 
 /* Efectos adicionales para mejor experiencia */
