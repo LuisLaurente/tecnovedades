@@ -52,7 +52,7 @@ body {
 
 /* === HERO + CATEGORÍAS: único contenedor full-height === */
 .hero-and-categories {
-  min-height: 90vh; /* ocupa 100% de la pantalla */
+  height: 90vh; /* ocupa 100% de la pantalla */
   display: flex;
   flex-direction: column;
   justify-content: space-between; /* banner arriba/centro, categorías abajo */
