@@ -1,14 +1,15 @@
 <?php
 
 namespace Controllers;
-
+use Core\Database;
 use Models\Producto;
 use Models\VarianteProducto;
 use Models\ImagenProducto;
 use Models\Categoria;
 use Models\Etiqueta;
-
-class ProductoController
+use PDO;
+use PDOException;
+class ProductoController extends BaseController
 {
     public function index()
     {
@@ -336,83 +337,100 @@ class ProductoController
         exit;
     }
     public function ver($id)
-    {
-        $productoModel = new Producto();
+{
+    $productoModel = new Producto();
 
-        if (!is_numeric($id)) {
-            header('Location: ' . url('producto'));
-            exit;
-        }
+    if (!is_numeric($id)) {
+        header('Location: ' . url('producto'));
+        exit;
+    }
 
-        $producto = $productoModel->obtenerPorId((int)$id);
+    $producto = $productoModel->obtenerPorId((int)$id);
 
-        if (!$producto) {
-            header('Location: ' . url('producto'));
-            exit;
-        }
+    if (!$producto) {
+        header('Location: ' . url('producto'));
+        exit;
+    }
 
-        $producto['categorias'] = Producto::obtenerCategoriasPorProducto($producto['id']);
-        $producto['imagenes'] = \Models\ImagenProducto::obtenerPorProducto($producto['id']);
+    $producto['categorias'] = Producto::obtenerCategoriasPorProducto($producto['id']);
+    $producto['imagenes'] = \Models\ImagenProducto::obtenerPorProducto($producto['id']);
 
-        // --- Breadcrumb ---
-        try {
-            $db = \Core\Database::getInstance()->getConnection();
-            $stmt = $db->prepare("SELECT id_categoria FROM producto_categoria WHERE id_producto = ?");
-            $stmt->execute([(int)$producto['id']]);
-            $catIds = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+    // --- Breadcrumb ---
+    try {
+        $db = \Core\Database::getInstance()->getConnection();
+        $stmt = $db->prepare("SELECT id_categoria FROM producto_categoria WHERE id_producto = ?");
+        $stmt->execute([(int)$producto['id']]);
+        $catIds = $stmt->fetchAll(\PDO::FETCH_COLUMN);
 
-            $bestChain = [];
-            foreach ($catIds as $cid) {
-                $chain = \Models\Categoria::obtenerAncestros((int)$cid);
-                if (count($chain) > count($bestChain)) {
-                    $bestChain = $chain;
-                }
+        $bestChain = [];
+        foreach ($catIds as $cid) {
+            $chain = \Models\Categoria::obtenerAncestros((int)$cid);
+            if (count($chain) > count($bestChain)) {
+                $bestChain = $chain;
             }
-
-            $breadcrumb = !empty($bestChain)
-                ? array_column($bestChain, 'nombre')
-                : ['Inicio', 'Productos'];
-
-            $breadcrumb[] = $producto['nombre'];
-        } catch (\Throwable $e) {
-            error_log('ProductoController::ver - error construyendo breadcrumb: ' . $e->getMessage());
-            $breadcrumb = ['Inicio', 'Productos', $producto['nombre']];
         }
 
-        // 🔹 SEO dinámico
-        $meta_title = $producto['nombre'] . ' | Tienda Tecnovedades';
-        $meta_description = substr(strip_tags($producto['descripcion']), 0, 160);
-        $meta_image = !empty($producto['imagenes'][0]['nombre_imagen'])
-            ? url('uploads/' . $producto['imagenes'][0]['nombre_imagen'])
-            : url('images/default-share.png');
-        $canonical = url('producto/ver/' . $producto['id']);
+        $breadcrumb = !empty($bestChain)
+            ? array_column($bestChain, 'nombre')
+            : ['Inicio', 'Productos'];
 
-        // ------------------- Relacionados -------------------
-        $relatedProducts = [];
-        $ids = $producto['productos_relacionados'] ?? [];
+        $breadcrumb[] = $producto['nombre'];
+    } catch (\Throwable $e) {
+        error_log('ProductoController::ver - error construyendo breadcrumb: ' . $e->getMessage());
+        $breadcrumb = ['Inicio', 'Productos', $producto['nombre']];
+    }
+
+    // 🔹 SEO dinámico
+    $meta_title = $producto['nombre'] . ' | Tienda Tecnovedades';
+    $meta_description = substr(strip_tags($producto['descripcion']), 0, 160);
+    $meta_image = !empty($producto['imagenes'][0]['nombre_imagen'])
+        ? url('uploads/' . $producto['imagenes'][0]['nombre_imagen'])
+        : url('images/default-share.png');
+    $canonical = url('producto/ver/' . $producto['id']);
+
+    // ------------------- Relacionados -------------------
+    $relatedProducts = [];
+    $ids = $producto['productos_relacionados'] ?? [];
+
+    if (!empty($ids)) {
+        // evita incluirse a sí mismo por si acaso
+        $ids = array_values(array_diff(array_map('intval', $ids), [(int)$producto['id']]));
 
         if (!empty($ids)) {
-            // evita incluirse a sí mismo por si acaso
-            $ids = array_values(array_diff(array_map('intval', $ids), [(int)$producto['id']]));
+            $relatedProducts = $productoModel->obtenerPorIds($ids);
 
-            if (!empty($ids)) {
-                $relatedProducts = $productoModel->obtenerPorIds($ids);
-
-                // Carga primera imagen y expón clave 'imagen' que espera la vista
-                foreach ($relatedProducts as &$rp) {
-                    $rp['imagenes'] = \Models\ImagenProducto::obtenerPorProducto((int)$rp['id']);
-                    $rp['imagen'] = !empty($rp['imagenes'][0]['nombre_imagen'])
-                        ? $rp['imagenes'][0]['nombre_imagen']
-                        : null;
-                }
-                unset($rp);
+            // Carga primera imagen y expón clave 'imagen' que espera la vista
+            foreach ($relatedProducts as &$rp) {
+                $rp['imagenes'] = \Models\ImagenProducto::obtenerPorProducto((int)$rp['id']);
+                $rp['imagen'] = !empty($rp['imagenes'][0]['nombre_imagen'])
+                    ? $rp['imagenes'][0]['nombre_imagen']
+                    : null;
             }
+            unset($rp);
         }
-
-
-
-        require_once __DIR__ . '/../views/producto/descripcion.php';
     }
+
+    // ------------------- Reseñas -------------------
+    try {
+        $stmt = $db->prepare("
+            SELECT r.*, u.nombre AS usuario_nombre
+            FROM product_reviews r
+            JOIN usuarios u ON r.user_id = u.id
+            WHERE r.producto_id = :id AND r.estado = 'aprobado'
+            ORDER BY r.created_at DESC
+        ");
+        $stmt->bindParam(':id', $producto['id'], \PDO::PARAM_INT);
+        $stmt->execute();
+        $reviews = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    } catch (\Throwable $e) {
+        error_log('ProductoController::ver - error cargando reseñas: ' . $e->getMessage());
+        $reviews = [];
+    }
+
+    // ------------------- Vista -------------------
+    require_once __DIR__ . '/../views/producto/descripcion.php';
+}
+
 
     public function busqueda()
     {
@@ -439,4 +457,50 @@ class ProductoController
         // Renderizamos la vista de búsqueda
         include __DIR__ . '/../views/home/busqueda.php';
     }
+    public function guardarComentario()
+{
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $db = \Core\Database::getConexion();
+
+        $producto_id = $_POST['producto_id'] ?? null;
+        $orden_id    = $_POST['orden_id'] ?? null;
+        $user_id     = $_POST['user_id'] ?? null; // lo recibes del formulario o de la sesión
+        $puntuacion  = $_POST['puntuacion'] ?? null;
+        $titulo      = $_POST['titulo'] ?? null;
+        $texto       = $_POST['texto'] ?? null;
+
+        if ($producto_id && $orden_id && $user_id && $puntuacion) {
+            $stmt = $db->prepare("
+                INSERT INTO product_reviews 
+                (producto_id, user_id, orden_id, puntuacion, titulo, texto, created_at)
+                VALUES (:producto_id, :user_id, :orden_id, :puntuacion, :titulo, :texto, NOW())
+            ");
+
+            $stmt->bindParam(':producto_id', $producto_id, PDO::PARAM_INT);
+            $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+            $stmt->bindParam(':orden_id', $orden_id, PDO::PARAM_INT);
+            $stmt->bindParam(':puntuacion', $puntuacion, PDO::PARAM_INT);
+            $stmt->bindParam(':titulo', $titulo, PDO::PARAM_STR);
+            $stmt->bindParam(':texto', $texto, PDO::PARAM_STR);
+            
+            if ($stmt->execute()) {
+                header("Location: " . url('usuario/pedidos')); // regresa a pedidos
+                 $_SESSION['flash'] = "✅ Comentario guardado con éxito";
+                exit;
+            } else {
+                $_SESSION['flash'] = "❌ Error al guardar el comentario";
+            }
+        } else {
+            $_SESSION['flash'] = "⚠️ Faltan datos para guardar el comentario";
+        }
+        // Redirigir siempre a pedidos
+        header("Location: " . url('usuario/pedidos'));
+        exit;
+    }
+}
+
+
+
+
+
 }

@@ -240,160 +240,27 @@ function producto_imagen_url($producto, $idx = 0)
 
 
         <!-- Reviews -->
-        <section class="reviews-section">
-            <h2>Lista de Reseñas</h2>
-            <div class="reviews-summary">
-                <div class="overall-rating">
-                    <h3>Opiniones</h3>
-                    <p class="score"><?= !empty($producto['rating_avg']) ? number_format((float)$producto['rating_avg'], 1) : '0.0' ?></p>
-                    <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-                    <p class="count"><?= !empty($producto['rating_count']) ? (int)$producto['rating_count'] . ' Reseñas' : '0 Reseñas' ?></p>
+        <h3 class="text-xl font-semibold mt-6 mb-3">Reseñas de clientes</h3>
+        <?php if (empty($reviews)): ?>
+            <p class="text-gray-500">Todavía no hay reseñas para este producto.</p>
+        <?php else: ?>
+            <?php foreach ($reviews as $review): ?>
+                <div class="border-b py-3">
+                    <div class="flex items-center gap-2">
+                        <strong><?= htmlspecialchars($review['usuario_nombre']) ?></strong>
+                        <span class="text-sm text-gray-500"><?= date('d/m/Y', strtotime($review['created_at'])) ?></span>
+                    </div>
+                    <div>
+                        <?php for ($i=1; $i<=5; $i++): ?>
+                            <span class="<?= $i <= $review['puntuacion'] ? 'text-yellow-400' : 'text-gray-300' ?>">★</span>
+                        <?php endfor; ?>
+                    </div>
+                    <p class="font-medium"><?= htmlspecialchars($review['titulo']) ?></p>
+                    <p><?= htmlspecialchars($review['texto']) ?></p>
                 </div>
-                <div class="recommendation">
-                    <p class="percentage">100%</p>
-                    <p>Ellos recomiendan</p>
-                    <p class="count">187 Recomendaciones</p>
-                </div>
-                <div class="rating-breakdown">
-                    <div class="star-row"><span>5&#9733;</span>
-                        <div class="bar">
-                            <div style="width: 80%;"></div>
-                        </div><span>240</span>
-                    </div>
-                    <div class="star-row"><span>4&#9733;</span>
-                        <div class="bar">
-                            <div style="width: 10%;"></div>
-                        </div><span>31</span>
-                    </div>
-                    <div class="star-row"><span>3&#9733;</span>
-                        <div class="bar">
-                            <div style="width: 3%;"></div>
-                        </div><span>3</span>
-                    </div>
-                    <div class="star-row"><span>2&#9733;</span>
-                        <div class="bar">
-                            <div style="width: 0%;"></div>
-                        </div><span>0</span>
-                    </div>
-                    <div class="star-row"><span>1&#9733;</span>
-                        <div class="bar">
-                            <div style="width: 2%;"></div>
-                        </div><span>6</span>
-                    </div>
-                </div>
-                <div class="write-review">
-                    <h3>Escribe tu reseña</h3>
-                    <p>Te llevará un minuto, ayudarás a otros usuarios a decidir.</p>
-                    <button class="add-opinion-btn">Añadir opinión</button>
-                </div>
-            </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
 
-            <div class="individual-reviews">
-                <?php if (!empty($reviews)): ?>
-                    <?php foreach ($reviews as $r): ?>
-                        <div class="review-item">
-                            <p class="reviewer-name"><?= htmlspecialchars($r['autor'] ?? 'Anónimo') ?></p>
-                            <div class="review-stars"><?= str_repeat('★', max(0, min(5, (int)$r['puntuacion']))) ?></div>
-                            <p class="review-date"><?= htmlspecialchars($r['fecha'] ?? '') ?></p>
-                            <p class="review-text"><?= nl2br(htmlspecialchars($r['texto'] ?? '')) ?></p>
-                        </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <!-- Ejemplos estáticos -->
-                    <div class="review-item">
-                        <p class="reviewer-name">Norka</p>
-                        <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-                        <p class="review-date">hace 1 año</p>
-                        <p class="review-text">El producto encantó; todo coincide con la descripción.</p>
-                    </div>
-                    <div class="review-item">
-                        <p class="reviewer-name">Carlos</p>
-                        <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-                        <p class="review-date">hace 6 meses</p>
-                        <p class="review-text">Excelente calidad y envío rápido.</p>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </section>
-    </main>
-
-    <?php include_once __DIR__ . '/../admin/includes/footer.php'; ?>
-
-    <!-- Scripts: galería, qty, collapsibles, carousel relacionado -->
-    <script>
-        (function() {
-            // Galería: click en miniatura cambia imagen principal
-            const mainImage = document.getElementById('main-product-image');
-            const thumbs = document.querySelectorAll('.thumbnail-images .thumb');
-            if (mainImage && thumbs.length > 0) {
-                thumbs.forEach(t => {
-                    t.addEventListener('click', function() {
-                        const src = this.dataset.src || this.src;
-                        mainImage.src = src;
-                        thumbs.forEach(x => x.classList.remove('activo'));
-                        this.classList.add('activo');
-                    });
-                });
-            }
-
-            // Cantidad: buttons + límite por stock (si existe)
-            const qtyInput = document.getElementById('qty-input');
-            const qtyIncrease = document.getElementById('qty-increase');
-            const qtyDecrease = document.getElementById('qty-decrease');
-            const formCantidad = document.getElementById('form-cantidad');
-            const stockLimit = <?= isset($producto['stock']) && $producto['stock'] !== null ? (int)$producto['stock'] : 'null' ?>;
-
-            function setQty(val) {
-                if (!Number.isFinite(val)) val = 1;
-                val = Math.max(1, Math.floor(val));
-                if (stockLimit !== null) val = Math.min(val, stockLimit);
-                qtyInput.value = val;
-                if (formCantidad) formCantidad.value = val;
-            }
-
-            if (qtyIncrease) qtyIncrease.addEventListener('click', () => setQty(parseInt(qtyInput.value || '1') + 1));
-            if (qtyDecrease) qtyDecrease.addEventListener('click', () => setQty(parseInt(qtyInput.value || '1') - 1));
-            if (qtyInput) qtyInput.addEventListener('change', () => setQty(parseInt(qtyInput.value || '1')));
-            // Inicializar form cantidad
-            if (formCantidad) formCantidad.value = qtyInput ? qtyInput.value : '1';
-
-            // Collapsibles
-            document.querySelectorAll('.collapsible-header').forEach(h => {
-                h.addEventListener('click', () => {
-                    h.classList.toggle('active');
-                    const c = h.nextElementSibling;
-                    if (!c) return;
-                    if (h.classList.contains('active')) {
-                        c.style.display = 'block';
-                    } else {
-                        c.style.display = 'none';
-                    }
-                });
-            });
-
-            // Related products: simple scroll arrows (mejorable)
-            const related = document.getElementById('related-carousel');
-            if (related) {
-                // make it horizontally scrollable by wheel and touch (native)
-                related.addEventListener('wheel', (e) => {
-                    e.preventDefault();
-                    related.scrollLeft += e.deltaY;
-                }, {
-                    passive: false
-                });
-            }
-
-            // Submit form: sync quantity
-            const addToCartForm = document.querySelector('.add-to-cart-form');
-            if (addToCartForm) {
-                addToCartForm.addEventListener('submit', function() {
-                    // ensure hidden input updated
-                    const q = document.getElementById('qty-input');
-                    if (q && formCantidad) formCantidad.value = q.value;
-                });
-            }
-        })();
-    </script>
 </body>
 
 </html>
