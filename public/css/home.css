@@ -14,11 +14,6 @@
 
 body {
   font-family: var(--font-secondary);
-  background-image: url('../images/celestel.jpg');
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  background-position: center center;
-  background-size: cover;
   color: var(--white-color);
   line-height: 1.6;
   overflow-x: hidden;
@@ -43,7 +38,7 @@ body {
   font-family: var(--font-primary);
   font-size: 2.5rem;
   font-weight: 700;
-  color: var(--white-color);
+  color: #4a4d50;
   margin-bottom: 0.5rem;
   text-transform: uppercase;
 }
@@ -57,7 +52,7 @@ body {
 
 /* === HERO + CATEGORÍAS: único contenedor full-height === */
 .hero-and-categories {
-  min-height: 90vh; /* ocupa 100% de la pantalla */
+  height: 90vh; /* ocupa 100% de la pantalla */
   display: flex;
   flex-direction: column;
   justify-content: space-between; /* banner arriba/centro, categorías abajo */
@@ -181,7 +176,7 @@ body {
 .category-name {
   margin-top: 10px; 
   font-family: "Outfit", sans-serif;
-  color: var(--white-color); 
+  color: var(--dark-color); 
   font-size: 0.95rem;
   text-align: center;
   font-weight: 500; 

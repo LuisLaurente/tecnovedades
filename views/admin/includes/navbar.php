@@ -234,17 +234,21 @@ $userRole = \Core\Helpers\SessionHelper::getRole();
             </a>
         <?php endif; ?>
 
-        <!-- Reportes/Estadísticas -->
+        
+                <!-- Reportes de Reclamaciones -->
         <?php if (hasPermission('reportes')): ?>
-            <a href="<?= url('/adminreclamacion') ?>" class="nav-link group flex items-center p-3 text-gray-700 hover:bg-white/60 rounded-xl transition-all duration-200 backdrop-blur-sm border border-transparent hover:border-blue-200">
+            <a href="<?= url('/adminreclamacion') ?>"
+                class="nav-link group flex items-center p-3 text-gray-700 hover:bg-white/60 rounded-xl 
+              transition-all duration-200 backdrop-blur-sm border border-transparent hover:border-blue-200">
                 <div class="w-10 h-10 bg-gradient-to-br from-gray-400 to-gray-600 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                     </svg>
                 </div>
-                <span class="font-medium">Reclamos</span>
+                <span class="font-medium">Reportes de Reclamaciones</span>
             </a>
-        <?php endif; ?>
+
 
         <!-- Reportes/Reseñas -->
         <?php if (hasPermission('reportes')): ?> 
@@ -262,17 +266,31 @@ $userRole = \Core\Helpers\SessionHelper::getRole();
             </a>
         <?php endif; ?>
 
+        <!-- Reportes/Estadísticas -->
+            <!-- Reportes de Ventas -->
+            <a href="<?= url('/reporte/resumen') ?>"
+                class="nav-link group flex items-center p-3 text-gray-700 hover:bg-white/60 rounded-xl 
+              transition-all duration-200 backdrop-blur-sm border border-transparent hover:border-green-200">
+                <div class="w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M11 11V9a4 4 0 118 0v2m-4 4h.01M5 13h4m0 0V9m0 4v4m6-4h4"></path>
+                    </svg>
+                </div>
+                <span class="font-medium">Reportes de Ventas</span>
+            </a>
+        <?php endif; ?>
 
     </nav>
 
     <!-- Sección de información del usuario -->
     <div class="p-4 border-t border-blue-100 bg-white/30 backdrop-blur-sm flex-shrink-0 space-y-4">
-            <a href="<?= url('/home/index') ?>" class="nav-link group flex items-center p-2 text-gray-600 hover:bg-white/60 rounded-lg transition-all duration-200 backdrop-blur-sm border border-gray-300 hover:border-blue-400">
-                <div class="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center mr-2 group-hover:scale-105 transition-transform">
-                </div>
-                <span class="text-xs font-medium">Listado de Productos</span>
-            </a>
-        
+        <a href="<?= url('/home/index') ?>" class="nav-link group flex items-center p-2 text-gray-600 hover:bg-white/60 rounded-lg transition-all duration-200 backdrop-blur-sm border border-gray-300 hover:border-blue-400">
+            <div class="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center mr-2 group-hover:scale-105 transition-transform">
+            </div>
+            <span class="text-xs font-medium">Listado de Productos</span>
+        </a>
+
         <div class="flex items-center p-3 bg-white/60 rounded-xl shadow-sm backdrop-blur-sm">
             <div class="w-10 h-10 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full flex items-center justify-center mr-3">
                 <span class="text-sm font-bold text-white">

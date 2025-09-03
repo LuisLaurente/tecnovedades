@@ -70,7 +70,9 @@ if (!isset($categorias)) {
         <?php endif; ?>
       </div>
 
-      <!-- Contenedor de categorías pegado al pie del hero (permanecerá dentro del mismo contenedor 100vh) -->
+
+    </section>
+          <!-- Contenedor de categorías pegado al pie del hero (permanecerá dentro del mismo contenedor 100vh) -->
       <div class="categories-carousel-container">
         <div class="container">
           <div class="section-title">
@@ -99,7 +101,6 @@ if (!isset($categorias)) {
           </div>
         </div>
       </div>
-    </section>
     <!-- ===================== FIN HERO + CATEGORÍAS ===================== -->
     <!-- PRODUCTOS DESTACADOS (CARRUSEL INFINITO) -->
     <section class="featured-products">
