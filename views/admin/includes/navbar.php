@@ -234,18 +234,8 @@ $userRole = \Core\Helpers\SessionHelper::getRole();
             </a>
         <?php endif; ?>
 
-        <!-- Reportes/Estadísticas -->
-        <?php if (hasPermission('reportes')): ?>
-            <a href="<?= url('/adminreclamacion') ?>" class="nav-link group flex items-center p-3 text-gray-700 hover:bg-white/60 rounded-xl transition-all duration-200 backdrop-blur-sm border border-transparent hover:border-blue-200">
-                <div class="w-10 h-10 bg-gradient-to-br from-gray-400 to-gray-600 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                    </svg>
-                </div>
-                <span class="font-medium">Reportes</span>
-            </a>
-        <?php endif; ?>
-        <!-- Reportes de Reclamaciones -->
+        
+                <!-- Reportes de Reclamaciones -->
         <?php if (hasPermission('reportes')): ?>
             <a href="<?= url('/adminreclamacion') ?>"
                 class="nav-link group flex items-center p-3 text-gray-700 hover:bg-white/60 rounded-xl 
@@ -259,6 +249,24 @@ $userRole = \Core\Helpers\SessionHelper::getRole();
                 <span class="font-medium">Reportes de Reclamaciones</span>
             </a>
 
+
+        <!-- Reportes/Reseñas -->
+        <?php if (hasPermission('reportes')): ?> 
+            <a href="<?= url('/review') ?>" 
+            class="nav-link group flex items-center p-3 text-gray-700 hover:bg-white/60 rounded-xl transition-all duration-200 backdrop-blur-sm border border-transparent hover:border-yellow-200">
+            
+                <!-- Logo Estrella -->
+                <div class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform shadow-sm">
+                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.382 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.382-2.46a1 1 0 00-1.176 0l-3.382 2.46c-.785.57-1.84-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.045 9.394c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.288-3.967z"/>
+                    </svg>
+                </div>
+
+                <span class="font-medium">Reseñas</span>
+            </a>
+        <?php endif; ?>
+
+        <!-- Reportes/Estadísticas -->
             <!-- Reportes de Ventas -->
             <a href="<?= url('/reporte/resumen') ?>"
                 class="nav-link group flex items-center p-3 text-gray-700 hover:bg-white/60 rounded-xl 
@@ -272,6 +280,7 @@ $userRole = \Core\Helpers\SessionHelper::getRole();
                 <span class="font-medium">Reportes de Ventas</span>
             </a>
         <?php endif; ?>
+
     </nav>
 
     <!-- Sección de información del usuario -->

@@ -1,7 +1,26 @@
+<?php if (!empty($_SESSION['flash'])): ?>
+    <div id="flashMessage" 
+         class="fixed top-6 left-1/2 transform -translate-x-1/2 
+                bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+        <?= $_SESSION['flash'] ?>
+    </div>
+    <?php unset($_SESSION['flash']); ?>
+<?php endif; ?>
 <!DOCTYPE html>
 <html lang="es">
 <?php include_once __DIR__ . '/../admin/includes/head.php'; ?>
-
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const flash = document.getElementById("flashMessage");
+        if (flash) {
+            setTimeout(() => {
+                flash.style.transition = "opacity 0.5s ease";
+                flash.style.opacity = "0";
+                setTimeout(() => flash.remove(), 500);
+            }, 2000); // 2 segundos
+        }
+    });
+</script>
 <body>
     <div class="flex h-screen">
         <!-- Incluir navegación lateral fija -->
@@ -201,7 +220,7 @@
                                                         <?= ucfirst($pedido['estado']) ?>
                                                     </span>
                                                 </div>
-                                                <button onclick="mostrarDetallePedido(<?= $pedidozz['id'] ?>)" class="text-blue-600 hover:text-blue-800 font-medium">
+                                                <button onclick="mostrarDetallePedido(<?= $pedidozz['id'] ?>)" class="text-blue-600 hover:text-blue-800 font-medium cursor-pointer">
                                                     Ver detalles →
                                                 </button>
                                             </div>
@@ -246,7 +265,7 @@
                         <span class="mr-2">📦</span>
                         Detalles del Pedido #<span id="modalPedidoId"></span>
                     </h2>
-                    <button onclick="cerrarModal()" class="text-gray-400 hover:text-gray-600 text-2xl">
+                    <button onclick="cerrarModal()" class="text-gray-400 hover:text-gray-600 text-2xl cursor-pointer">
                         ×
                     </button>
                 </div>
@@ -262,7 +281,7 @@
 
                 <!-- Footer del modal -->
                 <div class="flex justify-end pt-6 border-t">
-                    <button onclick="cerrarModal()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition-colors">
+                    <button onclick="cerrarModal()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition-colors cursor-pointer">
                         Cerrar
                     </button>
                 </div>
@@ -530,13 +549,82 @@
                             ${productosHtml}
                         </div>
                         ${pedido.detalles && pedido.detalles.length > 0 ? `
-                        <div class="mt-4 pt-4 border-t border-gray-200">
-                            <div class="flex justify-between items-center">
-                                <span class="font-semibold text-gray-900">Total del Pedido:</span>
-                                <span class="font-bold text-xl text-green-600">S/ ${totalCalculado.toFixed(2)}</span>
+                        <div class="mt-4 space-y-4">
+                            <!-- Botón de acción -->
+                            <div class="flex justify-center">
+                                <button 
+                                    onclick='abrirModalComentario(${pedido.id}, ${JSON.stringify(pedido.detalles)})' 
+                                    class="text-blue-600 hover:text-blue-800 font-medium cursor-pointer">
+                                    ✍️ Dejar Comentario
+                                </button>
+
+
+                                <!-- Modal Comentario -->
+                                <div id="modalComentario" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 modal-backdrop">
+                                    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative">
+                                        
+                                        <!-- Botón cerrar -->
+                                        <button onclick="cerrarModalComentario()" class="absolute top-2 right-4 text-gray-400 hover:text-gray-600 text-2xl cursor-pointer">×</button>
+                                        <h2 class="text-xl font-semibold mb-4 text-center">Dejar un comentario</h2>
+                                        
+                                        <form id="formComentario" action="<?= url('producto/guardarComentario') ?>" method="post">
+                                        <!-- Orden -->
+                                        <input type="hidden" name="orden_id" id="inputOrdenId">
+
+                                        <!-- Producto (selector si hay varios) -->
+                                        <div id="productoSelectWrapper" class="mb-4 hidden">
+                                            <label class="block mb-2 font-medium">Producto:</label>
+                                            <select id="selectProducto" class="w-full border rounded-lg p-2"></select>
+                                        </div>
+
+                                        <!-- Producto (hidden siempre será el que se envía al backend) -->
+                                        <input type="hidden" name="producto_id" id="inputProductoIdHidden">
+
+
+                                        <!-- Usuario -->
+                                        <input type="hidden" name="user_id" value="<?= $_SESSION['user_id'] ?>">
+
+                                        <!-- Puntuación con estrellas -->
+                                        <label class="block mb-2 font-medium">Puntuación:</label>
+                                        <div class="flex gap-1 text-2xl mb-4 cursor-pointer" id="starRating">
+                                            <span data-value="1" class="star text-gray-400">★</span>
+                                            <span data-value="2" class="star text-gray-400">★</span>
+                                            <span data-value="3" class="star text-gray-400">★</span>
+                                            <span data-value="4" class="star text-gray-400">★</span>
+                                            <span data-value="5" class="star text-gray-400">★</span>
+                                        </div>
+                                        <input type="hidden" name="puntuacion" id="inputPuntuacion">
+
+                                        <!-- Título -->
+                                        <label class="block mb-2 font-medium">Descripción:</label>
+                                        <input type="text" name="titulo" class="w-full border rounded-lg p-2 mb-4" required>
+
+                                        <!-- Comentario -->
+                                        <label class="block mb-2 font-medium">Comentario:</label>
+                                        <textarea name="texto" class="w-full border rounded-lg p-2 mb-4" rows="4" required></textarea>
+
+                                        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+                                            Enviar
+                                        </button>
+                                    </form>
+                                    </div>
+                                </div>
+
+
+
+
+                            </div>
+
+                            <!-- Total del Pedido -->
+                            <div class="pt-4 border-t border-gray-200">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-semibold text-gray-900">Total del Pedido:</span>
+                                    <span class="font-bold text-xl text-green-600">S/ ${totalCalculado.toFixed(2)}</span>
+                                </div>
                             </div>
                         </div>
-                        ` : ''}
+                    ` : ''}
+
                     </div>
                 </div>
             `;
@@ -574,6 +662,101 @@
                 cerrarModal();
             }
         });
+
+
+
+        //nuevo modal scrip
+        // Abrir modal
+                // --- Control de estrellas ---
+                /* ---------- Control de estrellas (delegación) ---------- */
+        // Resetea las estrellas (usa cuando abras el modal)
+        function resetStars() {
+            const stars = document.querySelectorAll('#starRating .star');
+            stars.forEach(s => {
+                s.classList.remove('text-yellow-400');
+                s.classList.add('text-gray-400');
+            });
+            const input = document.getElementById('inputPuntuacion');
+            if (input) input.value = '';
+        }
+
+        // Delegación: detecta clicks en cualquier .star dentro de #starRating
+        document.addEventListener('click', function(e) {
+            const star = e.target.closest('#starRating .star');
+            if (!star) return;
+
+            const value = Number(star.getAttribute('data-value')) || 0;
+            const input = document.getElementById('inputPuntuacion');
+            if (input) input.value = value;
+
+            // Pintar estrellas según el valor
+            const stars = document.querySelectorAll('#starRating .star');
+            stars.forEach(s => {
+                const v = Number(s.getAttribute('data-value')) || 0;
+                if (v <= value) {
+                    s.classList.add('text-yellow-400');
+                    s.classList.remove('text-gray-400');
+                } else {
+                    s.classList.remove('text-yellow-400');
+                    s.classList.add('text-gray-400');
+                }
+            });
+        });
+
+        
+
+        // Si quieres, resetea estrellas cada vez que abres el modal
+        // Añade esto en abrirModalComentario al principio:
+        function abrirModalComentario(ordenId, productos) {
+            // ... tu código actual ...
+            resetStars(); // <--- resetea visualmente y borra inputPuntuacion
+            document.getElementById("modalComentario").classList.remove("hidden");
+        }
+
+
+        // Abrir modal de comentario
+        function abrirModalComentario(ordenId, productos) {
+    document.getElementById("inputOrdenId").value = ordenId;
+    resetStars();
+
+    if (productos.length === 1) {
+        // Solo un producto
+        document.getElementById("productoSelectWrapper").classList.add("hidden");
+        document.getElementById("inputProductoIdHidden").value = productos[0].producto_id;
+    } else {
+        // Varios productos
+        document.getElementById("productoSelectWrapper").classList.remove("hidden");
+
+        let select = document.getElementById("selectProducto");
+        select.innerHTML = "";
+
+        productos.forEach(p => {
+            let opt = document.createElement("option");
+            opt.value = p.producto_id;
+            opt.textContent = p.producto_nombre || "Producto " + p.producto_id;
+            select.appendChild(opt);
+        });
+
+        // Poner el primero como seleccionado por defecto
+        document.getElementById("inputProductoIdHidden").value = productos[0].producto_id;
+
+        // Sincronizar al cambiar
+        select.addEventListener("change", function() {
+            document.getElementById("inputProductoIdHidden").value = this.value;
+        });
+    }
+
+    document.getElementById("modalComentario").classList.remove("hidden");
+}
+
+
+        function cerrarModalComentario() {
+            document.getElementById("modalComentario").classList.add("hidden");
+        }
+
+        
+
+         
     </script>
 </body>
 </html>
