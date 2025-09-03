@@ -15,395 +15,232 @@ class PromocionController
     }
 
     /**
-     * Mostrar listado de promociones
+     * Muestra el listado de todas las promociones.
      */
     public function index()
     {
         $promociones = $this->promocionModel->obtenerTodas();
-        $estadisticas = $this->promocionModel->obtenerEstadisticas();
-
-        // Calcular estadísticas adicionales para cada promoción
-        foreach ($promociones as &$promocion) {
-            $promocion['estado_vigencia'] = $this->determinarEstadoVigencia($promocion);
-        }
-
         require_once __DIR__ . '/../views/promocion/index.php';
     }
 
     /**
-     * Mostrar formulario para crear promoción
+     * Muestra el formulario para crear una nueva promoción.
      */
     public function crear()
     {
+        // Aquí podrías cargar datos necesarios para los desplegables, como categorías y productos.
+        // $categorias = $this->categoriaModel->obtenerTodas();
+        // $productos = $this->productoModel->obtenerTodos();
         require_once __DIR__ . '/../views/promocion/crear.php';
     }
 
     /**
-     * Procesar creación de promoción
+     * Guarda una nueva promoción en la base de datos.
      */
     public function guardar()
     {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $nombre       = $_POST['nombre'] ?? '';
-            $prioridad    = $_POST['prioridad'] ?? 3;
-            $fecha_inicio = $_POST['fecha_inicio'] ?? '';
-            $fecha_fin    = $_POST['fecha_fin'] ?? '';
-            $activo       = isset($_POST['activo']) ? 1 : 0;
-            $acumulable   = isset($_POST['acumulable']) ? 1 : 0;
-            $exclusivo    = isset($_POST['exclusivo']) ? 1 : 0;
-            $tipo_accion  = $_POST['tipo_accion'] ?? '';
-            $valor_desc   = $_POST['valor_descuento'] ?? null;
-            $producto_gratis_id = $_POST['producto_gratis_id'] ?? null;
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header("Location: " . url('promocion/crear'));
+            exit;
+        }
 
-            // Generar la "condicion" y "accion" como JSON (más flexible)
-            $condicion = json_encode([
-                'min_monto'   => $_POST['min_monto'] ?? 0,
-                'tipo_usuario'=> $_POST['tipo_usuario'] ?? '',
-                'categoria_id'=> $_POST['categoria_id'] ?? null,
-                'producto_id' => $_POST['producto_id'] ?? null
-            ]);
+        try {
+            $datos = [
+                'nombre'       => $_POST['nombre'] ?? '',
+                'prioridad'    => $_POST['prioridad'] ?? 3,
+                'fecha_inicio' => $_POST['fecha_inicio'] ?? '',
+                'fecha_fin'    => $_POST['fecha_fin'] ?? '',
+                'activo'       => isset($_POST['activo']) ? 1 : 0,
+                'acumulable'   => isset($_POST['acumulable']) ? 1 : 0,
+                'exclusivo'    => isset($_POST['exclusivo']) ? 1 : 0,
+                'condicion'    => $this->construirCondicion($_POST),
+                'accion'       => $this->construirAccion($_POST)
+            ];
 
-            $accion = json_encode([
-                'tipo'   => $tipo_accion,
-                'valor'  => $valor_desc,
-                'producto_gratis_id' => $producto_gratis_id
-            ]);
-
-            $promocion = new Promocion();
-            $resultado = $promocion->crear([
-                'nombre'       => $nombre,
-                'condicion'    => $condicion,
-                'accion'       => $accion,
-                'acumulable'   => $acumulable,
-                'exclusivo'    => $exclusivo,
-                'prioridad'    => $prioridad,
-                'activo'       => $activo,
-                'fecha_inicio' => $fecha_inicio,
-                'fecha_fin'    => $fecha_fin,
-                'tipo'         => 'general'
-            ]);
+            $resultado = $this->promocionModel->crear($datos);
 
             if ($resultado) {
                 $_SESSION['mensaje'] = "✅ Promoción creada correctamente.";
                 header("Location: " . url('promocion/index'));
-                exit;
             } else {
-                $_SESSION['error'] = "❌ Hubo un problema al guardar la promoción.";
-                header("Location: " . url('promocion/crear'));
-                exit;
+                throw new \Exception("Hubo un problema al guardar la promoción.");
             }
+        } catch (\Exception $e) {
+            $_SESSION['error'] = "❌ " . $e->getMessage();
+            header("Location: " . url('promocion/crear'));
         }
+        exit;
     }
 
     /**
-     * Mostrar formulario para editar promoción
+     * Muestra el formulario para editar una promoción existente.
      */
     public function editar($id)
     {
-        $promocion = $this->promocionModel->obtenerPorId($id);     
+        $promocion = $this->promocionModel->obtenerPorId($id);
+        if (!$promocion) {
+            $_SESSION['error'] = "❌ Promoción no encontrada.";
+            header("Location: " . url('promocion/index'));
+            exit;
+        }
+        // Los datos de condicion y accion ya vienen decodificados desde el modelo.
         include __DIR__ . '/../views/promocion/editar.php';
     }
 
     /**
-     * Procesar actualización de promoción
+     * Actualiza una promoción existente en la base de datos.
      */
     public function actualizar($id)
     {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $codigo       = $_POST['codigo'] ?? '';
-            $nombre       = $_POST['nombre'] ?? '';
-            $prioridad    = $_POST['prioridad'] ?? 3;
-            $fecha_inicio = $_POST['fecha_inicio'] ?? '';
-            $fecha_fin    = $_POST['fecha_fin'] ?? '';
-            $activo       = isset($_POST['activo']) ? 1 : 0;
-            $acumulable   = isset($_POST['acumulable']) ? 1 : 0;
-            $exclusivo    = isset($_POST['exclusivo']) ? 1 : 0;
-            $tipo_accion  = $_POST['tipo_accion'] ?? '';
-            $valor_desc   = $_POST['valor_descuento'] ?? null;
-            $producto_gratis_id = $_POST['producto_gratis_id'] ?? null;
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header("Location: " . url('promocion/editar/' . $id));
+            exit;
+        }
 
-            // Construir condicion y accion
-            $condicion = [
-                'min_monto'    => $_POST['min_monto'] ?? 0,
-                'tipo_usuario' => $_POST['tipo_usuario'] ?? '',
-                'categoria_id' => $_POST['categoria_id'] ?? null,
-                'producto_id'  => $_POST['producto_id'] ?? null
+        try {
+            $datos = [
+                'nombre'       => $_POST['nombre'] ?? '',
+                'prioridad'    => $_POST['prioridad'] ?? 3,
+                'fecha_inicio' => $_POST['fecha_inicio'] ?? '',
+                'fecha_fin'    => $_POST['fecha_fin'] ?? '',
+                'activo'       => isset($_POST['activo']) ? 1 : 0,
+                'acumulable'   => isset($_POST['acumulable']) ? 1 : 0,
+                'exclusivo'    => isset($_POST['exclusivo']) ? 1 : 0,
+                'condicion'    => $this->construirCondicion($_POST),
+                'accion'       => $this->construirAccion($_POST)
             ];
 
-            $accion = [
-                'tipo'   => $tipo_accion,
-                'valor'  => $valor_desc,
-                'producto_id' => $producto_gratis_id
-            ];
-
-            $promocionModel = new Promocion();
-            $resultado = $promocionModel->actualizar($id, [
-                'codigo'       => $codigo,
-                'nombre'       => $nombre,
-                'condicion'    => $condicion,
-                'accion'       => $accion,
-                'acumulable'   => $acumulable,
-                'exclusivo'    => $exclusivo,
-                'prioridad'    => $prioridad,
-                'activo'       => $activo,
-                'fecha_inicio' => $fecha_inicio,
-                'fecha_fin'    => $fecha_fin,
-                'tipo'         => 'general'
-            ]);
+            $resultado = $this->promocionModel->actualizar($id, $datos);
 
             if ($resultado) {
                 $_SESSION['mensaje'] = "✅ Promoción actualizada correctamente.";
                 header("Location: " . url('promocion/index'));
-                exit;
             } else {
-                $_SESSION['error'] = "❌ Error al actualizar la promoción.";
-                header("Location: " . url('promocion/editar/' . $id));
-                exit;
+                throw new \Exception("No se pudo actualizar la promoción.");
             }
+        } catch (\Exception $e) {
+            $_SESSION['error'] = "❌ " . $e->getMessage();
+            header("Location: " . url('promocion/editar/' . $id));
         }
+        exit;
     }
 
     /**
-     * Eliminar promoción
+     * Construye el array de condición basado en los datos del POST.
+     * @return string JSON con la estructura de la condición.
+     */
+    private function construirCondicion($post)
+    {
+        $tipoCondicion = $post['tipo_condicion'] ?? 'subtotal_minimo';
+        $condicion = ['tipo' => $tipoCondicion];
+
+        switch ($tipoCondicion) {
+            case 'subtotal_minimo':
+                $condicion['valor'] = (float)($post['cond_subtotal_minimo'] ?? 0);
+                break;
+            case 'primera_compra':
+                // No necesita valor adicional. El tipo es suficiente.
+                break;
+            case 'cantidad_producto_identico':
+                $condicion['producto_id'] = (int)($post['cond_producto_id'] ?? 0);
+                $condicion['cantidad_min'] = (int)($post['cond_cantidad_min'] ?? 1);
+                break;
+            case 'cantidad_producto_categoria':
+                $condicion['categoria_id'] = (int)($post['cond_categoria_id'] ?? 0);
+                $condicion['cantidad_min'] = (int)($post['cond_cantidad_min_categoria'] ?? 1);
+                break;
+        }
+
+        return json_encode($condicion);
+    }
+
+    /**
+     * Construye el array de acción basado en los datos del POST.
+     * @return string JSON con la estructura de la acción.
+     */
+    private function construirAccion($post)
+    {
+        $tipoAccion = $post['tipo_accion'] ?? '';
+        if (empty($tipoAccion)) {
+            throw new \Exception("El tipo de beneficio (acción) es obligatorio.");
+        }
+
+        $accion = ['tipo' => $tipoAccion];
+
+        switch ($tipoAccion) {
+            case 'descuento_porcentaje':
+            case 'descuento_fijo':
+                $accion['valor'] = (float)($post['accion_valor_descuento'] ?? 0);
+                break;
+            case 'envio_gratis':
+                // No necesita valor adicional.
+                break;
+            case 'compra_n_paga_m':
+                $accion['cantidad_lleva'] = (int)($post['accion_cantidad_lleva'] ?? 0);
+                $accion['cantidad_paga'] = (int)($post['accion_cantidad_paga'] ?? 0);
+                if ($accion['cantidad_lleva'] <= $accion['cantidad_paga'] || $accion['cantidad_paga'] <= 0) {
+                    throw new \Exception("Valores inválidos para la promoción N x M.");
+                }
+                break;
+            case 'descuento_enesima_unidad':
+                $accion['numero_unidad'] = (int)($post['accion_numero_unidad'] ?? 0);
+                $accion['descuento_unidad'] = (float)($post['accion_descuento_unidad'] ?? 0);
+                if ($accion['numero_unidad'] <= 1 || $accion['descuento_unidad'] <= 0) {
+                    throw new \Exception("Valores inválidos para el descuento en la N-ésima unidad.");
+                }
+                break;
+            case 'descuento_menor_valor':
+                $accion['valor'] = (float)($post['accion_descuento_menor_valor'] ?? 0);
+                 if ($accion['valor'] <= 0) {
+                    throw new \Exception("El porcentaje de descuento para el producto de menor valor debe ser mayor a 0.");
+                }
+                break;
+            default:
+                throw new \Exception("Tipo de acción no reconocido: " . htmlspecialchars($tipoAccion));
+        }
+
+        return json_encode($accion);
+    }
+
+    /**
+     * Elimina una promoción de forma permanente.
      */
     public function eliminar($id)
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . url('promocion'));
-            exit;
-        }
-
-        $promocion = $this->promocionModel->obtenerPorId($id);
-        if (!$promocion) {
-            header('Location: ' . url('promocion') . '?error=not_found');
+            header('Location: ' . url('promocion/index'));
             exit;
         }
 
         if ($this->promocionModel->eliminar($id)) {
-            header('Location: ' . url('promocion') . '?success=deleted');
-            exit;
+            $_SESSION['mensaje'] = "🗑️ Promoción eliminada correctamente.";
         } else {
-            header('Location: ' . url('promocion') . '?error=delete_failed');
-            exit;
+            $_SESSION['error'] = "❌ No se pudo eliminar la promoción o no fue encontrada.";
         }
-        
+        header('Location: ' . url('promocion/index'));
+        exit;
     }
 
     /**
-     * Cambiar estado activo/inactivo
+     * Cambia el estado 'activo' de una promoción.
      */
     public function toggleEstado($id)
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-            header('Location: ' . url('promocion'));
+        $promocion = $this->promocionModel->obtenerPorId($id);
+        if (!$promocion) {
+            $_SESSION['error'] = "❌ Promoción no encontrada.";
+            header('Location: ' . url('promocion/index'));
             exit;
         }
 
-        $success = $this->promocionModel->toggleEstado($id);
-
-        if ($success) {
-            header('Location: ' . url('promocion') . '?success=estado_cambiado');
-            exit;
+        $nuevoEstado = $promocion['activo'] ? 0 : 1;
+        if ($this->promocionModel->actualizarCampo($id, 'activo', $nuevoEstado)) {
+            $_SESSION['mensaje'] = $nuevoEstado ? "✅ Promoción activada." : "☑️ Promoción desactivada.";
         } else {
-            header('Location: ' . url('promocion') . '?error=not_found');
-            exit;
-        }
-        
-    }
-
-    /**
-     * Procesar condiciones del formulario
-     */
-    private function procesarCondicion($post)
-    {
-        $condicion = [];
-        
-        if (!empty($post['min_monto'])) {
-            $condicion['min_monto'] = (float)$post['min_monto'];
-        }
-        
-        if (!empty($post['tipo_usuario'])) {
-            $condicion['tipo_usuario'] = $post['tipo_usuario'];
-        }
-        
-        if (!empty($post['categoria_id'])) {
-            $condicion['categoria_id'] = (int)$post['categoria_id'];
-        }
-        
-        if (!empty($post['producto_id'])) {
-            $condicion['producto_id'] = (int)$post['producto_id'];
-        }
-        
-        return $condicion;
-    }
-
-    /**
-     * Procesar acciones del formulario
-     */
-    private function procesarAccion($post)
-    {
-        $accion = [];
-        
-        if (!empty($post['tipo_accion'])) {
-            $accion['tipo'] = $post['tipo_accion'];
-            
-            switch ($post['tipo_accion']) {
-                case 'descuento_porcentaje':
-                case 'descuento_fijo':
-                    $accion['valor'] = (float)($post['valor_descuento'] ?? 0);
-                    break;
-                case 'envio_gratis':
-                    // No necesita valor adicional
-                    break;
-                case 'producto_gratis':
-                    $accion['producto_id'] = (int)($post['producto_gratis_id'] ?? 0);
-                    break;
-            }
-        }
-        
-        return $accion;
-    }
-
-    /**
-     * Obtener estadísticas de promociones
-     */
-    public function estadisticas()
-    {
-        $stats = $this->promocionModel->obtenerEstadisticas();
-        header('Content-Type: application/json');
-        echo json_encode($stats);
-    }
-
-    /**
-     * Validar datos del formulario
-     */
-    private function validarDatos($datos, $excluirId = null)
-    {
-        $errores = [];
-
-        // Nombre
-        if (empty($datos['nombre'])) {
-            $errores['nombre'] = 'El nombre es requerido';
-        } elseif (strlen($datos['nombre']) < 3) {
-            $errores['nombre'] = 'El nombre debe tener al menos 3 caracteres';
-        } elseif (strlen($datos['nombre']) > 255) {
-            $errores['nombre'] = 'El nombre no puede tener más de 255 caracteres';
+            $_SESSION['error'] = "❌ Error al cambiar el estado de la promoción.";
         }
 
-        // Descripción
-        if (empty($datos['descripcion'])) {
-            $errores['descripcion'] = 'La descripción es requerida';
-        }
-
-        // Tipo
-        if (empty($datos['tipo'])) {
-            $errores['tipo'] = 'El tipo es requerido';
-        } elseif (!in_array($datos['tipo'], ['porcentaje', 'monto_fijo', 'compra_x_paga_y', 'envio_gratis'])) {
-            $errores['tipo'] = 'Tipo de promoción inválido';
-        }
-
-        // Valor
-        if (empty($datos['valor']) && $datos['tipo'] !== 'envio_gratis') {
-            $errores['valor'] = 'El valor es requerido';
-        } elseif (!empty($datos['valor']) && !is_numeric($datos['valor'])) {
-            $errores['valor'] = 'El valor debe ser numérico';
-        } elseif (!empty($datos['valor']) && $datos['valor'] <= 0) {
-            $errores['valor'] = 'El valor debe ser mayor a 0';
-        } elseif ($datos['tipo'] === 'porcentaje' && $datos['valor'] > 100) {
-            $errores['valor'] = 'El porcentaje no puede ser mayor a 100';
-        }
-
-        // Fechas
-        if (empty($datos['fecha_inicio'])) {
-            $errores['fecha_inicio'] = 'La fecha de inicio es requerida';
-        }
-
-        if (empty($datos['fecha_fin'])) {
-            $errores['fecha_fin'] = 'La fecha de fin es requerida';
-        }
-
-        if (empty($errores['fecha_inicio']) && empty($errores['fecha_fin'])) {
-            if (strtotime($datos['fecha_inicio']) > strtotime($datos['fecha_fin'])) {
-                $errores['fecha_fin'] = 'La fecha de fin debe ser posterior a la fecha de inicio';
-            }
-        }
-
-        return array_merge($datos, ['errores' => $errores]);
-    }
-
-    /**
-     * Procesar condiciones del formulario
-     */
-    private function procesarCondiciones($datos)
-    {
-        $condiciones = [];
-        
-        if (!empty($datos['min_cantidad'])) {
-            $condiciones['min_cantidad'] = (int)$datos['min_cantidad'];
-        }
-        
-        if (!empty($datos['monto_minimo'])) {
-            $condiciones['monto_minimo'] = (float)$datos['monto_minimo'];
-        }
-        
-        if (!empty($datos['categorias'])) {
-            $condiciones['categorias'] = is_array($datos['categorias']) ? $datos['categorias'] : explode(',', $datos['categorias']);
-        }
-        
-        if (!empty($datos['productos'])) {
-            $condiciones['productos'] = is_array($datos['productos']) ? $datos['productos'] : explode(',', $datos['productos']);
-        }
-        
-        return json_encode($condiciones);
-    }
-
-    /**
-     * Procesar acciones del formulario
-     */
-    private function procesarAcciones($datos)
-    {
-        $acciones = [];
-        
-        switch ($datos['tipo']) {
-            case 'porcentaje':
-                $acciones['descuento_porcentaje'] = (float)$datos['valor'];
-                $acciones['mensaje'] = $datos['mensaje'] ?? "¡{$datos['valor']}% de descuento!";
-                break;
-            case 'monto_fijo':
-                $acciones['descuento_fijo'] = (float)$datos['valor'];
-                $acciones['mensaje'] = $datos['mensaje'] ?? "¡S/ {$datos['valor']} de descuento!";
-                break;
-            case 'compra_x_paga_y':
-                $acciones['lleva'] = (int)$datos['valor'];
-                $acciones['paga'] = (int)($datos['paga'] ?? 1);
-                $acciones['mensaje'] = $datos['mensaje'] ?? "¡Compra {$datos['valor']} y paga {$acciones['paga']}!";
-                break;
-            case 'envio_gratis':
-                $acciones['envio_gratis'] = true;
-                $acciones['mensaje'] = $datos['mensaje'] ?? "¡Envío gratis!";
-                break;
-        }
-        
-        return json_encode($acciones);
-    }
-
-    /**
-     * Determinar el estado de vigencia de una promoción
-     */
-    private function determinarEstadoVigencia($promocion)
-    {
-        $hoy = date('Y-m-d');
-        $inicio = $promocion['fecha_inicio'];
-        $fin = $promocion['fecha_fin'];
-
-        if (!$promocion['activo']) {
-            return 'inactivo';
-        } elseif ($hoy < $inicio) {
-            return 'pendiente';
-        } elseif ($hoy > $fin) {
-            return 'expirado';
-        } else {
-            return 'vigente';
-        }
+        header('Location: ' . url('promocion/index'));
+        exit;
     }
 }

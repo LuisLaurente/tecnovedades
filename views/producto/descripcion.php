@@ -234,34 +234,30 @@ function producto_imagen_url($producto, $idx = 0)
             <?php endif; ?>
         </section>
 
-        <section id="reviews-section" class="reviews-section">
-            <h2>Lista de Reseñas</h2>
-            <div class="reviews-summary">
-                <div class="overall-rating">
-                    <h3>Opiniones</h3>
-                    <p class="score"><?= !empty($producto['rating_avg']) ? number_format((float)$producto['rating_avg'], 1) : '0.0' ?></p>
-                    <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-                    <p class="count"><?= !empty($producto['rating_count']) ? (int)$producto['rating_count'] . ' Reseñas' : '0 Reseñas' ?></p>
-                </div>
-                <div class="recommendation">
-                    <p class="percentage">100%</p>
-                    <p>Ellos recomiendan</p>
-                    <p class="count">187 Recomendaciones</p>
-                </div>
-                <div class="rating-breakdown">
-                    <div class="star-row"><span>5&#9733;</span><div class="bar"><div style="width: 80%;"></div></div><span>240</span></div>
-                    <div class="star-row"><span>4&#9733;</span><div class="bar"><div style="width: 10%;"></div></div><span>31</span></div>
-                    <div class="star-row"><span>3&#9733;</span><div class="bar"><div style="width: 3%;"></div></div><span>3</span></div>
-                    <div class="star-row"><span>2&#9733;</span><div class="bar"><div style="width: 0%;"></div></div><span>0</span></div>
-                    <div class="star-row"><span>1&#9733;</span><div class="bar"><div style="width: 2%;"></div></div><span>6</span></div>
-                </div>
-                <div class="write-review">
-                    <h3>Escribe tu reseña</h3>
-                    <p>Te llevará un minuto, ayudarás a otros usuarios a decidir.</p>
-                    <button class="add-opinion-btn">Añadir opinión</button>
-                </div>
-            </div>
 
+
+
+        <!-- Reviews -->
+        <h3 class="text-xl font-semibold mt-6 mb-3">Reseñas de clientes</h3>
+        <?php if (empty($reviews)): ?>
+            <p class="text-gray-500">Todavía no hay reseñas para este producto.</p>
+        <?php else: ?>
+            <?php foreach ($reviews as $review): ?>
+                <div class="border-b py-3">
+                    <div class="flex items-center gap-2">
+                        <strong><?= htmlspecialchars($review['usuario_nombre']) ?></strong>
+                        <span class="text-sm text-gray-500"><?= date('d/m/Y', strtotime($review['created_at'])) ?></span>
+                    </div>
+                    <div>
+                        <?php for ($i=1; $i<=5; $i++): ?>
+                            <span class="<?= $i <= $review['puntuacion'] ? 'text-yellow-400' : 'text-gray-300' ?>">★</span>
+                        <?php endfor; ?>
+                    </div>
+                    <p class="font-medium"><?= htmlspecialchars($review['titulo']) ?></p>
+                    <p><?= htmlspecialchars($review['texto']) ?></p>
+                </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
             <div class="individual-reviews">
                 <?php if (!empty($reviews)): ?>
                     <?php foreach ($reviews as $r): ?>

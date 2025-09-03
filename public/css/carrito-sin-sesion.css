@@ -316,8 +316,9 @@ body.carrito-sin-sesion {
 .carrito-header {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 16px;
-    background-color: var(--dark-color);
+    background-color: var(--white-color);
     padding: 20px 24px;
     border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow-sm);
@@ -336,7 +337,7 @@ body.carrito-sin-sesion {
     font-family: 'Orbitron', monospace;
     font-size: 1.5rem;
     font-weight: 600;
-    color: var(--white-color);
+    color: var(--dark-color);
     margin: 0;
 }
 
@@ -535,6 +536,7 @@ body.carrito-sin-sesion {
     border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow-sm);
     overflow: hidden;
+    margin-top: 1rem;
 }
 
 .resumen-header {
@@ -708,7 +710,7 @@ body.carrito-sin-sesion {
     }
     
     .producto-item {
-        flex-direction: column;
+        flex-direction: row;
         gap: 16px;
     }
     

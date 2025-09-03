@@ -4,7 +4,6 @@ if ($popup && $popup['activo']) :
 ?>
 <div id="popup-promocional" style="
     position: fixed;
-    top: 10%;
     left: 50%;
     transform: translateX(-50%);
     background: #ffffff;
