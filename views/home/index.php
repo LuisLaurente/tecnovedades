@@ -72,41 +72,41 @@ if (!isset($categorias)) {
 
 
     </section>
-          <!-- Contenedor de categorías pegado al pie del hero (permanecerá dentro del mismo contenedor 100vh) -->
-      <div class="categories-carousel-container">
-        <div class="container">
-          <div class="section-title">
-            <h2 class="fade-text">Categorías</h2>
-            <div class="line"></div>
-          </div>
+    <!-- Contenedor de categorías pegado al pie del hero (permanecerá dentro del mismo contenedor 100vh) -->
+    <div class="categories-carousel-container">
+      <div class="container">
+        <div class="section-title">
+          <h2 class="fade-text">Categorías</h2>
+          <div class="line"></div>
+        </div>
 
-          <div class="categories-carousel-track" aria-label="Carrusel de categorías">
-            <?php if (!empty($categorias)): ?>
-              <?php foreach ($categorias as $cat): ?>
-                <?php
-                $catId = $cat['id'] ?? '';
-                $catName = htmlspecialchars($cat['nombre'] ?? 'Categoría');
-                $catLink = $catId !== '' ? url('home/busqueda?categoria=' . $catId) : '#';
-                $imgFile = $cat['imagen'] ?? $cat['nombre_imagen'] ?? $cat['imagen_categoria'] ?? null;
-                $imgSrc = $imgFile ? url('uploads/categorias/' . $imgFile) : url('uploads/default-category.png');
-                ?>
-                <a class="category-box" href="<?= $catLink ?>" aria-label="<?= $catName ?>">
-                  <div class="category-image"><img src="<?= $imgSrc ?>" alt="<?= $catName ?>"></div>
-                  <div class="category-name"><?= $catName ?></div>
-                </a>
-              <?php endforeach; ?>
-            <?php else: ?>
-              <p style="text-align:center;">No hay categorías para mostrar.</p>
-            <?php endif; ?>
-          </div>
+        <div class="categories-carousel-track" aria-label="Carrusel de categorías">
+          <?php if (!empty($categorias)): ?>
+            <?php foreach ($categorias as $cat): ?>
+              <?php
+              $catId = $cat['id'] ?? '';
+              $catName = htmlspecialchars($cat['nombre'] ?? 'Categoría');
+              $catLink = $catId !== '' ? url('home/busqueda?categoria=' . $catId) : '#';
+              $imgFile = $cat['imagen'] ?? $cat['nombre_imagen'] ?? $cat['imagen_categoria'] ?? null;
+              $imgSrc = $imgFile ? url('uploads/categorias/' . $imgFile) : url('uploads/default-category.png');
+              ?>
+              <a class="category-box" href="<?= $catLink ?>" aria-label="<?= $catName ?>">
+                <div class="category-image"><img src="<?= $imgSrc ?>" alt="<?= $catName ?>"></div>
+                <div class="category-name"><?= $catName ?></div>
+              </a>
+            <?php endforeach; ?>
+          <?php else: ?>
+            <p style="text-align:center;">No hay categorías para mostrar.</p>
+          <?php endif; ?>
         </div>
       </div>
+    </div>
     <!-- ===================== FIN HERO + CATEGORÍAS ===================== -->
     <!-- PRODUCTOS DESTACADOS (CARRUSEL INFINITO) -->
     <section class="featured-products">
       <div class="container">
         <div class="section-title">
-          <h2>Nuestros Destacados</h2>
+          <h2>Productos Destacados</h2>
           <div class="line"></div>
         </div>
       </div>
@@ -122,6 +122,27 @@ if (!isset($categorias)) {
         ?>
       </div>
     </section>
+    <!-- ================================================== -->
+    <!--          INICIO DE LA SECCIÓN DE BANNERS           -->
+    <!-- ================================================== -->
+    <section class="promo-banners-section">
+      <div class="container">
+        <div class="banners-grid">
+          <!-- Banner 1 -->
+          <a href="#" class="promo-banner-item">
+            <img src="<?= url('images/baner1.jpg') ?>" alt="Promoción o categoría destacada 1">
+          </a>
+
+          <!-- Banner 2 -->
+          <a href="#" class="promo-banner-item">
+            <img src="<?= url('images/baner2.jpg') ?>" alt="Promoción o categoría destacada 1">
+          </a>
+        </div>
+      </div>
+    </section>
+    <!-- ================================================== -->
+    <!--           FIN DE LA SECCIÓN DE BANNERS             -->
+    <!-- ================================================== -->
 
     <!-- WHY CHOOSE US -->
     <section class="why-choose-us">
@@ -194,7 +215,7 @@ if (!isset($categorias)) {
     function setupDragCarousel(containerSelector) {
       const container = document.querySelector(containerSelector);
       if (!container) return;
-      
+
       const track = container.querySelector('.products-grid');
       if (!track) return;
 
@@ -258,7 +279,7 @@ if (!isset($categorias)) {
         container.classList.add('dragging');
         track.style.transition = 'none';
         track.style.animation = 'none';
-        
+
         startX = e.pageX - container.offsetLeft;
         scrollLeft = currentX;
       });
@@ -266,14 +287,13 @@ if (!isset($categorias)) {
       document.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
         e.preventDefault();
-        
+
         const x = e.pageX - container.offsetLeft;
         const walk = (x - startX) * 1.2;
         currentX = scrollLeft + walk;
         
         // Aplicar scroll infinito en tiempo real
         applyInfiniteScroll();
-        
         track.style.transform = `translateX(${currentX}px)`;
       });
 
@@ -281,13 +301,11 @@ if (!isset($categorias)) {
         if (!isDragging) return;
         isDragging = false;
         container.classList.remove('dragging');
-        
         // Comprobar si debe activarse el scroll infinito
         applyInfiniteScroll(true);
-        
         track.style.transition = 'transform 0.3s ease-out';
         track.style.transform = `translateX(${currentX}px)`;
-        
+
         // Reactivar scroll automático después de un tiempo
         setTimeout(restartAutoScroll, 3000);
       });
@@ -298,15 +316,17 @@ if (!isset($categorias)) {
         container.classList.add('dragging');
         track.style.transition = 'none';
         track.style.animation = 'none';
-        
+
         startX = e.touches[0].pageX - container.offsetLeft;
         scrollLeft = currentX;
-      }, { passive: true });
+      }, {
+        passive: true
+      });
 
       container.addEventListener('touchmove', (e) => {
         if (!isDragging) return;
         e.preventDefault();
-        
+
         const x = e.touches[0].pageX - container.offsetLeft;
         const walk = (x - startX) * 1.2;
         currentX = scrollLeft + walk;
@@ -315,7 +335,9 @@ if (!isset($categorias)) {
         applyInfiniteScroll();
         
         track.style.transform = `translateX(${currentX}px)`;
-      }, { passive: false });
+      }, {
+        passive: false
+      });
 
       container.addEventListener('touchend', () => {
         if (!isDragging) return;
@@ -324,10 +346,9 @@ if (!isset($categorias)) {
         
         // Comprobar si debe activarse el scroll infinito
         applyInfiniteScroll(true);
-        
         track.style.transition = 'transform 0.3s ease-out';
         track.style.transform = `translateX(${currentX}px)`;
-        
+
         // Reactivar scroll automático después de un tiempo
         setTimeout(restartAutoScroll, 3000);
       });
@@ -366,12 +387,12 @@ if (!isset($categorias)) {
 
       function restartAutoScroll() {
         if (isDragging) return;
-        
+
         // Volver al inicio suavemente
         track.style.transition = 'transform 1s ease-in-out';
         track.style.transform = 'translateX(0px)';
         currentX = 0;
-        
+
         // Reactivar animación CSS
         setTimeout(() => {
           if (!isDragging) {
@@ -384,7 +405,7 @@ if (!isset($categorias)) {
       // Prevenir comportamientos por defecto
       container.addEventListener('dragstart', e => e.preventDefault());
       container.addEventListener('selectstart', e => e.preventDefault());
-      
+
       // Prevenir clicks durante arrastre
       container.addEventListener('click', (e) => {
         if (Math.abs(currentX - scrollLeft) > 5) {
