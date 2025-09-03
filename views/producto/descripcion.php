@@ -233,10 +233,6 @@ function producto_imagen_url($producto, $idx = 0)
                 <p>No hay productos relacionados para mostrar.</p>
             <?php endif; ?>
         </section>
-
-
-
-
         <!-- Reviews -->
         <h3 class="text-xl font-semibold mt-6 mb-3">Reseñas de clientes</h3>
         <?php if (empty($reviews)): ?>
