@@ -190,10 +190,178 @@ if (!isset($categorias)) {
       track.classList.add('scrolling');
     }
 
-    // --- Inicializar ambos carruseles ---
+    // --- Funcionalidad de Arrastre para Productos (Versión Simplificada) ---
+    function setupDragCarousel(containerSelector) {
+      const container = document.querySelector(containerSelector);
+      if (!container) return;
+      
+      const track = container.querySelector('.products-grid');
+      if (!track) return;
+
+      // Clonar elementos para scroll infinito
+      const originalItems = Array.from(track.children);
+      if (originalItems.length > 0) {
+        originalItems.forEach(item => {
+          const clone = item.cloneNode(true);
+          clone.setAttribute('aria-hidden', 'true');
+          track.appendChild(clone);
+        });
+      }
+
+      let isDragging = false;
+      let startX = 0;
+      let scrollLeft = 0;
+      let currentX = 0;
+
+      // Configuración inicial
+      track.style.animation = 'none';
+      track.style.transform = 'translateX(0px)';
+
+      // Mouse events
+      container.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        container.classList.add('dragging');
+        track.style.transition = 'none';
+        track.style.animation = 'none';
+        
+        startX = e.pageX - container.offsetLeft;
+        scrollLeft = currentX;
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        
+        const x = e.pageX - container.offsetLeft;
+        const walk = (x - startX) * 1.2;
+        currentX = scrollLeft + walk;
+        
+        // Límites básicos
+        const maxScroll = 0;
+        const minScroll = -(track.scrollWidth - container.offsetWidth);
+        
+        if (currentX > maxScroll) {
+          currentX = maxScroll + (currentX - maxScroll) * 0.3;
+        }
+        if (currentX < minScroll) {
+          currentX = minScroll + (currentX - minScroll) * 0.3;
+        }
+        
+        track.style.transform = `translateX(${currentX}px)`;
+      });
+
+      document.addEventListener('mouseup', () => {
+        if (!isDragging) return;
+        isDragging = false;
+        container.classList.remove('dragging');
+        
+        // Aplicar límites finales
+        const maxScroll = 0;
+        const minScroll = -(track.scrollWidth - container.offsetWidth);
+        
+        if (currentX > maxScroll) currentX = maxScroll;
+        if (currentX < minScroll) currentX = minScroll;
+        
+        track.style.transition = 'transform 0.3s ease-out';
+        track.style.transform = `translateX(${currentX}px)`;
+        
+        // Reactivar scroll automático después de un tiempo
+        setTimeout(restartAutoScroll, 3000);
+      });
+
+      // Touch events
+      container.addEventListener('touchstart', (e) => {
+        isDragging = true;
+        container.classList.add('dragging');
+        track.style.transition = 'none';
+        track.style.animation = 'none';
+        
+        startX = e.touches[0].pageX - container.offsetLeft;
+        scrollLeft = currentX;
+      }, { passive: true });
+
+      container.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        
+        const x = e.touches[0].pageX - container.offsetLeft;
+        const walk = (x - startX) * 1.2;
+        currentX = scrollLeft + walk;
+        
+        // Límites básicos
+        const maxScroll = 0;
+        const minScroll = -(track.scrollWidth - container.offsetWidth);
+        
+        if (currentX > maxScroll) {
+          currentX = maxScroll + (currentX - maxScroll) * 0.3;
+        }
+        if (currentX < minScroll) {
+          currentX = minScroll + (currentX - minScroll) * 0.3;
+        }
+        
+        track.style.transform = `translateX(${currentX}px)`;
+      }, { passive: false });
+
+      container.addEventListener('touchend', () => {
+        if (!isDragging) return;
+        isDragging = false;
+        container.classList.remove('dragging');
+        
+        // Aplicar límites finales
+        const maxScroll = 0;
+        const minScroll = -(track.scrollWidth - container.offsetWidth);
+        
+        if (currentX > maxScroll) currentX = maxScroll;
+        if (currentX < minScroll) currentX = minScroll;
+        
+        track.style.transition = 'transform 0.3s ease-out';
+        track.style.transform = `translateX(${currentX}px)`;
+        
+        // Reactivar scroll automático después de un tiempo
+        setTimeout(restartAutoScroll, 3000);
+      });
+
+      function restartAutoScroll() {
+        if (isDragging) return;
+        
+        // Volver al inicio suavemente
+        track.style.transition = 'transform 1s ease-in-out';
+        track.style.transform = 'translateX(0px)';
+        currentX = 0;
+        
+        // Reactivar animación CSS
+        setTimeout(() => {
+          if (!isDragging) {
+            track.style.transition = '';
+            track.style.animation = 'scroll-infinite 60s linear infinite';
+          }
+        }, 1000);
+      }
+
+      // Prevenir comportamientos por defecto
+      container.addEventListener('dragstart', e => e.preventDefault());
+      container.addEventListener('selectstart', e => e.preventDefault());
+      
+      // Prevenir clicks durante arrastre
+      container.addEventListener('click', (e) => {
+        if (Math.abs(currentX - scrollLeft) > 5) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }, true);
+
+      // Iniciar scroll automático
+      setTimeout(() => {
+        if (!isDragging) {
+          track.style.animation = 'scroll-infinite 60s linear infinite';
+        }
+      }, 500);
+    }
+
+    // --- Inicializar carruseles ---
     document.addEventListener('DOMContentLoaded', function() {
-      //setupInfiniteCarousel('.categories-carousel-container', '.categories-carousel-track', '.category-box');
-      setupInfiniteCarousel('.products-carousel-container', '.products-grid', '.product-card');
+      // Solo configurar funcionalidad de arrastre (que incluye la animación automática)
+      setupDragCarousel('.products-carousel-container');
     });
   </script>
 </body>

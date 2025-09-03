@@ -206,6 +206,7 @@ body {
   width: 100%;
   overflow: hidden;
   position: relative;
+  cursor: grab;
   -webkit-mask-image: linear-gradient(
     to right,
     transparent,
@@ -221,17 +222,31 @@ body {
     transparent
   );
 }
+
+.products-carousel-container.dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
 .products-carousel-container .products-grid {
   display: flex;
   flex-wrap: nowrap;
   gap: 2rem;
   margin-top: 1rem;
+  will-change: transform;
 }
+
 .products-carousel-container .products-grid.scrolling {
   animation: scroll-infinite 60s linear infinite;
 }
+
 .products-carousel-container:hover .scrolling {
   animation-play-state: paused;
+}
+
+.products-carousel-container.dragging .products-grid {
+  animation: none !important;
+  transition: none !important;
 }
 /* NOTA: El estilo de .product-card está en cards.css */
 
@@ -366,6 +381,8 @@ body {
 
   .categories-carousel-track {
     gap: 0.8rem;
+    flex-wrap: wrap; /* Permite que las categorías se envuelvan en filas */
+    justify-content: center;
   }
 
   .features-grid {
@@ -440,6 +457,8 @@ body {
 
   .categories-carousel-track {
     gap: 0.6rem;
+    flex-wrap: wrap; /* Permite que las categorías se envuelvan en filas */
+    justify-content: center;
   }
 
   .featured-products,
@@ -462,6 +481,11 @@ body {
       black 97%,
       transparent
     );
+    cursor: grab;
+  }
+
+  .products-carousel-container.dragging {
+    cursor: grabbing;
   }
 
   .products-carousel-container .products-grid {
@@ -583,6 +607,8 @@ body {
 
   .categories-carousel-track {
     gap: 0.5rem;
+    flex-wrap: wrap; /* Permite que las categorías se envuelvan en filas */
+    justify-content: center;
   }
 
   .featured-products,
@@ -684,6 +710,8 @@ body {
 
   .categories-carousel-track {
     gap: 0.4rem;
+    flex-wrap: wrap; /* Permite que las categorías se envuelvan en filas */
+    justify-content: center;
   }
 
   .featured-products,
