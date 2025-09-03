@@ -138,7 +138,7 @@ function categoria_url($cat)
     <!-- Left: logo -->
     <div class="header-left">
       <a href="<?= url('home/index') ?>" class="logo-link" aria-label="Bytebox home">
-        <img src="<?= url('images/image-logobytebox.png') ?>" alt="Bytebox" class="logo-image">
+        <img src="<?= url('images/Logo_Horizontal2_Versi_nPrincipal.png') ?>" alt="Bytebox" class="logo-image">
       </a>
     </div>
 

@@ -124,7 +124,6 @@ if (isset($_SESSION['carrito'])) {
             <!-- Columna derecha: Header del carrito y resumen -->
             <div class="right-column">
                 <div class="carrito-header">
-                    <div class="carrito-logo"><img src="<?= url('images/image-logobytebox.png') ?>" alt="Bytebox" class="logo-img"></div>
                     <h1 class="carrito-title">Carro de compra</h1>
                 </div>
 

@@ -268,5 +268,33 @@ class Promocion
         return (json_last_error() === JSON_ERROR_NONE);
     }
 
+        /**
+     * Actualiza un campo específico de una promoción.
+     * Es más eficiente que 'actualizar' para cambios puntuales.
+     *
+     * @param int $id ID de la promoción.
+     * @param string $campo Nombre de la columna en la base de datos.
+     * @param mixed $valor Nuevo valor para el campo.
+     * @return bool True si la actualización fue exitosa, false en caso contrario.
+     */
+    public function actualizarCampo($id, $campo, $valor)
+    {
+        // Lista blanca de campos permitidos para evitar inyecciones SQL en los nombres de columna.
+        $camposPermitidos = ['nombre', 'prioridad', 'activo', 'acumulable', 'exclusivo', 'fecha_inicio', 'fecha_fin'];
+        
+        if (!in_array($campo, $camposPermitidos)) {
+            // Si el campo no está en la lista, no hacemos nada para proteger la BD.
+            return false;
+        }
+
+        $sql = "UPDATE promociones SET {$campo} = :valor WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        
+        return $stmt->execute([
+            ':valor' => $valor,
+            ':id'    => $id
+        ]);
+    }
+
 }
 
