@@ -52,12 +52,15 @@ body {
 
 /* === HERO + CATEGORÍAS: único contenedor full-height === */
 .hero-and-categories {
-  height: 90vh; /* ocupa 100% de la pantalla */
+  height: 80vh; /* Aumentado de 70vh a 80vh para un poco más de altura */
   display: flex;
   flex-direction: column;
   justify-content: space-between; /* banner arriba/centro, categorías abajo */
   align-items: stretch; /* ocupa todo el ancho */
   background-color: var(--bg); /* usa tu variable de color (1B1B1B) */
+  /* Asegurar que termine exactamente donde debe */
+  scroll-snap-align: start;
+  position: relative;
 }
 
 /* El banner ocupa el espacio disponible */
@@ -90,8 +93,9 @@ body {
 /* Categorías en el fondo del hero (dentro del mismo contenedor) */
 .categories-carousel-container {
   width: 100%;
-  padding: 14px 0 28px; /* separaciones: arriba pequeño, abajo más grande */
+  padding: 14px 0 20px; /* Reducido el padding inferior para que termine exacto */
   background: transparent; /* sin degradados, como pediste */
+  flex-shrink: 0; /* No se encoge para mantener altura exacta */
 }
 
 
@@ -188,7 +192,7 @@ body {
 /* Ajustes responsive: en pantallas muy pequeñas reducimos altura del hero para evitar overflow */
 @media (max-height: 700px) {
   .hero-and-categories {
-    min-height: calc(100vh - 60px);
+    height: 50vh; /* Ajustado proporcionalmente */
   } /* deja espacio para header fijo si hay */
   .category-image {
     width: 68px;
@@ -201,6 +205,9 @@ body {
 /* ================================================================== */
 .featured-products {
   padding: 6rem 0;
+  margin-top: 0; /* Asegurar que no haya espacio extra */
+  position: relative;
+  z-index: 1;
 }
 .products-carousel-container {
   width: 100%;
@@ -423,7 +430,7 @@ body {
 /* ================================================================== */
 @media (max-width: 1600px) {
   .hero-and-categories {
-    min-height: 65vh;
+    height: 75vh; /* Aumentado proporcionalmente */
   }
 }
 /* Tablets grandes y laptops pequeñas */
@@ -433,7 +440,7 @@ body {
     padding: 0 1.5rem;
   }
   .hero-and-categories {
-    min-height: 70vh;
+    height: 70vh; /* Aumentado proporcionalmente */
   }
 
   .section-title h2 {
@@ -457,7 +464,7 @@ body {
   }
 
   .hero-and-categories {
-    min-height: 60vh;
+    height: 65vh; /* Aumentado proporcionalmente */
   }
 
   .hero-content-static {
@@ -519,7 +526,7 @@ body {
   }
 
   .hero-and-categories {
-    min-height: 50vh;
+    height: 60vh; /* Aumentado proporcionalmente */
   }
 
   .section-title {
@@ -640,7 +647,7 @@ body {
 /* Móviles grandes */
 @media (max-width: 600px) {
   .hero-and-categories {
-    min-height: 35vh;
+    height: 55vh; /* Aumentado proporcionalmente */
   }
 
   .hero-content-static {
@@ -757,7 +764,7 @@ body {
 /* Móviles pequeños */
 @media (max-width: 375px) {
   .hero-and-categories {
-    min-height: 70vh;
+    height: 50vh; /* Aumentado proporcionalmente */
   }
 
   .section-title h2 {
@@ -805,7 +812,7 @@ body {
   }
 
   .hero-and-categories {
-    min-height: 65vh;
+    height: 45vh; /* Aumentado proporcionalmente */
   }
 
   .section-title h2 {

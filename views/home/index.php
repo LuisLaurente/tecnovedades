@@ -236,7 +236,7 @@ if (!isset($categorias)) {
       let startX = 0;
       let scrollLeft = 0;
       let currentX = 0;
-      
+
       // Medidas importantes para el scroll infinito
       let itemWidth = 0;
       let totalItems = originalItems.length;
@@ -244,28 +244,28 @@ if (!isset($categorias)) {
       let viewportWidth = 0;
       let itemsInViewport = 0;
       let threshold = 0;
-      
+
       // Calcular dimensiones iniciales
       function calculateDimensions() {
         if (originalItems.length === 0) return;
-        
+
         const firstItem = originalItems[0];
         // Incluir margin/gap en el cálculo del ancho
         const style = window.getComputedStyle(firstItem);
         const marginRight = parseInt(style.marginRight) || 0;
         itemWidth = firstItem.offsetWidth + marginRight;
-        
+
         totalWidth = itemWidth * totalItems;
         viewportWidth = container.offsetWidth;
         itemsInViewport = Math.ceil(viewportWidth / itemWidth);
-        
+
         // Umbral para activar el salto es cuando se ve 1/3 del siguiente conjunto de elementos
         threshold = totalWidth - (itemWidth * Math.floor(itemsInViewport / 3));
       }
-      
+
       // Calcular dimensiones inicialmente
       calculateDimensions();
-      
+
       // Recalcular cuando cambie el tamaño de la ventana
       window.addEventListener('resize', calculateDimensions);
 
@@ -291,7 +291,7 @@ if (!isset($categorias)) {
         const x = e.pageX - container.offsetLeft;
         const walk = (x - startX) * 1.2;
         currentX = scrollLeft + walk;
-        
+
         // Aplicar scroll infinito en tiempo real
         applyInfiniteScroll();
         track.style.transform = `translateX(${currentX}px)`;
@@ -330,10 +330,10 @@ if (!isset($categorias)) {
         const x = e.touches[0].pageX - container.offsetLeft;
         const walk = (x - startX) * 1.2;
         currentX = scrollLeft + walk;
-        
+
         // Aplicar scroll infinito en tiempo real
         applyInfiniteScroll();
-        
+
         track.style.transform = `translateX(${currentX}px)`;
       }, {
         passive: false
@@ -343,7 +343,7 @@ if (!isset($categorias)) {
         if (!isDragging) return;
         isDragging = false;
         container.classList.remove('dragging');
-        
+
         // Comprobar si debe activarse el scroll infinito
         applyInfiniteScroll(true);
         track.style.transition = 'transform 0.3s ease-out';
@@ -352,11 +352,11 @@ if (!isset($categorias)) {
         // Reactivar scroll automático después de un tiempo
         setTimeout(restartAutoScroll, 3000);
       });
-      
+
       // Función para aplicar el scroll infinito
       function applyInfiniteScroll(withAnimation = false) {
         if (totalItems === 0 || totalWidth === 0) return;
-        
+
         // Cuando se arrastra hacia la derecha (inicio) y pasa el primer elemento
         if (currentX > threshold / 2) {
           // Saltar al final del primer ciclo
@@ -366,7 +366,7 @@ if (!isset($categorias)) {
           currentX = currentX - totalWidth;
           track.style.transform = `translateX(${currentX}px)`;
         }
-        
+
         // Cuando se arrastra hacia la izquierda (final) y casi llega al final del primer ciclo
         else if (Math.abs(currentX) > threshold) {
           // Saltar al inicio del primer ciclo
@@ -376,7 +376,7 @@ if (!isset($categorias)) {
           currentX = currentX + totalWidth;
           track.style.transform = `translateX(${currentX}px)`;
         }
-        
+
         // Reactivar la transición si fue desactivada
         if (withAnimation) {
           setTimeout(() => {
