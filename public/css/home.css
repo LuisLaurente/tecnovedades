@@ -52,7 +52,7 @@ body {
 
 /* === HERO + CATEGORÍAS: único contenedor full-height === */
 .hero-and-categories {
-  height: 80vh; /* Aumentado de 70vh a 80vh para un poco más de altura */
+  height: 84vh; /* Aumentado de 70vh a 80vh para un poco más de altura */
   display: flex;
   flex-direction: column;
   justify-content: space-between; /* banner arriba/centro, categorías abajo */

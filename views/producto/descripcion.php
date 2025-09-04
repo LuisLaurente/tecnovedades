@@ -130,12 +130,23 @@ function producto_imagen_url($producto, $idx = 0)
             </div>
 
             <div class="product-short-description">
-                <h2>Descripción:</h2>
-                <!-- CORRECCIÓN: Se añade la clase 'short-desc-text' para limitar las líneas con CSS -->
-                <p class="short-desc-text">
-                    <?= htmlspecialchars($producto['descripcion'] ?? 'No hay descripción disponible.') ?>
-                </p>
-                <a href="#descripcion-section" class="read-more-link">Leer más</a>
+                <h2>Especificaciones Clave:</h2>
+<!-- Mostramos las especificaciones como una lista -->
+<ul class="specs-list-short">
+    <?php if (!empty($producto['especificaciones_array']) && is_array($producto['especificaciones_array'])): ?>
+        <?php 
+        // Tomamos solo las primeras 5 especificaciones para no saturar el espacio
+        $especificacionesMostradas = array_slice($producto['especificaciones_array'], 0, 5); 
+        ?>
+        <?php foreach ($especificacionesMostradas as $spec): ?>
+            <li><?= htmlspecialchars($spec) ?></li>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <li>No hay especificaciones disponibles.</li>
+    <?php endif; ?>
+</ul>
+<a href="#descripcion-section" class="read-more-link">Ver descripción completa</a>
+
 
                 <div class="info-boxes">
                     <div class="info-box">
@@ -233,93 +244,93 @@ function producto_imagen_url($producto, $idx = 0)
             <?php else: ?>
                 <p>No hay productos relacionados para mostrar.</p>
             <?php endif; ?>
-<!-- ================================================== -->
-<!-- INICIO DE LA NUEVA SECCIÓN DE RESEÑAS CON ESTADÍSTICAS -->
-<!-- ================================================== -->
-<section id="reviews-section" class="reviews-container">
-    <h2 class="reviews-main-title">Comentarios de este producto</h2>
+            <!-- ================================================== -->
+            <!-- INICIO DE LA NUEVA SECCIÓN DE RESEÑAS CON ESTADÍSTICAS -->
+            <!-- ================================================== -->
+            <section id="reviews-section" class="reviews-container">
+                <h2 class="reviews-main-title">Comentarios de este producto</h2>
 
-    <?php
-    // --- Bloque de cálculo de estadísticas ---
-    $totalReviews = count($reviews);
-    $averageRating = 0;
-    $ratingCounts = [5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0];
+                <?php
+                // --- Bloque de cálculo de estadísticas ---
+                $totalReviews = count($reviews);
+                $averageRating = 0;
+                $ratingCounts = [5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0];
 
-    if ($totalReviews > 0) {
-        $totalScore = 0;
-        foreach ($reviews as $review) {
-            $puntuacion = (int)$review['puntuacion'];
-            if (isset($ratingCounts[$puntuacion])) {
-                $ratingCounts[$puntuacion]++;
-            }
-            $totalScore += $puntuacion;
-        }
-        $averageRating = round($totalScore / $totalReviews, 1);
-    }
-    // --- Fin del bloque de cálculo ---
-    ?>
+                if ($totalReviews > 0) {
+                    $totalScore = 0;
+                    foreach ($reviews as $review) {
+                        $puntuacion = (int)$review['puntuacion'];
+                        if (isset($ratingCounts[$puntuacion])) {
+                            $ratingCounts[$puntuacion]++;
+                        }
+                        $totalScore += $puntuacion;
+                    }
+                    $averageRating = round($totalScore / $totalReviews, 1);
+                }
+                // --- Fin del bloque de cálculo ---
+                ?>
 
-    <?php if ($totalReviews > 0): ?>
-        <div class="reviews-summary">
-            <!-- Columna Izquierda: Puntuación General -->
-            <div class="overall-rating">
-                <div class="score">
-                    <span class="score-number"><?= htmlspecialchars($averageRating) ?></span>/5
-                </div>
-                <div class="stars-display">
-                    <?php for ($i = 1; $i <= 5; $i++): ?>
-                        <span class="<?= $i <= floor($averageRating) ? 'filled' : '' ?>">★</span>
-                    <?php endfor; ?>
-                </div>
-                <div class="total-reviews-count"><?= $totalReviews ?> comentario<?= $totalReviews > 1 ? 's' : '' ?></div>
-            </div>
-
-            <!-- Columna Derecha: Desglose de Puntuaciones -->
-            <div class="rating-breakdown">
-                <?php foreach ($ratingCounts as $star => $count): ?>
-                    <?php
-                    $percentage = ($totalReviews > 0) ? ($count / $totalReviews) * 100 : 0;
-                    ?>
-                    <div class="breakdown-row">
-                        <span class="star-label"><?= $star ?> ★</span>
-                        <div class="bar-container">
-                            <div class="bar" style="width: <?= $percentage ?>%;"></div>
+                <?php if ($totalReviews > 0): ?>
+                    <div class="reviews-summary">
+                        <!-- Columna Izquierda: Puntuación General -->
+                        <div class="overall-rating">
+                            <div class="score">
+                                <span class="score-number"><?= htmlspecialchars($averageRating) ?></span>/5
+                            </div>
+                            <div class="stars-display">
+                                <?php for ($i = 1; $i <= 5; $i++): ?>
+                                    <span class="<?= $i <= floor($averageRating) ? 'filled' : '' ?>">★</span>
+                                <?php endfor; ?>
+                            </div>
+                            <div class="total-reviews-count"><?= $totalReviews ?> comentario<?= $totalReviews > 1 ? 's' : '' ?></div>
                         </div>
-                        <span class="count-label"><?= $count ?></span>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        </div>
-    <?php endif; ?>
 
-    <!-- Listado de Reseñas Individuales -->
-    <div class="individual-reviews">
-        <?php if ($totalReviews > 0): ?>
-            <?php foreach ($reviews as $review): ?>
-                <div class="review-item">
-                    <div class="review-header">
-                        <h3 class="review-title"><?= htmlspecialchars($review['titulo']) ?></h3>
-                        <div class="review-stars">
-                            <?php for ($i = 1; $i <= 5; $i++): ?>
-                                <span class="<?= $i <= $review['puntuacion'] ? 'filled' : '' ?>">★</span>
-                            <?php endfor; ?>
+                        <!-- Columna Derecha: Desglose de Puntuaciones -->
+                        <div class="rating-breakdown">
+                            <?php foreach ($ratingCounts as $star => $count): ?>
+                                <?php
+                                $percentage = ($totalReviews > 0) ? ($count / $totalReviews) * 100 : 0;
+                                ?>
+                                <div class="breakdown-row">
+                                    <span class="star-label"><?= $star ?> ★</span>
+                                    <div class="bar-container">
+                                        <div class="bar" style="width: <?= $percentage ?>%;"></div>
+                                    </div>
+                                    <span class="count-label"><?= $count ?></span>
+                                </div>
+                            <?php endforeach; ?>
                         </div>
                     </div>
-                    <div class="review-author-date">
-                        <span class="review-author">por <?= htmlspecialchars($review['usuario_nombre']) ?></span>
-                        <span class="review-date"><?= date('d/m/Y', strtotime($review['created_at'])) ?></span>
-                    </div>
-                    <p class="review-text"><?= nl2br(htmlspecialchars($review['texto'])) ?></p>
+                <?php endif; ?>
+
+                <!-- Listado de Reseñas Individuales -->
+                <div class="individual-reviews">
+                    <?php if ($totalReviews > 0): ?>
+                        <?php foreach ($reviews as $review): ?>
+                            <div class="review-item">
+                                <div class="review-header">
+                                    <h3 class="review-title"><?= htmlspecialchars($review['titulo']) ?></h3>
+                                    <div class="review-stars">
+                                        <?php for ($i = 1; $i <= 5; $i++): ?>
+                                            <span class="<?= $i <= $review['puntuacion'] ? 'filled' : '' ?>">★</span>
+                                        <?php endfor; ?>
+                                    </div>
+                                </div>
+                                <div class="review-author-date">
+                                    <span class="review-author">por <?= htmlspecialchars($review['usuario_nombre']) ?></span>
+                                    <span class="review-date"><?= date('d/m/Y', strtotime($review['created_at'])) ?></span>
+                                </div>
+                                <p class="review-text"><?= nl2br(htmlspecialchars($review['texto'])) ?></p>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <p class="no-reviews-message">Todavía no hay comentarios para este producto.</p>
+                    <?php endif; ?>
                 </div>
-            <?php endforeach; ?>
-        <?php else: ?>
-            <p class="no-reviews-message">Todavía no hay comentarios para este producto.</p>
-        <?php endif; ?>
-    </div>
-</section>
-<!-- ================================================ -->
-<!-- FIN DE LA NUEVA SECCIÓN DE RESEÑAS -->
-<!-- ================================================ -->
+            </section>
+            <!-- ================================================ -->
+            <!-- FIN DE LA NUEVA SECCIÓN DE RESEÑAS -->
+            <!-- ================================================ -->
 
     </main>
 
@@ -399,7 +410,7 @@ function producto_imagen_url($producto, $idx = 0)
                         }
                         if (content) content.style.display = 'block';
                         const arrow = header.querySelector('.arrow');
-                        if(arrow) arrow.innerHTML = '&#9650;';
+                        if (arrow) arrow.innerHTML = '&#9650;';
                         if (e) e.stopPropagation();
                     }
                 };
@@ -412,7 +423,7 @@ function producto_imagen_url($producto, $idx = 0)
                         }
                         if (content) content.style.display = '';
                         const arrow = header.querySelector('.arrow');
-                        if(arrow) arrow.innerHTML = '&#9660;';
+                        if (arrow) arrow.innerHTML = '&#9660;';
                         if (e) e.stopPropagation();
                     }
                 };
