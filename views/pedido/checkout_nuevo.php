@@ -293,10 +293,26 @@ $total_final = max(0, $totales['total'] - $descuento_cupon);
                             <!-- Campos ocultos para dirección seleccionada -->
                             <input type="hidden" id="direccion_id_seleccionada" name="direccion_id" value="">
                             
+                            <!-- Términos y condiciones -->
+                            <div class="mt-6 p-4 bg-gray-50 rounded-lg border-l-4 border-blue-500">
+                                <div class="flex items-start space-x-3">
+                                    <input type="checkbox" id="terminos" name="terminos" required
+                                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1">
+                                    <label for="terminos" class="text-sm text-gray-700 leading-relaxed">
+                                        Acepto los 
+                                        <button type="button" id="open-terms-modal" 
+                                                class="text-blue-600 hover:text-blue-800 underline font-medium">
+                                            términos y condiciones
+                                        </button>
+                                        y autorizo el procesamiento de mis datos personales para el procesamiento de este pedido. *
+                                    </label>
+                                </div>
+                            </div>
+                            
                             <!-- Botón de envío -->
                             <div class="mt-6">
-                                <button type="submit" 
-                                        class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200">
+                                <button type="submit" id="confirm-order-btn" disabled
+                                        class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed">
                                     🚀 Confirmar Pedido - S/ <?= number_format($total_final, 2) ?>
                                 </button>
                             </div>
@@ -392,6 +408,115 @@ $total_final = max(0, $totales['total'] - $descuento_cupon);
         </div>
     </div>
 
+    <!-- Modal de términos y condiciones -->
+    <div id="terms-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[80vh] overflow-hidden">
+            <!-- Header del modal -->
+            <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold">📋 Términos y Condiciones</h2>
+                    <button type="button" id="close-terms-modal" 
+                            class="text-white hover:text-gray-200 text-3xl font-bold leading-none">
+                        &times;
+                    </button>
+                </div>
+                <p class="text-blue-100 mt-2">Por favor, lee cuidadosamente nuestros términos antes de confirmar tu pedido</p>
+            </div>
+            
+            <!-- Contenido del modal -->
+            <div class="p-6 overflow-y-auto max-h-[50vh]">
+                <div class="prose prose-sm max-w-none">
+                    <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
+                        <span class="bg-blue-100 text-blue-800 rounded-full w-8 h-8 flex items-center justify-center text-sm mr-3">1</span>
+                        Información General
+                    </h3>
+                    <p class="text-gray-600 mb-6 leading-relaxed">
+                        Bienvenido a <strong>TecnoVedades</strong>. Al realizar una compra en nuestro sitio web, 
+                        usted acepta estar sujeto a los siguientes términos y condiciones de venta.
+                    </p>
+                    
+                    <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
+                        <span class="bg-blue-100 text-blue-800 rounded-full w-8 h-8 flex items-center justify-center text-sm mr-3">2</span>
+                        Productos y Precios
+                    </h3>
+                    <p class="text-gray-600 mb-6 leading-relaxed">
+                        • Todos los precios están expresados en soles peruanos (S/) e incluyen IGV<br>
+                        • Los precios están sujetos a cambios sin previo aviso<br>
+                        • Los productos están sujetos a disponibilidad de stock<br>
+                        • Nos reservamos el derecho de limitar las cantidades de compra por cliente
+                    </p>
+                    
+                    <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
+                        <span class="bg-green-100 text-green-800 rounded-full w-8 h-8 flex items-center justify-center text-sm mr-3">3</span>
+                        Política de Envío
+                    </h3>
+                    <p class="text-gray-600 mb-6 leading-relaxed">
+                        • <strong>Envío gratuito</strong> a todo el Perú en compras mayores a S/ 100<br>
+                        • Tiempo de entrega: 2-5 días hábiles en Lima, 3-7 días en provincias<br>
+                        • Horarios de entrega: Lunes a Viernes de 9:00 AM a 6:00 PM<br>
+                        • El cliente debe estar presente en el momento de la entrega
+                    </p>
+                    
+                    <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
+                        <span class="bg-yellow-100 text-yellow-800 rounded-full w-8 h-8 flex items-center justify-center text-sm mr-3">4</span>
+                        Política de Devoluciones
+                    </h3>
+                    <p class="text-gray-600 mb-6 leading-relaxed">
+                        • Plazo para devoluciones: <strong>30 días</strong> calendarios desde la recepción<br>
+                        • Los productos deben estar en perfecto estado, sin uso y con embalaje original<br>
+                        • No se aceptan devoluciones de productos personalizados o de uso íntimo<br>
+                        • Los gastos de envío para devoluciones corren por cuenta del cliente
+                    </p>
+                    
+                    <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
+                        <span class="bg-purple-100 text-purple-800 rounded-full w-8 h-8 flex items-center justify-center text-sm mr-3">5</span>
+                        Protección de Datos Personales
+                    </h3>
+                    <p class="text-gray-600 mb-6 leading-relaxed">
+                        • Respetamos su privacidad conforme a la Ley de Protección de Datos Personales<br>
+                        • Sus datos serán utilizados únicamente para procesar su pedido<br>
+                        • No compartimos información personal con terceros sin su consentimiento<br>
+                        • Puede solicitar la eliminación de sus datos contactándonos
+                    </p>
+                    
+                    <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
+                        <span class="bg-red-100 text-red-800 rounded-full w-8 h-8 flex items-center justify-center text-sm mr-3">6</span>
+                        Garantías y Responsabilidad
+                    </h3>
+                    <p class="text-gray-600 mb-6 leading-relaxed">
+                        • Ofrecemos garantía del fabricante en todos nuestros productos<br>
+                        • No nos hacemos responsables por daños causados por mal uso del producto<br>
+                        • Nuestra responsabilidad se limita al valor del producto adquirido<br>
+                        • En caso de productos defectuosos, procederemos al cambio o reembolso
+                    </p>
+                    
+                    <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
+                        <span class="bg-indigo-100 text-indigo-800 rounded-full w-8 h-8 flex items-center justify-center text-sm mr-3">7</span>
+                        Contacto y Soporte
+                    </h3>
+                    <p class="text-gray-600 mb-4 leading-relaxed">
+                        Para consultas, reclamos o soporte técnico:<br>
+                        📧 <strong>Email:</strong> soporte@tecnovedades.com<br>
+                        📱 <strong>WhatsApp:</strong> +51 999 888 777<br>
+                        🕐 <strong>Horario:</strong> Lunes a Viernes 9:00 AM - 6:00 PM
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Footer del modal -->
+            <div class="bg-gray-50 px-6 py-4 flex justify-end space-x-3 border-t">
+                <button type="button" id="close-terms-btn" 
+                        class="px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition duration-200">
+                    Cerrar
+                </button>
+                <button type="button" id="accept-terms-btn" 
+                        class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-200 font-medium">
+                    ✅ Acepto los Términos
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let selectedAddressCard = null;
 
@@ -477,6 +602,92 @@ $total_final = max(0, $totales['total'] - $descuento_cupon);
             if (firstAddress) {
                 selectAddress(firstAddress);
             }
+        });
+
+        // Funcionalidad del modal de términos y condiciones
+        document.addEventListener('DOMContentLoaded', function() {
+            const termsModal = document.getElementById('terms-modal');
+            const openTermsModal = document.getElementById('open-terms-modal');
+            const closeTermsModal = document.getElementById('close-terms-modal');
+            const closeTermsBtn = document.getElementById('close-terms-btn');
+            const acceptTermsBtn = document.getElementById('accept-terms-btn');
+            const terminosCheckbox = document.getElementById('terminos');
+            const confirmOrderBtn = document.getElementById('confirm-order-btn');
+
+            // Abrir modal
+            openTermsModal.addEventListener('click', function(e) {
+                e.preventDefault();
+                termsModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden'; // Prevenir scroll del body
+            });
+
+            // Función para cerrar modal
+            function closeModal() {
+                termsModal.classList.add('hidden');
+                document.body.style.overflow = 'auto'; // Restaurar scroll del body
+            }
+
+            // Cerrar modal con X
+            closeTermsModal.addEventListener('click', closeModal);
+            
+            // Cerrar modal con botón
+            closeTermsBtn.addEventListener('click', closeModal);
+
+            // Cerrar modal al hacer clic fuera
+            termsModal.addEventListener('click', function(e) {
+                if (e.target === termsModal) {
+                    closeModal();
+                }
+            });
+
+            // Cerrar modal con ESC
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && !termsModal.classList.contains('hidden')) {
+                    closeModal();
+                }
+            });
+
+            // Aceptar términos
+            acceptTermsBtn.addEventListener('click', function() {
+                terminosCheckbox.checked = true;
+                confirmOrderBtn.disabled = false;
+                confirmOrderBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                confirmOrderBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+                closeModal();
+            });
+
+            // Validar checkbox para habilitar/deshabilitar botón
+            terminosCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    confirmOrderBtn.disabled = false;
+                    confirmOrderBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                    confirmOrderBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+                } else {
+                    confirmOrderBtn.disabled = true;
+                    confirmOrderBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+                    confirmOrderBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                }
+            });
+
+            // Validar al enviar el formulario
+            document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+                if (!terminosCheckbox.checked) {
+                    e.preventDefault();
+                    // Mostrar alerta con Tailwind
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg z-50';
+                    alertDiv.innerHTML = '⚠️ Debe aceptar los términos y condiciones para continuar';
+                    document.body.appendChild(alertDiv);
+                    
+                    // Remover alerta después de 3 segundos
+                    setTimeout(() => {
+                        alertDiv.remove();
+                    }, 3000);
+                    
+                    // Hacer scroll al checkbox
+                    terminosCheckbox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
         });
     </script>
 </body>
