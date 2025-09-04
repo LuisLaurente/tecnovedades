@@ -154,20 +154,21 @@ if (!isset($categorias)) {
         <div class="features-grid">
           <div class="feature-box">
             <i class="fa-solid fa-shield-halved"></i>
-            <h3>Calidad Garantizada</h3>
-            <p>Seleccionamos los mejores componentes y periféricos de marcas líderes para asegurar tu satisfacción y rendimiento.</p>
+            <h3>Calidad Premium</h3>
+            <p>Garantizamos productos seleccionados bajo estrictos estándares, diseñados para ofrecerte el máximo rendimiento y una experiencia de compra superior.</p>
           </div>
           <div class="feature-box">
             <i class="fa-solid fa-headset"></i>
-            <h3>Soporte Técnico Experto</h3>
-            <p>Nuestro equipo está listo para ayudarte con cualquier consulta, desde la compatibilidad de piezas hasta la configuración de tu equipo.</p>
+            <h3>Soporte Postventa</h3>
+            <p>Nuestro equipo especializado te brinda asistencia continua después de tu compra, resolviendo dudas y asegurando el mejor desempeño de tus equipos.</p>
           </div>
           <div class="feature-box">
             <i class="fa-solid fa-truck-fast"></i>
             <h3>Envíos a Nivel Nacional</h3>
-            <p>Recibe tus productos de forma rápida y segura en la puerta de tu casa, sin importar en qué parte del país te encuentres.</p>
+            <p>Realizamos entregas rápidas y seguras, con un tiempo de envío de hasta 24 horas en Lima y de 1 a 2 días en provincias, asegurando puntualidad y confianza en cada pedido.</p>
           </div>
         </div>
+
       </div>
     </section>
   </main>

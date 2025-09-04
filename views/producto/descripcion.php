@@ -131,37 +131,72 @@ function producto_imagen_url($producto, $idx = 0)
 
             <div class="product-short-description">
                 <h2>Especificaciones Clave:</h2>
-<!-- Mostramos las especificaciones como una lista -->
-<ul class="specs-list-short">
-    <?php if (!empty($producto['especificaciones_array']) && is_array($producto['especificaciones_array'])): ?>
-        <?php 
-        // Tomamos solo las primeras 5 especificaciones para no saturar el espacio
-        $especificacionesMostradas = array_slice($producto['especificaciones_array'], 0, 5); 
-        ?>
-        <?php foreach ($especificacionesMostradas as $spec): ?>
-            <li><?= htmlspecialchars($spec) ?></li>
-        <?php endforeach; ?>
-    <?php else: ?>
-        <li>No hay especificaciones disponibles.</li>
-    <?php endif; ?>
-</ul>
-<a href="#descripcion-section" class="read-more-link">Ver descripción completa</a>
+                <!-- Mostramos las especificaciones como una lista -->
+                <ul class="specs-list-short">
+                    <?php if (!empty($producto['especificaciones_array']) && is_array($producto['especificaciones_array'])): ?>
+                        <?php
+                        // Tomamos solo las primeras 5 especificaciones para no saturar el espacio
+                        $especificacionesMostradas = array_slice($producto['especificaciones_array'], 0, 5);
+                        ?>
+                        <?php foreach ($especificacionesMostradas as $spec): ?>
+                            <li><?= htmlspecialchars($spec) ?></li>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <li>No hay especificaciones disponibles.</li>
+                    <?php endif; ?>
+                </ul>
+                <a href="#descripcion-section" class="read-more-link">Ver descripción completa</a>
 
 
                 <div class="info-boxes">
-                    <div class="info-box">
-                        <img src="<?= url('images/delivery_icon.png') ?>" alt="Envíos">
-                        <span>Envíos a todo el Perú</span>
-                    </div>
-                    <div class="info-box">
-                        <img src="<?= url('images/warranty_icon.png') ?>" alt="Garantía">
-                        <span>Garantía en tus pedidos</span>
-                    </div>
-                    <div class="info-box">
-                        <img src="<?= url('images/secure_payment_icon.png') ?>" alt="Pagos Seguros">
-                        <span>Pagos 100% seguros</span>
-                    </div>
-                </div>
+  <div class="info-box">
+    <i class="fa-solid fa-truck"></i>
+    <span>Envíos rápidos a todo el Perú</span>
+  </div>
+  <div class="info-box">
+    <i class="fa-solid fa-certificate"></i>
+    <span>Garantía Bytebox en todos tus pedidos</span>
+  </div>
+  <div class="info-box">
+    <i class="fa-solid fa-circle-check"></i>
+    <span>Pagos seguros y protegidos siempre</span>
+  </div>
+</div>
+<style>
+  .info-boxes {
+    display: flex;
+    justify-content: space-between; /* distribuye de forma más pareja */
+    gap: 0.8rem; /* menor separación entre bloques */
+    width: 100%;
+  }
+
+  .info-box {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex: 1; /* cada caja ocupa el mismo ancho */
+  }
+
+  .info-box i {
+    font-size: 1.2rem; /* un poco más pequeño */
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+    border-radius: 50%;
+    padding: 8px; /* más compacto */
+    margin-right: 8px; /* espacio mínimo entre ícono y texto */
+    margin-bottom: 0; /* quitamos margen inferior */
+  }
+
+  .info-box span {
+    text-align: left;   /* alinea a la izquierda */
+    white-space: nowrap; /* evita salto de línea */
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #333;
+  }
+</style>
+
+
             </div>
 
             <div class="product-details">

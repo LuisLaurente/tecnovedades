@@ -124,7 +124,7 @@ if (isset($_SESSION['carrito'])) {
             <!-- Columna derecha: Header del carrito y resumen -->
             <div class="right-column">
                 <div class="carrito-header">
-                    <h1 class="carrito-title">Carro de compra</h1>
+                    <h1 class="carrito-title">Resumen de la compra</h1>
                 </div>
 
                 <!-- Contenedor principal del carrito que se actualizará -->
