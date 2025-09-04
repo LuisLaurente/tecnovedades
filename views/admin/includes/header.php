@@ -114,7 +114,7 @@ function categoria_url($cat)
 ?>
 
 <link rel="stylesheet" href="<?= url('css/header.css') ?>">
-
+<!--
 <div class="top-bar">
   <div class="top-bar-content">
     <nav class="top-links">
@@ -125,13 +125,13 @@ function categoria_url($cat)
     </nav>
     <div class="social-icons">
       <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
-      <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+      <a href="#" class="social-icon"><i class="fab fa-tiktok"></i></a>
       <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
-      <a href="#" class="social-icon"><i class="fab fa-youtube"></i></a>
     </div>
   </div>
 </div>
-
+-->
+<div class="sticky-header-wrapper">  <!-- <<-- AÑADIR ESTE DIV ENVOLVENTE -->
 <header class="main-header">
   <div class="header-content">
 
@@ -306,7 +306,7 @@ function categoria_url($cat)
       </nav>
     </div>
   </div>
-
+</div> <!-- <<-- CERRAR EL DIV ENVOLVENTE -->
 <!-- Exponer BASE_URL para JS -->
 <script>
   const BASE_URL = "<?= rtrim(url(''), '/') ?>";

@@ -13,6 +13,11 @@
   --radio-borde-suave: 12px; /* Bordes redondeados suaves */
   --radio-borde-completo: 50px; /* Para elementos circulares/píldoras */
 }
+.sticky-header-wrapper {
+  position: sticky; /* Hacemos que este contenedor sea el pegajoso */
+  top: 0;           /* Se pega en la parte superior de la ventana */
+  z-index: 1000;    /* Se asegura de que esté por encima de otro contenido */
+}
 
 /* Estilos para la barra superior (Empresa, Novedades, etc.) */
 .top-bar {
@@ -31,7 +36,7 @@
 }
 
 .top-links a, .social-icons a {
-  color: #555;
+  color: #3b3b3b;
   text-decoration: none;
   margin: 0 10px;
   transition: color 0.2s;
@@ -53,10 +58,13 @@
 .main-header {
   background-color: var(--color-fondo-header);
   padding: 15px 5%;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
   border-bottom: 1px solid #333;
+  
+  /* --- INICIO DE LA CORRECCIÓN --- */
+  position: sticky; /* Hacemos que el header principal sea pegajoso */
+  top: 0;           /* Se pega en el borde superior de la pantalla */
+  z-index: 1001;    /* Un z-index alto para que esté por encima de todo */
+  /* --- FIN DE LA CORRECCIÓN --- */
 }
 
 .header-content {
@@ -220,6 +228,7 @@
   padding: 10px 5%;
   border-bottom: 1px solid #e0e0e0;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  /* No necesita position: sticky aquí */
 }
 
 .categories-content {
