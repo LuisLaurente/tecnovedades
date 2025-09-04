@@ -316,12 +316,9 @@ body.carrito-sin-sesion {
 .carrito-header {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: start;
     gap: 16px;
-    background-color: var(--white-color);
-    padding: 20px 24px;
     border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow-sm);
 }
 
 .carrito-logo {
