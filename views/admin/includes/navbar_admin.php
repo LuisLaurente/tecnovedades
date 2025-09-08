@@ -38,14 +38,20 @@ $userName = \Core\Helpers\SessionHelper::getUserName();
 $userEmail = \Core\Helpers\SessionHelper::getUserEmail();
 $userRole = \Core\Helpers\SessionHelper::getRole();
 ?>
-<?php if (!isCliente()): ?>
-    <!-- Sidebar -->
-<aside id="sidebar"
-    class="w-64 h-screen bg-gradient-to-b from-slate-50 to-blue-50 border-r border-blue-100 shadow-lg 
-           hidden lg:flex lg:flex-col fixed left-0 top-0 transition-transform duration-300">
 
-    <!-- Header del sidebar con logo y nombre -->
-    <div class="p-6 border-b border-blue-100 bg-white/50 backdrop-blur-sm flex-shrink-0">
+<aside class="">
+    
+
+    <!-- Navegación principal - scrolleable -->
+    <nav class="">
+
+        <!-- Sección Panel Administrativo (solo para usuarios con permisos administrativos) -->
+        <?php
+        $tienePermisosAdmin = hasPermission('usuarios') || hasPermission('productos') || hasPermission('categorias') || hasPermission('pedidos');
+        if ($tienePermisosAdmin):
+        ?>
+        <!-- Header del sidebar con logo y nombre -->
+    <div class="">
         <div class="flex items-center space-x-3">
             <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -60,10 +66,6 @@ $userRole = \Core\Helpers\SessionHelper::getRole();
             </div>
         </div>
     </div>
-
-    <!-- Navegación principal - scrolleable -->
-    <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-
         <!-- Mi Perfil (siempre visible para usuarios autenticados) -->
         <a href="<?= url('/auth/profile') ?>" class="nav-link group flex items-center p-3 text-gray-700 hover:bg-white/60 rounded-xl transition-all duration-200 backdrop-blur-sm border border-transparent hover:border-blue-200">
             <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform">
@@ -76,13 +78,6 @@ $userRole = \Core\Helpers\SessionHelper::getRole();
 
         <!-- Divisor -->
         <div class="my-4 border-t border-blue-200/50"></div>
-
-
-        <!-- Sección Panel Administrativo (solo para usuarios con permisos administrativos) -->
-        <?php
-        $tienePermisosAdmin = hasPermission('usuarios') || hasPermission('productos') || hasPermission('categorias') || hasPermission('pedidos');
-        if ($tienePermisosAdmin):
-        ?>
             <div class="mb-3">
                 <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 mb-2">Panel Administrativo</h3>
             </div>
@@ -306,23 +301,6 @@ $userRole = \Core\Helpers\SessionHelper::getRole();
         <?php endif; ?>
     </div>
 </aside>
-    <!-- <button id="sidebar-toggle"
-        class="hidden lg:block fixed top-1/2 left-64 transform -translate-y-1/2 z-50 text-white 
-            p-2 rounded-r-lg shadow-md hover:bg-blue-700 transition-colors"style="background-color: var(--color-primario);">
-        ⬅️
-    </button> -->
-        <!-- Overlay para móviles -->
-        <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden hidden"></div>
-
-        <!-- Botón hamburguesa -->
-        <button id="mobile-menu-button" class="lg:hidden fixed top-4 left-4 z-30 p-2 bg-white rounded-lg shadow-lg">
-            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-            </svg>
-        </button>
-<?php endif; ?>
-    
-
 
 <!-- Overlay para móviles (cuando el sidebar esté abierto) -->
 <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden hidden"></div>
@@ -349,23 +327,5 @@ $userRole = \Core\Helpers\SessionHelper::getRole();
     overlay?.addEventListener('click', function() {
         sidebar?.classList.add('hidden');
         overlay?.classList.add('hidden');
-    });
-    const toggleBtn = document.getElementById('sidebar-toggle');
-
-    let sidebarVisible = true;
-
-    toggleBtn.addEventListener('click', () => {
-        if (sidebarVisible) {
-            sidebar.classList.add('-translate-x-full');
-            toggleBtn.classList.remove('left-64');
-            toggleBtn.classList.add('left-0');
-            toggleBtn.innerHTML = '➡️';
-        } else {
-            sidebar.classList.remove('-translate-x-full');
-            toggleBtn.classList.remove('left-0');
-            toggleBtn.classList.add('left-64');
-            toggleBtn.innerHTML = '⬅️';
-        }
-        sidebarVisible = !sidebarVisible;
     });
 </script>

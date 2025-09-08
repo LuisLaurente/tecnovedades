@@ -136,7 +136,7 @@ function categoria_url($cat)
   <div class="header-content">
 
     <!-- Left: logo -->
-    <div class="header-left">
+    <div class="header-left ml-[15px]">
       <a href="<?= url('home/index') ?>" class="logo-link" aria-label="Bytebox home">
         <img src="<?= url('images/Logo_Horizontal2_Versi_nPrincipal.png') ?>" alt="Bytebox" class="logo-image">
       </a>
@@ -232,7 +232,7 @@ function categoria_url($cat)
 <div class="categories-bar">
     <div class="categories-content">
       <div class="all-categories-dropdown-container">
-        <button class="all-categories-button" id="allCategoriesButton" aria-haspopup="true" aria-expanded="false">
+        <button class="all-categories-button ml-[15px]" id="allCategoriesButton" aria-haspopup="true" aria-expanded="false">
           Todas las Categorías
           <svg class="dropdown-arrow-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>

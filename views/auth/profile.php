@@ -6,13 +6,13 @@
     <div class="flex h-screen">
         <!-- Incluir navegación lateral fija -->
         <div class="fixed inset-y-0 left-0 z-50">
-            <?php include_once __DIR__ . '/../admin/includes/navbar.php'; ?>
+            <?php include __DIR__ . '/../admin/includes/navbar.php'; ?>
         </div>
-         <div class="flex-1 ml-64 flex flex-col min-h-screen">
+         <div class="flex-1 flex flex-col min-h-screen">
 
-        <main class="flex-1 p-2 bg-gray-50 overflow-y-auto">
+        <main class="flex-1 p-2 bg-gray-50 overflow-y-auto ">
             <!-- Incluir header superior fijo -->
-            <div class="sticky top-0 z-40">
+            <div class="sticky top-0 z-40 ">
                 <?php include_once __DIR__ . '/../admin/includes/header.php'; ?>
             </div>
 
@@ -119,8 +119,9 @@
                                             <?php endif; ?>
                                         </div>
                                     </div>
-
+                                                    
                                     <!-- Botones -->
+                                     
                                     <div class="mt-6 flex justify-end space-x-3">
                                         <button type="submit"
                                             class="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
@@ -206,6 +207,14 @@
                                 </div>
                             </div>
                         </div>
+                        <?php if (isCliente()): ?>
+                                            <!-- Botón Mis Pedidos para clientes -->
+                                            <a href="<?= url('/usuario/pedidos') ?>"
+                                            
+                                                class="flex items-center justify-center w-full md:w-auto px-4 py-2 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-md shadow hover:from-violet-600 hover:to-purple-700 transition-all duration-200 text-sm font-medium">
+                                                📦 Mis Pedidos
+                                            </a>
+                                        <?php endif; ?>
                     </div>
                 </div>
             </div>
