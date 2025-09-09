@@ -211,10 +211,15 @@
 .noUi-target { background: var(--medium-gray); border: none; box-shadow: none; height: 4px; }
 .noUi-connect { background: var(--primary-color); }
 .noUi-handle {
-  width: 18px; height: 18px; border-radius: 50%;
-  background: var(--primary-color); border: 2px solid var(--white-color);
-  box-shadow: var(--shadow-light); cursor: pointer;
-  right: -9px; top: -7px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--primary-color); border: 1px solid var(--white-color);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15); cursor: pointer;
+  right: -3.5px; top: -1.5px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.noUi-handle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
 }
 .noUi-handle:focus { outline: none; }
 .noUi-handle::before, .noUi-handle::after { display: none; }

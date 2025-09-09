@@ -69,6 +69,7 @@ $totalEncontrados = $totalProductos;
                         <div class="filter-group">
                             <label class="filter-label">PRECIO</label>
                             <div id="price-slider" class="price-slider-container"></div>
+                            <br>
                             <div class="price-inputs">
                                 <input type="number" class="price-input" name="min_price" value="<?= htmlspecialchars($_GET['min_price'] ?? '0') ?>" placeholder="Mín">
                                 <span>-</span>
