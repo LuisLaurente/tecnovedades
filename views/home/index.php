@@ -102,7 +102,7 @@ if (!isset($categorias)) {
       </div>
     </div>
     <!-- ===================== FIN HERO + CATEGORÍAS ===================== -->
-    <!-- PRODUCTOS DESTACADOS (CARRUSEL INFINITO) -->
+    <!-- ===================== PRODUCTOS DESTACADOS (CARRUSEL INFINITO) ===================== -->
     <section class="featured-products">
       <div class="container">
         <div class="section-title">
@@ -113,37 +113,56 @@ if (!isset($categorias)) {
       <!-- Contenedor del carrusel de productos -->
       <div class="products-carousel-container" aria-label="Carrusel de productos destacados">
         <?php
-        if (!empty($productos)) {
-          // Tu parcial _products_grid.php se incluye aquí. El JS lo manipulará.
+        if (!empty($productos_destacados)) {  // Cambio 1: Usa el nombre del controlador ($productos_destacados)
+          $productos = $productos_destacados;  // Cambio 2: Asigna a $productos para compatibilidad con el parcial _products_grid.php
+          // Ahora el include recibirá $productos con los datos reales
           include __DIR__ . '/_products_grid.php';
         } else {
-          echo '<p style="text-align:center;">No hay productos destacados disponibles.</p>';
+          echo '<p style="text-align:center;">No hay productos destacados disponibles.</p>';  // Fallback si no hay datos
         }
         ?>
       </div>
     </section>
+    <!-- ... (código anterior) ... -->
     <!-- ================================================== -->
-    <!--          INICIO DE LA SECCIÓN DE BANNERS           -->
+    <!--          INICIO DE LA SECCIÓN DE BANNERS SECUNDARIOS          -->
     <!-- ================================================== -->
     <section class="promo-banners-section">
       <div class="container">
         <div class="banners-grid">
-          <!-- Banner 1 -->
-          <a href="#" class="promo-banner-item">
-            <img src="<?= url('images/baner1.jpg') ?>" alt="Promoción o categoría destacada 1">
-          </a>
+          <?php
+          $banner_sec_izq = !empty($banners_secundarios_izquierda) ? $banners_secundarios_izquierda[0] : null;
+          $banner_sec_der = !empty($banners_secundarios_derecha) ? $banners_secundarios_derecha[0] : null;
+          ?>
 
-          <!-- Banner 2 -->
-          <a href="#" class="promo-banner-item">
-            <img src="<?= url('images/baner2.jpg') ?>" alt="Promoción o categoría destacada 1">
-          </a>
+          <?php if ($banner_sec_izq): ?>
+            <a href="#" class="promo-banner-item">
+              <img src="<?= url("uploads/banners/" . htmlspecialchars($banner_sec_izq["nombre_imagen"])) ?>" alt="Banner Secundario Izquierda">
+            </a>
+          <?php else: ?>
+            <!-- Fallback si no hay banner secundario izquierdo en la BD -->
+            <a href="#" class="promo-banner-item">
+              <img src="<?= url("images/baner1.jpg") ?>" alt="Promoción o categoría destacada 1">
+            </a>
+          <?php endif; ?>
+
+          <?php if ($banner_sec_der): ?>
+            <a href="#" class="promo-banner-item">
+              <img src="<?= url("uploads/banners/" . htmlspecialchars($banner_sec_der["nombre_imagen"])) ?>" alt="Banner Secundario Derecha">
+            </a>
+          <?php else: ?>
+            <!-- Fallback si no hay banner secundario derecho en la BD -->
+            <a href="#" class="promo-banner-item">
+              <img src="<?= url("images/baner2.jpg") ?>" alt="Promoción o categoría destacada 2">
+            </a>
+          <?php endif; ?>
         </div>
       </div>
     </section>
     <!-- ================================================== -->
     <!--           FIN DE LA SECCIÓN DE BANNERS             -->
     <!-- ================================================== -->
-
+    <!-- ... (código posterior) ... -->
     <!-- WHY CHOOSE US -->
     <section class="why-choose-us">
       <div class="container">
@@ -191,28 +210,7 @@ if (!isset($categorias)) {
       setInterval(showNextSlide, 12500);
     })();
 
-    // --- Lógica de Carrusel Infinito (Reutilizable) ---
-    function setupInfiniteCarousel(containerSelector, trackSelector, itemsSelector) {
-      const container = document.querySelector(containerSelector);
-      if (!container) return;
-      const track = container.querySelector(trackSelector);
-      if (!track) return;
-
-      const items = Array.from(track.children);
-      if (items.length === 0) return;
-
-      // Clonar elementos para el bucle
-      items.forEach(item => {
-        const clone = item.cloneNode(true);
-        clone.setAttribute('aria-hidden', 'true');
-        track.appendChild(clone);
-      });
-
-      // Añadir clase para activar animación CSS
-      track.classList.add('scrolling');
-    }
-
-    // --- Funcionalidad de Arrastre para Productos con Scroll Infinito ---
+    // --- Funcionalidad de Arrastre para Productos con Scroll Infinito Seamless ---
     function setupDragCarousel(containerSelector) {
       const container = document.querySelector(containerSelector);
       if (!container) return;
@@ -220,81 +218,86 @@ if (!isset($categorias)) {
       const track = container.querySelector('.products-grid');
       if (!track) return;
 
-      // Clonar elementos para scroll infinito (dos veces para asegurar suficientes elementos)
       const originalItems = Array.from(track.children);
-      if (originalItems.length > 0) {
-        // Duplicamos los elementos para crear un ciclo completo
-        for (let i = 0; i < 2; i++) {
-          originalItems.forEach(item => {
-            const clone = item.cloneNode(true);
-            clone.setAttribute('aria-hidden', 'true');
-            track.appendChild(clone);
-          });
-        }
+      if (originalItems.length === 0) return;
+
+      // PASO 1: Clonar items para loop infinito (2 veces -> 3 sets totales)
+      for (let i = 0; i < 2; i++) {
+        originalItems.forEach(item => {
+          const clone = item.cloneNode(true);
+          clone.setAttribute('aria-hidden', 'true');
+          track.appendChild(clone);
+        });
       }
 
-      let isDragging = false;
-      let startX = 0;
-      let scrollLeft = 0;
-      let currentX = 0;
-
-      // Medidas importantes para el scroll infinito
+      // PASO 2: Calcular dimensiones
       let itemWidth = 0;
-      let totalItems = originalItems.length;
-      let totalWidth = 0;
-      let viewportWidth = 0;
-      let itemsInViewport = 0;
-      let threshold = 0;
+      let setWidth = 0; // Ancho de un set original
+      let totalSets = 3; // Original + 2 clones
+      let isDragging = false;
+      let isAnimating = true;
+      let startX = 0;
+      let currentX = 0;
+      let initialX = 0;
 
-      // Calcular dimensiones iniciales
       function calculateDimensions() {
         if (originalItems.length === 0) return;
-
         const firstItem = originalItems[0];
-        // Incluir margin/gap en el cálculo del ancho
         const style = window.getComputedStyle(firstItem);
-        const marginRight = parseInt(style.marginRight) || 0;
+        const marginRight = parseFloat(style.marginRight) || 0;
+        const gap = parseFloat(getComputedStyle(track).gap) || 0;
         itemWidth = firstItem.offsetWidth + marginRight;
 
-        totalWidth = itemWidth * totalItems;
-        viewportWidth = container.offsetWidth;
-        itemsInViewport = Math.ceil(viewportWidth / itemWidth);
-
-        // Umbral para activar el salto es cuando se ve 1/3 del siguiente conjunto de elementos
-        threshold = totalWidth - (itemWidth * Math.floor(itemsInViewport / 3));
+        // Calcula ancho del set original (items + gaps)
+        setWidth = itemWidth * originalItems.length + gap * (originalItems.length - 1);
+        track.style.width = `${setWidth * totalSets}px`; // Total 3 sets
       }
 
-      // Calcular dimensiones inicialmente
       calculateDimensions();
+      window.addEventListener('resize', () => {
+        calculateDimensions();
+        if (!isDragging) {
+          currentX = 0;
+          track.style.transform = 'translateX(0)';
+          track.classList.add('scrolling');
+          isAnimating = true;
+        }
+      });
 
-      // Recalcular cuando cambie el tamaño de la ventana
-      window.addEventListener('resize', calculateDimensions);
+      // PASO 3: Configuración inicial
+      track.style.transform = 'translateX(0)';
+      setTimeout(() => {
+        if (!isDragging && !track.classList.contains('scrolling')) {
+          track.classList.add('scrolling');
+          isAnimating = true;
+        }
+      }, 500);
 
-      // Configuración inicial
-      track.style.animation = 'none';
-      track.style.transform = 'translateX(0px)';
-
-      // Mouse events
+      // PASO 4: Mouse events
       container.addEventListener('mousedown', (e) => {
+        if (isDragging) return;
         isDragging = true;
         container.classList.add('dragging');
+        track.classList.remove('scrolling');
+        isAnimating = false;
         track.style.transition = 'none';
-        track.style.animation = 'none';
 
+        initialX = currentX;
         startX = e.pageX - container.offsetLeft;
-        scrollLeft = currentX;
+        e.preventDefault();
       });
 
       document.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
         e.preventDefault();
-
         const x = e.pageX - container.offsetLeft;
-        const walk = (x - startX) * 1.2;
-        currentX = scrollLeft + walk;
+        const walk = (x - startX) * 1.2; // Sensibilidad
+        currentX = initialX + walk;
 
-        // Aplicar scroll infinito en tiempo real
-        applyInfiniteScroll();
+        // Loop infinito: mantener currentX en rango [-setWidth, 0]
+        while (currentX > 0) currentX -= setWidth;
+        while (currentX < -setWidth) currentX += setWidth;
+
         track.style.transform = `translateX(${currentX}px)`;
       });
 
@@ -302,38 +305,50 @@ if (!isset($categorias)) {
         if (!isDragging) return;
         isDragging = false;
         container.classList.remove('dragging');
-        // Comprobar si debe activarse el scroll infinito
-        applyInfiniteScroll(true);
+
+        // Normalizar posición para reanudar animación
+        currentX = currentX % setWidth; // Ajusta al set más cercano
+        if (currentX < -setWidth / 2) currentX += setWidth; // Evita negativos grandes
         track.style.transition = 'transform 0.3s ease-out';
         track.style.transform = `translateX(${currentX}px)`;
 
-        // Reactivar scroll automático después de un tiempo
-        setTimeout(restartAutoScroll, 3000);
+        // Reanudar animación CSS
+        setTimeout(() => {
+          if (!isDragging) {
+            // Ajustar posición para que coincida con el keyframe
+            let offsetPercentage = (currentX / setWidth) * 33.333; // Convertir a % del set
+            track.style.transform = `translateX(${offsetPercentage}%)`;
+            track.classList.add('scrolling');
+            isAnimating = true;
+          }
+        }, 300);
       });
 
-      // Touch events
+      // PASO 5: Touch events
       container.addEventListener('touchstart', (e) => {
+        if (isDragging) return;
         isDragging = true;
         container.classList.add('dragging');
+        track.classList.remove('scrolling');
+        isAnimating = false;
         track.style.transition = 'none';
-        track.style.animation = 'none';
 
+        initialX = currentX;
         startX = e.touches[0].pageX - container.offsetLeft;
-        scrollLeft = currentX;
       }, {
-        passive: true
+        passive: false
       });
 
       container.addEventListener('touchmove', (e) => {
         if (!isDragging) return;
         e.preventDefault();
-
         const x = e.touches[0].pageX - container.offsetLeft;
         const walk = (x - startX) * 1.2;
-        currentX = scrollLeft + walk;
+        currentX = initialX + walk;
 
-        // Aplicar scroll infinito en tiempo real
-        applyInfiniteScroll();
+        // Loop infinito
+        while (currentX > 0) currentX -= setWidth;
+        while (currentX < -setWidth) currentX += setWidth;
 
         track.style.transform = `translateX(${currentX}px)`;
       }, {
@@ -345,87 +360,39 @@ if (!isset($categorias)) {
         isDragging = false;
         container.classList.remove('dragging');
 
-        // Comprobar si debe activarse el scroll infinito
-        applyInfiniteScroll(true);
+        // Normalizar posición
+        currentX = currentX % setWidth;
+        if (currentX < -setWidth / 2) currentX += setWidth;
         track.style.transition = 'transform 0.3s ease-out';
         track.style.transform = `translateX(${currentX}px)`;
 
-        // Reactivar scroll automático después de un tiempo
-        setTimeout(restartAutoScroll, 3000);
-      });
-
-      // Función para aplicar el scroll infinito
-      function applyInfiniteScroll(withAnimation = false) {
-        if (totalItems === 0 || totalWidth === 0) return;
-
-        // Cuando se arrastra hacia la derecha (inicio) y pasa el primer elemento
-        if (currentX > threshold / 2) {
-          // Saltar al final del primer ciclo
-          if (withAnimation) {
-            track.style.transition = 'none';
-          }
-          currentX = currentX - totalWidth;
-          track.style.transform = `translateX(${currentX}px)`;
-        }
-
-        // Cuando se arrastra hacia la izquierda (final) y casi llega al final del primer ciclo
-        else if (Math.abs(currentX) > threshold) {
-          // Saltar al inicio del primer ciclo
-          if (withAnimation) {
-            track.style.transition = 'none';
-          }
-          currentX = currentX + totalWidth;
-          track.style.transform = `translateX(${currentX}px)`;
-        }
-
-        // Reactivar la transición si fue desactivada
-        if (withAnimation) {
-          setTimeout(() => {
-            track.style.transition = 'transform 0.3s ease-out';
-          }, 10);
-        }
-      }
-
-      function restartAutoScroll() {
-        if (isDragging) return;
-
-        // Volver al inicio suavemente
-        track.style.transition = 'transform 1s ease-in-out';
-        track.style.transform = 'translateX(0px)';
-        currentX = 0;
-
-        // Reactivar animación CSS
+        // Reanudar animación CSS
         setTimeout(() => {
           if (!isDragging) {
-            track.style.transition = '';
-            track.style.animation = 'scroll-infinite 60s linear infinite';
+            let offsetPercentage = (currentX / setWidth) * 33.333;
+            track.style.transform = `translateX(${offsetPercentage}%)`;
+            track.classList.add('scrolling');
+            isAnimating = true;
           }
-        }, 1000);
-      }
+        }, 300);
+      });
 
-      // Prevenir comportamientos por defecto
+      // Prevenir defaults
       container.addEventListener('dragstart', e => e.preventDefault());
       container.addEventListener('selectstart', e => e.preventDefault());
 
-      // Prevenir clicks durante arrastre
+      // Prevenir clicks si drag
+      let clickThreshold = 5;
       container.addEventListener('click', (e) => {
-        if (Math.abs(currentX - scrollLeft) > 5) {
+        if (Math.abs(currentX - initialX) > clickThreshold) {
           e.preventDefault();
           e.stopPropagation();
         }
       }, true);
-
-      // Iniciar scroll automático
-      setTimeout(() => {
-        if (!isDragging) {
-          track.style.animation = 'scroll-infinite 60s linear infinite';
-        }
-      }, 500);
     }
 
-    // --- Inicializar carruseles ---
+    // --- Inicializar (sin cambios) ---
     document.addEventListener('DOMContentLoaded', function() {
-      // Solo configurar funcionalidad de arrastre (que incluye la animación automática)
       setupDragCarousel('.products-carousel-container');
     });
   </script>
