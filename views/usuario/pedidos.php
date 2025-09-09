@@ -27,7 +27,7 @@
         <div class="fixed inset-y-0 left-0 z-50">
             <?php include_once __DIR__ . '/../admin/includes/navbar.php'; ?>
         </div>
-        <main class="flex-1 ml-64 p-2 bg-gray-50 overflow-y-auto">
+        <main class="flex-1 p-2 bg-gray-50 overflow-y-auto">
             <!-- Incluir header superior fijo -->
             <div class="sticky top-0 z-40">
                 <?php include_once __DIR__ . '/../admin/includes/header.php'; ?>
@@ -223,6 +223,7 @@
                                                 <button onclick="mostrarDetallePedido(<?= $pedidozz['id'] ?>)" class="text-blue-600 hover:text-blue-800 font-medium cursor-pointer">
                                                     Ver detalles →
                                                 </button>
+                                                
                                             </div>
                                         </div>
                                         
@@ -551,11 +552,11 @@
                         ${pedido.detalles && pedido.detalles.length > 0 ? `
                         <div class="mt-4 space-y-4">
                             <!-- Botón de acción -->
-                            <div class="flex justify-center">
+                            <div class="flex justify-end mr-[20px]">
                                 <button 
                                     onclick='abrirModalComentario(${pedido.id}, ${JSON.stringify(pedido.detalles)})' 
                                     class="text-blue-600 hover:text-blue-800 font-medium cursor-pointer">
-                                    ✍️ Dejar Comentario
+                                    ✍️ Califica tu compra
                                 </button>
 
 

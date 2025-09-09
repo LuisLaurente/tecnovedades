@@ -18,7 +18,7 @@
 
                 <div class="flex-1 p-6 bg-gray-50 overflow-y-auto">
                     <div class="max-w-6xl mx-auto">
-                        
+
                         <!-- Título y descripción -->
                         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
                             <h1 class="text-3xl font-bold text-gray-800 mb-2">📊 Reporte de Ventas</h1>
@@ -27,65 +27,50 @@
 
                         <!-- Filtro de fechas -->
                         <form method="get" class="bg-white rounded-lg shadow-md p-6 mb-6">
-                            <div class="flex items-center gap-4">
-                                <label class="flex flex-col">
-                                    Desde:
-                                    <input type="date" name="inicio" value="<?= htmlspecialchars($fechaInicio) ?>" class="input input-bordered border border-gray-300 rounded px-3 py-2">
+                            <div class="flex flex-col md:flex-row items-start md:items-center gap-4">
+                                <label class="flex flex-col text-sm">
+                                    <span class="text-gray-700">Desde</span>
+                                    <input type="date" name="inicio" value="<?= htmlspecialchars($fechaInicio ?? '') ?>" class="border border-gray-300 rounded px-3 py-2 mt-1">
                                 </label>
-                                <label class="flex flex-col">
-                                    Hasta:
-                                    <input type="date" name="fin" value="<?= htmlspecialchars($fechaFin) ?>" class="input input-bordered border border-gray-300 rounded px-3 py-2">
+                                <label class="flex flex-col text-sm">
+                                    <span class="text-gray-700">Hasta</span>
+                                    <input type="date" name="fin" value="<?= htmlspecialchars($fechaFin ?? '') ?>" class="border border-gray-300 rounded px-3 py-2 mt-1">
                                 </label>
-                                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg mt-5">
-                                    Buscar
-                                </button>
+                                <div class="mt-3 md:mt-0">
+                                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg cursor-pointer">
+                                        Buscar
+                                    </button>
+                                </div>
                             </div>
                         </form>
-                        <!-- Botones -->
-                        <div class="mb-4 flex gap-3">
-                            <!-- Botón Reporte General -->
-                            <form method="get" action="<?= url('reporte/exportar_csv') ?>">
-                                <input type="hidden" name="inicio" value="<?= htmlspecialchars($fechaInicio) ?>">
-                                <input type="hidden" name="fin" value="<?= htmlspecialchars($fechaFin) ?>">
-                                <input type="hidden" name="tipo" value="general">
-                                <button type="submit" 
-                                        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer">
-                                    ⬇️ Exportar Reporte General (CSV)
-                                </button>
-                            </form>
 
-                            <!-- Botón Reporte Detallado -->
-                            <form method="get" action="<?= url('reporte/exportar_csv') ?>">
-                                <input type="hidden" name="inicio" value="<?= htmlspecialchars($fechaInicio) ?>">
-                                <input type="hidden" name="fin" value="<?= htmlspecialchars($fechaFin) ?>">
-                                <input type="hidden" name="tipo" value="detalle">
-                                <button type="submit" 
-                                        class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg cursor-pointer">
-                                    ⬇️ Exportar Reporte Detallado (CSV)
+                        <!-- Botón de exportación completo -->
+                        <div class="mb-4">
+                            <form method="get" action="<?= url('reporte/exportarCsv') ?>">
+                                <input type="hidden" name="inicio" value="<?= htmlspecialchars($fechaInicio ?? '') ?>">
+                                <input type="hidden" name="fin" value="<?= htmlspecialchars($fechaFin ?? '') ?>">
+                                <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg cursor-pointer">
+                                    ⬇️ Exportar Reporte (CSV)
                                 </button>
                             </form>
                         </div>
 
-
-                        <!-- Reporte General -->
+                        <!-- Resumen General -->
                         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
                             <h2 class="text-2xl font-bold mb-4">📈 Resumen General</h2>
-                            <?php if ($resumen): ?>
+                            <?php if (!empty($resumen)): ?>
                                 <ul class="space-y-2 text-gray-800">
-                                    <li>🧾 Total vendido: 
-                                    <strong>S/ <?= number_format($resumen['total_vendido'] ?? 0, 2) ?></strong>
-                                    </li>
-                                    <li>📦 Total de pedidos: <strong><?= $resumen['total_pedidos'] ?></strong></li>
-                                    <li>🎟️ Ticket promedio: 
-                                    <strong>S/ <?= number_format($resumen['ticket_promedio'] ?? 0, 2) ?></strong>
-                                    </li>
+                                    <li>🧾 <strong>Total vendido:</strong> S/ <?= number_format($resumen['total_vendido'] ?? 0, 2) ?></li>
+                                    <li>📦 <strong>Total de pedidos:</strong> <?= intval($resumen['total_pedidos'] ?? 0) ?></li>
+                                    <li>🎟️ <strong>Ticket promedio:</strong> S/ <?= number_format($resumen['ticket_promedio'] ?? 0, 2) ?></li>
+                                    <li>📅 <strong>Rango:</strong> <?= htmlspecialchars($fechaInicio ?? '-') ?> — <?= htmlspecialchars($fechaFin ?? '-') ?></li>
                                 </ul>
                             <?php else: ?>
                                 <p class="text-gray-600">No hay datos disponibles para este rango.</p>
                             <?php endif; ?>
                         </div>
 
-                        <!-- Reporte Detallado -->
+                        <!-- Detalle por Producto con columnas adicionales de Pedidos -->
                         <div class="bg-white rounded-lg shadow-md p-6">
                             <h2 class="text-2xl font-bold mb-4">📦 Detalle por Producto</h2>
                             <?php if (!empty($detalles)): ?>
@@ -93,19 +78,34 @@
                                     <table class="min-w-full text-left text-sm border">
                                         <thead class="bg-gray-100 text-gray-700">
                                             <tr>
+                                                <th class="px-4 py-2 border">Pedido ID</th>
+                                                <th class="px-4 py-2 border">Fecha</th>
                                                 <th class="px-4 py-2 border">Producto</th>
                                                 <th class="px-4 py-2 border">Precio Unitario (S/)</th>
                                                 <th class="px-4 py-2 border">Cantidad Vendida</th>
-                                                <th class="px-4 py-2 border">Subtotal (S/)</th>
+                                                <th class="px-4 py-2 border">Total (S/)</th>
+                                                <th class="px-4 py-2 border text-center">Acciones</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <?php foreach ($detalles as $d): ?>
-                                            <tr class="border-t">
-                                                    <td class="px-4 py-2"><?= htmlspecialchars($d['nombre']) ?></td>
-                                                    <td class="px-4 py-2">S/ <?= number_format($d['precio_unitario'], 2) ?></td>
-                                                    <td class="px-4 py-2"><?= $d['cantidad_total'] ?></td>
-                                                    <td class="px-4 py-2">S/ <?= number_format($d['precio_unitario'] * $d['cantidad_total'], 2) ?></td>
+                                                <?php
+                                                    $precio = floatval($d['precio_unitario'] ?? $d['precio'] ?? 0);
+                                                    $cantidad = intval($d['cantidad_total'] ?? $d['cantidad'] ?? 0);
+                                                    $subtotal = $precio * $cantidad;
+                                                    $pedidoId = $d['id'] ?? $d['pedido_id'] ?? '';
+                                                    $fechaPedido = $d['creado_en'] ?? $d['fecha'] ?? '';
+                                                ?>
+                                                <tr class="border-t hover:bg-gray-50">
+                                                    <td class="px-4 py-2"><?= htmlspecialchars($pedidoId) ?></td>
+                                                    <td class="px-4 py-2"><?= htmlspecialchars(date('d/m/Y H:i', strtotime($fechaPedido))) ?></td>
+                                                    <td class="px-4 py-2"><?= htmlspecialchars($d['nombre'] ?? $d['producto'] ?? '') ?></td>
+                                                    <td class="px-4 py-2">S/ <?= number_format($precio, 2) ?></td>
+                                                    <td class="px-4 py-2"><?= $cantidad ?></td>
+                                                    <td class="px-4 py-2">S/ <?= number_format($subtotal, 2) ?></td>
+                                                    <td class="px-4 py-2 text-center">
+                                                        <a href="<?= url('pedido/ver/' . ($d['pedido_id'] ?? $d['id'] ?? '')) ?>" class="text-blue-600 hover:text-blue-800">Ver</a>
+                                                    </td>
                                                 </tr>
                                             <?php endforeach; ?>
                                         </tbody>
@@ -115,6 +115,7 @@
                                 <p class="text-gray-600 mt-2">No hay ventas registradas en el rango seleccionado.</p>
                             <?php endif; ?>
                         </div>
+
                     </div>
                 </div>
 

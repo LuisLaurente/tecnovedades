@@ -313,7 +313,7 @@ $total_final = max(0, $totales['total'] - $descuento_cupon);
                             <div class="mt-6">
                                 <button type="submit" id="confirm-order-btn" disabled
                                         class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed">
-                                    🚀 Confirmar Pedido - S/ <?= number_format($total_final, 2) ?>
+                                    Pagar Ahora - S/ <?= number_format($total_final, 2) ?>
                                 </button>
                             </div>
                         </form>
