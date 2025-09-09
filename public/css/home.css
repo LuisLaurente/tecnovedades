@@ -20,7 +20,7 @@ body {
 }
 
 .container {
-  max-width: 1400px;
+  max-width: 1800px;
   margin: 0 auto;
   padding: 0 2rem;
   justify-content: center;
@@ -262,120 +262,83 @@ body {
 /* ================================================== */
 
 .promo-banners-section {
-    padding: 4rem 0; /* Espaciado vertical */
-    background-color: #f8f9fa; /* Un fondo ligeramente gris para diferenciarla */
+   background-color: #ffffff;
+   padding: 2rem 0; /* Solo padding vertical */
 }
 
 .banners-grid {
-    display: grid;
-    /* Crea 3 columnas en escritorio */
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem; /* Espacio entre los banners */
+   display: flex;
+   justify-content: space-between;
+   gap: 1.5rem;
+   max-width: 100%;
+   padding: 0; /* Sin padding lateral */
 }
 
 .promo-banner-item {
-    display: block;
-    position: relative; /* Necesario para el overlay */
-    overflow: hidden; /* Oculta partes de la imagen que se salgan */
-    border-radius: 12px; /* Bordes redondeados */
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+   display: block;
+   position: relative;
+   overflow: hidden;
+   border-radius: 0; /* Sin bordes redondeados para que llegue a los extremos */
+   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+   transition: transform 0.3s ease, box-shadow 0.3s ease;
+   flex: 1; /* Cada banner ocupa el mismo espacio disponible */
 }
 
 .promo-banner-item:hover {
-    transform: translateY(-5px); /* Efecto de elevación al pasar el mouse */
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+   transform: translateY(-5px);
+   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
 .promo-banner-item img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* Asegura que la imagen cubra todo el espacio sin deformarse */
-    transition: transform 0.4s ease;
+   display: block;
+   width: 100%;
+   height: 300px; /* Altura aumentada */
+   object-fit: cover;
+   transition: transform 0.4s ease;
 }
 
 .promo-banner-item:hover img {
-    transform: scale(1.05); /* Efecto de zoom en la imagen */
+   transform: scale(1.05);
 }
-
-.banner-overlay {
-    position: absolute;
-    inset: 0; /* Cubre todo el contenedor (top, right, bottom, left = 0) */
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 60%); /* Gradiente oscuro desde abajo */
-    display: flex;
-    align-items: flex-end; /* Alinea el contenido en la parte inferior */
-    padding: 1.5rem;
-}
-
-.banner-content {
-    color: #ffffff;
-    transform: translateY(10px); /* Ligeramente desplazado hacia abajo */
-    opacity: 0.9;
-    transition: transform 0.3s ease, opacity 0.3s ease;
-}
-
-.promo-banner-item:hover .banner-content {
-    transform: translateY(0); /* Vuelve a su posición original */
-    opacity: 1;
-}
-
-.banner-title {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin: 0 0 0.25rem 0;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.banner-cta {
-    font-family: 'Outfit', sans-serif;
-    font-size: 1rem;
-    font-weight: 500;
-    display: inline-block;
-    transition: letter-spacing 0.3s ease;
-}
-
-.promo-banner-item:hover .banner-cta {
-    letter-spacing: 0.5px; /* Sutil efecto en el texto del CTA */
-}
-
-.banner-cta i {
-    margin-left: 0.5rem;
-    transition: transform 0.3s ease;
-}
-
-.promo-banner-item:hover .banner-cta i {
-    transform: translateX(5px); /* Mueve la flecha a la derecha */
-}
-
 
 /* --- Responsive Design --- */
 
 /* Para tablets */
 @media (max-width: 992px) {
-    .banners-grid {
-        /* Mantiene 3 columnas pero con menos espacio */
-        gap: 1rem;
-    }
-    .banner-title {
-        font-size: 1.25rem;
-    }
-    .banner-cta {
-        font-size: 0.9rem;
-    }
+   .banners-grid {
+       gap: 1rem;
+   }
+   
+   .promo-banner-item img {
+       height: 250px;
+   }
 }
 
 /* Para móviles grandes y tablets en vertical */
 @media (max-width: 768px) {
-    .promo-banners-section {
-        padding: 3rem 0;
-    }
-    .banners-grid {
-        /* Cambia a una sola columna */
-        grid-template-columns: 1fr;
-        gap: 1.5rem; /* Espacio vertical entre banners */
-    }
+   .promo-banners-section {
+       padding: 1.5rem 0;
+   }
+   
+   .banners-grid {
+       flex-direction: column;
+       gap: 1.5rem;
+   }
+   
+   .promo-banner-item img {
+       height: 200px;
+   }
+}
+
+/* Para móviles pequeños */
+@media (max-width: 480px) {
+   .promo-banners-section {
+       padding: 1rem 0;
+   }
+   
+   .promo-banner-item img {
+       height: 180px;
+   }
 }
 
 /* ================================================================== */
@@ -415,16 +378,38 @@ body {
 /* ================================================================== */
 /* ANIMACIÓN DE SCROLL INFINITO (REUTILIZABLE)                        */
 /* ================================================================== */
+
+/* Animación infinita seamless para el track de productos */
 @keyframes scroll-infinite {
   0% {
-    transform: translateX(0);
+    transform: translateX(0);  /* Inicio: set original visible */
   }
   100% {
-    /* Se mueve la mitad de la longitud total del track */
-    transform: translateX(-50%);
+    transform: translateX(-33.333%);  /* Fin: mueve exactamente el ancho de 1 set (1/3 del total con 3 sets) */
   }
 }
 
+.products-grid {
+  display: flex;
+  transition: transform 0.3s ease-out;  /* Para snaps suaves en drag */
+  will-change: transform;  /* Optimiza performance */
+}
+
+.products-grid.scrolling {
+  animation: scroll-infinite 60s linear infinite;  /* Auto-scroll: 60s para un ciclo completo */
+}
+
+/* Para drag state */
+.products-carousel-container.dragging .products-grid {
+  animation-play-state: paused !important;  /* Pausa animación durante drag */
+}
+
+/* Responsive: Ajusta si necesitas pausar en mobile, pero no es necesario */
+@media (max-width: 768px) {
+  .products-grid.scrolling {
+    animation-duration: 45s;  /* Más rápido en mobile si quieres */
+  }
+}
 /* ================================================================== */
 /* RESPONSIVE DESIGN - MEDIA QUERIES                                  */
 /* ================================================================== */

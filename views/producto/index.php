@@ -16,46 +16,31 @@ if (isset($_SESSION['carrito'])) {
 <html lang="es">
 <?php include_once __DIR__ . '/../admin/includes/head.php'; ?>
 
-<link rel="stylesheet" href="<?= url('css/min/producto-index.min.css') ?>">
-
+<link rel="stylesheet" href="<?= url('css/producto-index.css') ?>">
 
 <body>
-    <div class="flex h-screen">
-        <!-- Incluir navegación lateral fija -->
-        <div class="fixed inset-y-0 left-0 z-50">
+    <div class="page-container">
+        <!-- Navegación lateral fija -->
+        <div class="sidebar">
             <?php include_once __DIR__ . '/../admin/includes/navbar.php'; ?>
         </div>
-        <div class="flex-1 ml-64 flex flex-col min-h-screen">
-            <!-- Incluir header superior fijo -->
-            <div class="sticky top-0 z-40">
+        <div class="main-content">
+            <!-- Header superior fijo -->
+            <div class="header">
                 <?php include_once __DIR__ . '/../admin/includes/header.php'; ?>
             </div>
 
-            <div class="flex-1 p-6 bg-gray-50 overflow-y-auto productos-page">
-                <div class="max-w-7xl mx-auto">
+            <div class="content">
+                <div class="container">
                     <!-- Header de la página -->
-                    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                        <h1 class="text-3xl font-bold text-gray-800 mb-2">📦 Gestión de Productos</h1>
-                        <p class="text-gray-600">Administra el catálogo completo de productos</p>
+                    <div class="page-header">
+                        <h1 class="page-title">📦 Gestión de Productos</h1>
+                        <p class="page-description">Administra el catálogo completo de productos</p>
                     </div>
 
                     <!-- Alerta carrito -->
                     <?php if (isset($_SESSION['mensaje_carrito'])): ?>
-                        <div id="mensaje-alerta" style="
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #28a745;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-weight: bold;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            z-index: 9999;
-            text-align: center;
-            animation: fadein 0.5s;
-        ">
+                        <div id="mensaje-alerta" class="alerta-carrito">
                             <?= $_SESSION['mensaje_carrito'] ?>
                         </div>
 
@@ -70,132 +55,130 @@ if (isset($_SESSION['carrito'])) {
                         <?php unset($_SESSION['mensaje_carrito']); ?>
                     <?php endif; ?>
 
-
-                    </head>
-
-                    <body data-base-url="<?= url('') ?>">
-                        <h1>Listado de Productos</h1>
-
-                        <a href="<?= url('cargaMasiva/descargarPlantilla') ?>">📥 Descargar Plantilla CSV</a><br>
-                        <a href="<?= url('cargaMasiva/gestionImagenes') ?>">📸 Gestión Masiva de Imágenes</a><br>
-                        <!-- Carrito -->
-                        <a href="<?= url('carrito/ver') ?>" class="boton-carrito"> Ver Carrito<?php if ($cantidadEnCarrito > 0): ?>
-                            <span style="
-            position: absolute;
-            top: -8px;
-            right: -12px;
-            background-color: rgb(245, 115, 8);
-            color: white;
-            font-size: 12px;
-            padding: 2px 6px;
-            border-radius: 50%;
-            font-weight: bold;
-        ">
-                                <?= $cantidadEnCarrito ?>
-                            </span>
-                        <?php endif; ?>
-                        </a>
-
-                        <form action="<?= url('cargaMasiva/procesarCSV') ?>" method="POST" enctype="multipart/form-data">
-                            <input type="file" name="archivo_csv" accept=".csv" required>
-                            <button type="submit">📤 Subir CSV</button>
-                        </form>
-
-                        <a href="<?= url('producto/crear') ?>">+ Nuevo Producto</a><br><br>
-
-                        <!-- Filtros -->
-                        <div class="filtros-container">
-                            <h3>🔍 Filtros de búsqueda</h3>
-
-                            <?php if (isset($estadisticasPrecios)): ?>
-                                <div>
-                                    <span>Rango disponible: S/ <?= $estadisticasPrecios['precio_minimo'] ?> - S/ <?= $estadisticasPrecios['precio_maximo'] ?></span><br>
-                                    <span>Promedio: S/ <?= $estadisticasPrecios['precio_promedio'] ?></span><br>
-                                    <span>Total productos: <?= $estadisticasPrecios['total_productos'] ?></span>
-                                </div>
+                    <!-- Acciones superiores -->
+                    <div class="acciones-superiores">
+                        <a href="<?= url('cargaMasiva/descargarPlantilla') ?>" class="boton-accion">📥 Descargar Plantilla CSV</a>
+                        <a href="<?= url('cargaMasiva/gestionImagenes') ?>" class="boton-accion">📸 Gestión Imágenes</a>
+                        <a href="<?= url('carrito/ver') ?>" class="boton-accion boton-carrito">Ver Carrito
+                            <?php if ($cantidadEnCarrito > 0): ?>
+                                <span class="carrito-contador"><?= $cantidadEnCarrito ?></span>
                             <?php endif; ?>
+                        </a>
+                        <a href="<?= url('producto/crear') ?>" class="boton-accion">+ Nuevo Producto</a>
+                    </div>
 
-                            <form id="filtroForm" method="GET" action="<?= url('producto') ?>">
-                                <!-- Filtros por precio -->
-                                <label>Precio mínimo (S/):</label>
-                                <input type="number" id="min_price" name="min_price" value="<?= $_GET['min_price'] ?? '' ?>" step="1" min="0"><br>
+                    <!-- Formulario de carga CSV -->
+                    <form action="<?= url('cargaMasiva/procesarCSV') ?>" method="POST" enctype="multipart/form-data" class="form-csv">
+                        <input type="file" name="archivo_csv" accept=".csv" required class="input-accion">
+                        <button type="submit" class="boton-accion">📤 Subir CSV</button>
+                    </form>
 
-                                <label>Precio máximo (S/):</label>
-                                <input type="number" id="max_price" name="max_price" value="<?= $_GET['max_price'] ?? '' ?>" step="1" min="0"><br>
+                    <!-- Filtros -->
+                    <div class="filtros-container">
+                        <h3>🔍 Filtros de búsqueda</h3>
 
-                                <!-- Filtro por categoría -->
-                                <label>Categoría:</label>
-                                <select id="categoria" name="categoria">
+                        <?php if (isset($estadisticasPrecios)): ?>
+                            <div class="estadisticas-precios">
+                                <span>Rango disponible: S/ <?= $estadisticasPrecios['precio_minimo'] ?> - S/ <?= $estadisticasPrecios['precio_maximo'] ?></span>
+                                <span>Promedio: S/ <?= $estadisticasPrecios['precio_promedio'] ?></span>
+                                <span>Total productos: <?= $estadisticasPrecios['total_productos'] ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <form id="filtroForm" method="GET" action="<?= url('producto') ?>">
+                            <!-- Filtros por precio -->
+                            <div class="filtro-grupo">
+                                <label for="min_price">Precio mínimo (S/):</label>
+                                <input type="number" id="min_price" name="min_price" value="<?= $_GET['min_price'] ?? '' ?>" step="1" min="0" class="input-accion">
+                            </div>
+                            <div class="filtro-grupo">
+                                <label for="max_price">Precio máximo (S/):</label>
+                                <input type="number" id="max_price" name="max_price" value="<?= $_GET['max_price'] ?? '' ?>" step="1" min="0" class="input-accion">
+                            </div>
+
+                            <!-- Filtro por categoría -->
+                            <div class="filtro-grupo">
+                                <label for="categoria">Categoría:</label>
+                                <select id="categoria" name="categoria" class="input-accion">
                                     <option value="">-- Todas --</option>
                                     <?php foreach ($categoriasDisponibles as $categoria): ?>
                                         <option value="<?= $categoria['id'] ?>" <?= ($_GET['categoria'] ?? '') == $categoria['id'] ? 'selected' : '' ?>>
                                             <?= htmlspecialchars($categoria['nombre']) ?> (<?= $categoria['total_productos'] ?>)
                                         </option>
                                     <?php endforeach; ?>
-                                </select><br>
+                                </select>
+                            </div>
 
-                                <!-- Filtro por etiquetas -->
+                            <!-- Filtro por etiquetas -->
+                            <div class="filtro-grupo">
                                 <fieldset>
                                     <legend>Etiquetas:</legend>
                                     <?php foreach ($todasEtiquetas as $etiqueta): ?>
-                                        <label>
+                                        <label class="etiqueta-label">
                                             <input type="checkbox" class="etiqueta-checkbox" name="etiquetas[]" value="<?= $etiqueta['id'] ?>"
                                                 <?= in_array($etiqueta['id'], $_GET['etiquetas'] ?? []) ? 'checked' : '' ?>>
                                             <?= htmlspecialchars($etiqueta['nombre']) ?>
-                                        </label><br>
+                                        </label>
                                     <?php endforeach; ?>
                                 </fieldset>
+                            </div>
 
-                                <!-- Disponibilidad -->
-                                <label>
+                            <!-- Disponibilidad -->
+                            <div class="filtro-grupo">
+                                <label class="disponibles-label">
                                     <input type="checkbox" id="disponibles" name="disponibles" value="1" <?= isset($_GET['disponibles']) ? 'checked' : '' ?>>
                                     Solo productos disponibles (stock > 0)
-                                </label><br>
+                                </label>
+                            </div>
 
-                                <!-- Orden -->
+                            <!-- Orden -->
+                            <div class="filtro-grupo">
                                 <label for="orden">Ordenar por:</label>
-                                <select name="orden" id="orden">
+                                <select name="orden" id="orden" class="input-accion">
                                     <option value="">-- Seleccionar --</option>
                                     <option value="precio_asc" <?= ($_GET['orden'] ?? '') === 'precio_asc' ? 'selected' : '' ?>>Precio: Menor a mayor</option>
                                     <option value="precio_desc" <?= ($_GET['orden'] ?? '') === 'precio_desc' ? 'selected' : '' ?>>Precio: Mayor a menor</option>
                                     <option value="nombre_asc" <?= ($_GET['orden'] ?? '') === 'nombre_asc' ? 'selected' : '' ?>>Nombre: A-Z</option>
                                     <option value="nombre_desc" <?= ($_GET['orden'] ?? '') === 'nombre_desc' ? 'selected' : '' ?>>Nombre: Z-A</option>
                                     <option value="fecha_desc" <?= ($_GET['orden'] ?? '') === 'fecha_desc' ? 'selected' : '' ?>>Más recientes</option>
-                                </select><br><br>
+                                </select>
+                            </div>
 
-                                <button type="button" id="btnFiltrar">🔍 Filtrar</button>
-                                <button type="button" id="btnLimpiar">❌ Limpiar filtros</button>
+                            <div class="filtro-acciones">
+                                <button type="button" id="btnFiltrar" class="boton-accion">🔍 Filtrar</button>
+                                <button type="button" id="btnLimpiar" class="boton-accion boton-secundario">❌ Limpiar</button>
+                            </div>
 
-                                <span id="loading" class="loading">⏳ Cargando...</span>
-                            </form>
-                        </div>
+                            <span id="loading" class="loading">⏳ Cargando...</span>
+                        </form>
+                    </div>
 
-                        <!-- Contenedor para mostrar errores -->
-                        <div id="errorFiltros" style="display: none; color: red; margin: 10px 0; padding: 10px; border: 1px solid red; border-radius: 5px;">
-                            <strong>❌ Errores en filtros:</strong>
-                            <ul id="listaErrores"></ul>
-                        </div>
+                    <!-- Contenedor para mostrar errores -->
+                    <div id="errorFiltros" class="error-filtros">
+                        <strong>❌ Errores en filtros:</strong>
+                        <ul id="listaErrores"></ul>
+                    </div>
 
-                        <!-- Contenedor para mostrar filtros activos -->
-                        <div id="filtrosActivos" style="display: none; margin: 10px 0; padding: 10px; background: #e8f5e8; border-radius: 5px;">
-                            <strong>🔍 Filtros activos:</strong>
-                            <div id="infoFiltros"></div>
-                        </div>
+                    <!-- Contenedor para mostrar filtros activos -->
+                    <div id="filtrosActivos" class="filtros-activos">
+                        <strong>🔍 Filtros activos:</strong>
+                        <div id="infoFiltros"></div>
+                    </div>
 
-                        <!-- Productos -->
-                        <!-- Productos (Vista Administrador) -->
-                        <div id="productosContainer">
-                            <?php if (!empty($productos)): ?>
+                    <!-- Productos (Vista Administrador) -->
+                    <div id="productosContainer">
+                        <?php if (!empty($productos)): ?>
+                            <div class="admin-productos-table-container">
                                 <table class="admin-productos-table">
                                     <thead>
                                         <tr>
                                             <th>ID</th>
-                                            <th>Sku</th>
+                                            <th>SKU</th>
                                             <th>Nombre</th>
                                             <th>Descripción</th>
-                                            <th>Precio Final</th>
-                                            <th>Precio Original</th>
-                                            <th>% Descuento</th>
+                                            <th>Precio</th>
+                                            <th>Original</th>
+                                            <th>Descuento</th>
                                             <th>Visible</th>
                                             <th>Categorías</th>
                                             <th>Imágenes</th>
@@ -205,13 +188,22 @@ if (isset($_SESSION['carrito'])) {
                                     <tbody>
                                         <?php foreach ($productos as $producto): ?>
                                             <tr>
-                                                <td><?= $producto['id'] ?></td>
-                                                <td><?= htmlspecialchars($producto['sku']) ?></td>
-                                                <td><?= htmlspecialchars($producto['nombre']) ?></td>
-                                                <td><?= htmlspecialchars($producto['descripcion']) ?></td>
-                                                <td>S/ <?= number_format($producto['precio'], 2) ?></td>
+                                                <td><?= htmlspecialchars($producto['id'] ?? '') ?></td>
+                                                <td><?= htmlspecialchars($producto['sku'] ?? '') ?></td>
+                                                <td><?= htmlspecialchars($producto['nombre'] ?? '') ?></td>
+                                                <td class="descripcion-columna">
+                                                    <?php
+                                                    $desc = $producto['descripcion'] ?? '';
+                                                    $shortDesc = strlen($desc) > 50 ? substr($desc, 0, 47) . '...' : $desc;
+                                                    ?>
+                                                    <span class="descripcion-corta"><?= htmlspecialchars($shortDesc) ?></span>
+                                                    <?php if (strlen($desc) > 50): ?>
+                                                        <span class="descripcion-tooltip"><?= htmlspecialchars($desc) ?></span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td>S/ <?= number_format($producto['precio'] ?? 0, 2) ?></td>
                                                 <td>
-                                                    <?php if (!empty($producto['precio_tachado']) && $producto['precio_tachado'] > $producto['precio']): ?>
+                                                    <?php if (!empty($producto['precio_tachado']) && $producto['precio_tachado'] > ($producto['precio'] ?? 0)): ?>
                                                         S/ <?= number_format($producto['precio_tachado'], 2) ?>
                                                     <?php else: ?>
                                                         —
@@ -224,114 +216,62 @@ if (isset($_SESSION['carrito'])) {
                                                         —
                                                     <?php endif; ?>
                                                 </td>
-                                                <td class="<?= $producto['visible'] ? 'disponible' : 'no-disponible' ?>">
+                                                <td class="estado-<?= $producto['visible'] ? 'disponible' : 'no-disponible' ?>">
                                                     <?= $producto['visible'] ? 'Sí' : 'No' ?>
                                                 </td>
                                                 <td>
                                                     <?php if (!empty($producto['categorias'])): ?>
-                                                        <?= implode(', ', array_map('htmlspecialchars', $producto['categorias'])) ?>
+                                                        <span class="categorias-lista">
+                                                            <?= implode(', ', array_map('htmlspecialchars', $producto['categorias'])) ?>
+                                                        </span>
                                                     <?php else: ?>
                                                         <span class="sin-categoria">Sin categoría</span>
                                                     <?php endif; ?>
                                                 </td>
                                                 <td class="imagenes-columna">
-                                                    <?php if (!empty($producto['imagenes'])): ?>
-                                                        <?php foreach ($producto['imagenes'] as $imagen): ?>
-                                                            <img src="<?= url('uploads/' . $imagen['nombre_imagen']) ?>"
-                                                                alt="Imagen de <?= htmlspecialchars($producto['nombre']) ?>"
-                                                                class="imagen-miniatura">
-                                                        <?php endforeach; ?>
+                                                    <?php if (!empty($producto['imagenes']) && is_array($producto['imagenes'])): ?>
+                                                        <div class="imagenes-contenedor">
+                                                            <img src="<?= url('Uploads/' . htmlspecialchars($producto['imagenes'][0]['nombre_imagen'] ?? '')) ?>"
+                                                                 alt="Imagen de <?= htmlspecialchars($producto['nombre'] ?? 'Producto') ?>"
+                                                                 class="imagen-miniatura">
+                                                            <?php if (count($producto['imagenes']) > 1): ?>
+                                                                <span class="imagenes-contador">+<?= count($producto['imagenes']) - 1 ?></span>
+                                                            <?php endif; ?>
+                                                            <div class="imagenes-tooltip">
+                                                                <?php foreach ($producto['imagenes'] as $imagen): ?>
+                                                                    <img src="<?= url('Uploads/' . htmlspecialchars($imagen['nombre_imagen'] ?? '')) ?>"
+                                                                         alt="Imagen adicional"
+                                                                         class="imagen-tooltip">
+                                                                <?php endforeach; ?>
+                                                            </div>
+                                                        </div>
                                                     <?php else: ?>
                                                         <span class="sin-imagen">Sin imágenes</span>
                                                     <?php endif; ?>
                                                 </td>
                                                 <td class="acciones">
-                                                    <a href="<?= url('producto/editar/' . $producto['id']) ?>">✏️ Editar</a>
-                                                    <a href="<?= url('producto/eliminar/' . $producto['id']) ?>"
-                                                        class="eliminar"
-                                                        onclick="return confirm('¿Estás seguro de eliminar este producto?')">🗑️ Eliminar</a>
+                                                    <a href="<?= url('producto/editar/' . $producto['id']) ?>" class="accion-editar">✏️</a>
+                                                    <a href="<?= url('producto/eliminar/' . $producto['id']) ?>" class="accion-eliminar"
+                                                       onclick="return confirm('¿Estás seguro de eliminar este producto?')">🗑️</a>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
                                     </tbody>
                                 </table>
-                            <?php else: ?>
-                                <div class="bg-white rounded-lg shadow-md p-8 text-center">
-                                    <div class="text-gray-400 text-6xl mb-4">📦</div>
-                                    <h3 class="text-xl font-semibold text-gray-600 mb-2">No hay productos disponibles</h3>
-                                    <p class="text-gray-500">Aún no se han agregado productos al catálogo</p>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                        <!-- CSS para tabla de administración -->
-                        <style>
-                            .admin-productos-table {
-                                width: 100%;
-                                border-collapse: collapse;
-                                margin-top: 20px;
-                                background: #fff;
-                                border: 1px solid #ddd;
-                            }
-
-                            .admin-productos-table th,
-                            .admin-productos-table td {
-                                border: 1px solid #ddd;
-                                padding: 8px 12px;
-                                text-align: left;
-                            }
-
-                            .admin-productos-table th {
-                                background: #f4f4f4;
-                                font-weight: bold;
-                            }
-
-                            .disponible {
-                                color: green;
-                                font-weight: bold;
-                            }
-
-                            .no-disponible {
-                                color: red;
-                                font-weight: bold;
-                            }
-
-                            .imagenes-columna img.imagen-miniatura {
-                                width: 50px;
-                                height: 50px;
-                                object-fit: cover;
-                                margin-right: 5px;
-                                border: 1px solid #ccc;
-                                border-radius: 4px;
-                            }
-
-                            .acciones a {
-                                display: inline-block;
-                                margin-right: 8px;
-                                color: #007bff;
-                                text-decoration: none;
-                            }
-
-                            .acciones a.eliminar {
-                                color: #d9534f;
-                            }
-
-                            .sin-categoria,
-                            .sin-imagen {
-                                color: #888;
-                                font-style: italic;
-                            }
-                        </style>
-
-                </div>
-
-                <!-- Footer -->
-                <div class="mt-4">
-                    <?php include_once __DIR__ . '/../admin/includes/footer.php'; ?>
+                            </div>
+                        <?php else: ?>
+                            <div class="empty-state">
+                                <div class="empty-icon">📦</div>
+                                <h3 class="empty-title">No hay productos disponibles</h3>
+                                <p class="empty-description">Aún no se han agregado productos al catálogo.</p>
+                                <a href="<?= url('producto/crear') ?>" class="boton-accion">+ Agregar Producto</a>
+                            </div>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
         </div>
 
         <script src="<?= url('js/min/producto-filtros.min.js') ?>?v=<?= time() ?>"></script>
 </body>
-
 </html>
