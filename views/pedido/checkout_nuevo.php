@@ -409,108 +409,136 @@ $total_final = max(0, $totales['total'] - $descuento_cupon);
     </div>
 
     <!-- Modal de términos y condiciones -->
-    <div id="terms-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[80vh] overflow-hidden">
+    <div id="terms-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background-color: rgba(27, 27, 27, 0.8); backdrop-filter: blur(5px);">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[85vh] overflow-hidden relative">
+            <!-- Línea superior con gradiente -->
+            <div class="absolute top-0 left-0 right-0 h-1" style="background: linear-gradient(90deg, #2ac1db, #363993);"></div>
+            
             <!-- Header del modal -->
-            <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-2xl font-bold">📋 Términos y Condiciones</h2>
+            <div class="p-8 text-white relative overflow-hidden" style="background: linear-gradient(135deg, #1b1b1b 0%, #2d2d2d 50%, #1b1b1b 100%);">
+                <div class="absolute inset-0 opacity-5" style="background: radial-gradient(ellipse at top, rgba(42, 193, 219, 0.05) 0%, transparent 70%);"></div>
+                <div class="flex justify-between items-start relative z-10">
+                    <div>
+                        <h2 class="text-3xl font-bold mb-2" style="font-family: 'Orbitron', sans-serif; text-transform: uppercase; letter-spacing: 1px;">
+                            📋 Términos y Condiciones
+                        </h2>
+                        <p class="text-lg opacity-90" style="font-family: 'Outfit', sans-serif; color: #2ac1db;">
+                            Políticas y condiciones de uso de ByteBox
+                        </p>
+                    </div>
                     <button type="button" id="close-terms-modal" 
-                            class="text-white hover:text-gray-200 text-3xl font-bold leading-none">
+                            class="w-12 h-12 rounded-xl border-2 flex items-center justify-center text-2xl font-bold transition-all duration-300 hover:scale-105"
+                            style="background: rgba(255, 255, 255, 0.1); border-color: rgba(42, 193, 219, 0.3); color: white;"
+                            onmouseover="this.style.background='rgba(42, 193, 219, 0.2)'; this.style.borderColor='#2ac1db';"
+                            onmouseout="this.style.background='rgba(255, 255, 255, 0.1)'; this.style.borderColor='rgba(42, 193, 219, 0.3)';">
                         &times;
                     </button>
                 </div>
-                <p class="text-blue-100 mt-2">Por favor, lee cuidadosamente nuestros términos antes de confirmar tu pedido</p>
             </div>
             
             <!-- Contenido del modal -->
-            <div class="p-6 overflow-y-auto max-h-[50vh]">
-                <div class="prose prose-sm max-w-none">
-                    <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
-                        <span class="bg-blue-100 text-blue-800 rounded-full w-8 h-8 flex items-center justify-center text-sm mr-3">1</span>
-                        Información General
-                    </h3>
-                    <p class="text-gray-600 mb-6 leading-relaxed">
-                        Bienvenido a <strong>TecnoVedades</strong>. Al realizar una compra en nuestro sitio web, 
-                        usted acepta estar sujeto a los siguientes términos y condiciones de venta.
-                    </p>
+            <div class="p-8 overflow-y-auto max-h-[55vh]" style="font-family: 'Outfit', sans-serif;">
+                <div class="space-y-8">
                     
-                    <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
-                        <span class="bg-blue-100 text-blue-800 rounded-full w-8 h-8 flex items-center justify-center text-sm mr-3">2</span>
-                        Productos y Precios
-                    </h3>
-                    <p class="text-gray-600 mb-6 leading-relaxed">
-                        • Todos los precios están expresados en soles peruanos (S/) e incluyen IGV<br>
-                        • Los precios están sujetos a cambios sin previo aviso<br>
-                        • Los productos están sujetos a disponibilidad de stock<br>
-                        • Nos reservamos el derecho de limitar las cantidades de compra por cliente
-                    </p>
+                    <div class="border-b border-gray-200 pb-6">
+                        <h3 class="text-xl font-bold mb-4 flex items-center gap-4" style="font-family: 'Orbitron', sans-serif; color: #1b1b1b; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <span class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-lg" 
+                                  style="background: linear-gradient(135deg, #2ac1db, #363993);">1</span>
+                            Información General
+                        </h3>
+                        <p class="text-gray-600 leading-relaxed text-justify">
+                            Bienvenido a <strong>ByteBox</strong>. Al utilizar nuestro sitio web y realizar compras, 
+                            usted acepta estar sujeto a los siguientes términos y condiciones de uso y venta.
+                        </p>
+                    </div>
                     
-                    <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
-                        <span class="bg-green-100 text-green-800 rounded-full w-8 h-8 flex items-center justify-center text-sm mr-3">3</span>
-                        Política de Envío
-                    </h3>
-                    <p class="text-gray-600 mb-6 leading-relaxed">
-                        • <strong>Envío gratuito</strong> a todo el Perú en compras mayores a S/ 100<br>
-                        • Tiempo de entrega: 2-5 días hábiles en Lima, 3-7 días en provincias<br>
-                        • Horarios de entrega: Lunes a Viernes de 9:00 AM a 6:00 PM<br>
-                        • El cliente debe estar presente en el momento de la entrega
-                    </p>
+                    <div class="border-b border-gray-200 pb-6">
+                        <h3 class="text-xl font-bold mb-4 flex items-center gap-4" style="font-family: 'Orbitron', sans-serif; color: #1b1b1b; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <span class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-lg" 
+                                  style="background: linear-gradient(135deg, #2ac1db, #363993);">2</span>
+                            Productos y Precios
+                        </h3>
+                        <div class="text-gray-600 leading-relaxed space-y-2">
+                            <p class="flex items-start gap-3"><span class="text-xl" style="color: #2ac1db;">✓</span> Todos los precios están expresados en soles peruanos (S/) e incluyen IGV</p>
+                            <p class="flex items-start gap-3"><span class="text-xl" style="color: #2ac1db;">✓</span> Los precios están sujetos a cambios sin previo aviso</p>
+                            <p class="flex items-start gap-3"><span class="text-xl" style="color: #2ac1db;">✓</span> Los productos están sujetos a disponibilidad de stock</p>
+                            <p class="flex items-start gap-3"><span class="text-xl" style="color: #2ac1db;">✓</span> Nos reservamos el derecho de limitar las cantidades de compra por cliente</p>
+                        </div>
+                    </div>
                     
-                    <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
-                        <span class="bg-yellow-100 text-yellow-800 rounded-full w-8 h-8 flex items-center justify-center text-sm mr-3">4</span>
-                        Política de Devoluciones
-                    </h3>
-                    <p class="text-gray-600 mb-6 leading-relaxed">
-                        • Plazo para devoluciones: <strong>30 días</strong> calendarios desde la recepción<br>
-                        • Los productos deben estar en perfecto estado, sin uso y con embalaje original<br>
-                        • No se aceptan devoluciones de productos personalizados o de uso íntimo<br>
-                        • Los gastos de envío para devoluciones corren por cuenta del cliente
-                    </p>
+                    <div class="border-b border-gray-200 pb-6">
+                        <h3 class="text-xl font-bold mb-4 flex items-center gap-4" style="font-family: 'Orbitron', sans-serif; color: #1b1b1b; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <span class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-lg" 
+                                  style="background: linear-gradient(135deg, #2ac1db, #363993);">3</span>
+                            Política de Envío
+                        </h3>
+                        <div class="text-gray-600 leading-relaxed space-y-2">
+                            <p class="flex items-start gap-3"><span class="text-xl" style="color: #2ac1db;">✓</span> <strong>Envío gratuito</strong> a todo el Perú en compras mayores a S/ 100</p>
+                            <p class="flex items-start gap-3"><span class="text-xl" style="color: #2ac1db;">✓</span> Tiempo de entrega: 2-5 días hábiles en Lima, 3-7 días en provincias</p>
+                            <p class="flex items-start gap-3"><span class="text-xl" style="color: #2ac1db;">✓</span> Horarios de entrega: Lunes a Viernes de 9:00 AM a 6:00 PM</p>
+                            <p class="flex items-start gap-3"><span class="text-xl" style="color: #2ac1db;">✓</span> El cliente debe estar presente en el momento de la entrega</p>
+                        </div>
+                    </div>
                     
-                    <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
-                        <span class="bg-purple-100 text-purple-800 rounded-full w-8 h-8 flex items-center justify-center text-sm mr-3">5</span>
-                        Protección de Datos Personales
-                    </h3>
-                    <p class="text-gray-600 mb-6 leading-relaxed">
-                        • Respetamos su privacidad conforme a la Ley de Protección de Datos Personales<br>
-                        • Sus datos serán utilizados únicamente para procesar su pedido<br>
-                        • No compartimos información personal con terceros sin su consentimiento<br>
-                        • Puede solicitar la eliminación de sus datos contactándonos
-                    </p>
+                    <div class="border-b border-gray-200 pb-6">
+                        <h3 class="text-xl font-bold mb-4 flex items-center gap-4" style="font-family: 'Orbitron', sans-serif; color: #1b1b1b; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <span class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-lg" 
+                                  style="background: linear-gradient(135deg, #2ac1db, #363993);">4</span>
+                            Devoluciones y Cambios
+                        </h3>
+                        <div class="text-gray-600 leading-relaxed space-y-2">
+                            <p class="flex items-start gap-3"><span class="text-xl" style="color: #2ac1db;">✓</span> Plazo para devoluciones: <strong>30 días</strong> calendarios desde la recepción</p>
+                            <p class="flex items-start gap-3"><span class="text-xl" style="color: #2ac1db;">✓</span> Los productos deben estar en perfecto estado, sin uso y con embalaje original</p>
+                            <p class="flex items-start gap-3"><span class="text-xl" style="color: #2ac1db;">✓</span> No se aceptan devoluciones de productos personalizados</p>
+                            <p class="flex items-start gap-3"><span class="text-xl" style="color: #2ac1db;">✓</span> Los gastos de envío para devoluciones corren por cuenta del cliente</p>
+                        </div>
+                    </div>
                     
-                    <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
-                        <span class="bg-red-100 text-red-800 rounded-full w-8 h-8 flex items-center justify-center text-sm mr-3">6</span>
-                        Garantías y Responsabilidad
-                    </h3>
-                    <p class="text-gray-600 mb-6 leading-relaxed">
-                        • Ofrecemos garantía del fabricante en todos nuestros productos<br>
-                        • No nos hacemos responsables por daños causados por mal uso del producto<br>
-                        • Nuestra responsabilidad se limita al valor del producto adquirido<br>
-                        • En caso de productos defectuosos, procederemos al cambio o reembolso
-                    </p>
+                    <div class="border-b border-gray-200 pb-6">
+                        <h3 class="text-xl font-bold mb-4 flex items-center gap-4" style="font-family: 'Orbitron', sans-serif; color: #1b1b1b; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <span class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-lg" 
+                                  style="background: linear-gradient(135deg, #2ac1db, #363993);">5</span>
+                            Protección de Datos
+                        </h3>
+                        <div class="text-gray-600 leading-relaxed space-y-2">
+                            <p class="flex items-start gap-3"><span class="text-xl" style="color: #2ac1db;">✓</span> Respetamos su privacidad conforme a la Ley de Protección de Datos Personales</p>
+                            <p class="flex items-start gap-3"><span class="text-xl" style="color: #2ac1db;">✓</span> Sus datos serán utilizados únicamente para procesar pedidos</p>
+                            <p class="flex items-start gap-3"><span class="text-xl" style="color: #2ac1db;">✓</span> No compartimos información personal con terceros sin consentimiento</p>
+                        </div>
+                    </div>
                     
-                    <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
-                        <span class="bg-indigo-100 text-indigo-800 rounded-full w-8 h-8 flex items-center justify-center text-sm mr-3">7</span>
-                        Contacto y Soporte
-                    </h3>
-                    <p class="text-gray-600 mb-4 leading-relaxed">
-                        Para consultas, reclamos o soporte técnico:<br>
-                        📧 <strong>Email:</strong> soporte@tecnovedades.com<br>
-                        📱 <strong>WhatsApp:</strong> +51 999 888 777<br>
-                        🕐 <strong>Horario:</strong> Lunes a Viernes 9:00 AM - 6:00 PM
-                    </p>
+                    <div>
+                        <h3 class="text-xl font-bold mb-4 flex items-center gap-4" style="font-family: 'Orbitron', sans-serif; color: #1b1b1b; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <span class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-lg" 
+                                  style="background: linear-gradient(135deg, #2ac1db, #363993);">6</span>
+                            Contacto y Soporte
+                        </h3>
+                        <div class="text-gray-600 leading-relaxed">
+                            <p class="mb-3">Para consultas, reclamos o soporte técnico:</p>
+                            <div class="space-y-2">
+                                <p class="flex items-center gap-3"><span class="text-lg" style="color: #2ac1db;">📧</span> <strong>Email:</strong> info@bytebox.com</p>
+                                <p class="flex items-center gap-3"><span class="text-lg" style="color: #2ac1db;">📱</span> <strong>Teléfono:</strong> +51 999 123 456</p>
+                                <p class="flex items-center gap-3"><span class="text-lg" style="color: #2ac1db;">�</span> <strong>Horario:</strong> Lunes a Sábado 9:00 AM - 8:00 PM</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             
             <!-- Footer del modal -->
-            <div class="bg-gray-50 px-6 py-4 flex justify-end space-x-3 border-t">
+            <div class="p-6 border-t-2 border-gray-100 flex justify-end gap-4" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
                 <button type="button" id="close-terms-btn" 
-                        class="px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition duration-200">
+                        class="px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:-translate-y-1"
+                        style="background: linear-gradient(135deg, #95a5a6, #7f8c8d); color: white; font-family: 'Outfit', sans-serif; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 15px rgba(149, 165, 166, 0.3);"
+                        onmouseover="this.style.background='linear-gradient(135deg, #7f8c8d, #6c757d)'; this.style.boxShadow='0 6px 20px rgba(149, 165, 166, 0.4)';"
+                        onmouseout="this.style.background='linear-gradient(135deg, #95a5a6, #7f8c8d)'; this.style.boxShadow='0 4px 15px rgba(149, 165, 166, 0.3)';">
                     Cerrar
                 </button>
                 <button type="button" id="accept-terms-btn" 
-                        class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-200 font-medium">
+                        class="px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:-translate-y-1"
+                        style="background: linear-gradient(135deg, #2ac1db, #363993); color: white; font-family: 'Outfit', sans-serif; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 15px rgba(42, 193, 219, 0.3);"
+                        onmouseover="this.style.boxShadow='0 6px 20px rgba(42, 193, 219, 0.4)';"
+                        onmouseout="this.style.boxShadow='0 4px 15px rgba(42, 193, 219, 0.3)';">
                     ✅ Acepto los Términos
                 </button>
             </div>

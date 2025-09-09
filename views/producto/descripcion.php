@@ -117,7 +117,7 @@ function producto_imagen_url($producto, $idx = 0)
 
         <section class="product-info-grid">
             <div class="product-image-gallery">
-                <img id="main-product-image" src="<?= producto_imagen_url($producto, 0) ?>" alt="<?= htmlspecialchars($producto['nombre']) ?>" class="main-product-image">
+                <img id="main-product-image" src="<?= producto_imagen_url($producto, 0) ?>" alt="<?= htmlspecialchars($producto['nombre']) ?>" class="main-product-image clickable-image" style="cursor: pointer;" title="Click para ampliar imagen">
                 <?php if (!empty($producto['imagenes']) && count($producto['imagenes']) > 1): ?>
                     <div class="thumbnail-images" role="list">
                         <?php foreach ($producto['imagenes'] as $idx => $img):
@@ -162,39 +162,6 @@ function producto_imagen_url($producto, $idx = 0)
     <span>Pagos seguros y protegidos siempre</span>
   </div>
 </div>
-<style>
-  .info-boxes {
-    display: flex;
-    justify-content: space-between; /* distribuye de forma más pareja */
-    gap: 0.8rem; /* menor separación entre bloques */
-    width: 100%;
-  }
-
-  .info-box {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    flex: 1; /* cada caja ocupa el mismo ancho */
-  }
-
-  .info-box i {
-    font-size: 1.2rem; /* un poco más pequeño */
-    color: var(--primary-color);
-    border: 2px solid var(--primary-color);
-    border-radius: 50%;
-    padding: 8px; /* más compacto */
-    margin-right: 8px; /* espacio mínimo entre ícono y texto */
-    margin-bottom: 0; /* quitamos margen inferior */
-  }
-
-  .info-box span {
-    text-align: left;   /* alinea a la izquierda */
-    white-space: nowrap; /* evita salto de línea */
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #333;
-  }
-</style>
 
 
             </div>
@@ -369,128 +336,25 @@ function producto_imagen_url($producto, $idx = 0)
 
     </main>
 
+    <!-- Modal para imagen en tamaño completo -->
+    <div id="image-modal" class="image-modal-overlay" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="modal-image" tabindex="-1">
+        <div class="image-modal-container">
+            <button type="button" id="close-image-modal" class="image-modal-close" aria-label="Cerrar imagen" title="Cerrar imagen">
+                &times;
+            </button>
+            <img id="modal-image" src="" alt="" class="modal-image">
+        </div>
+    </div>
+
     <?php include_once __DIR__ . '/../admin/includes/footer.php'; ?>
 
-    <!-- CORRECCIÓN: Script completo con la lógica corregida para los desplegables -->
+    <!-- Scripts -->
     <script>
-        (function() {
-            // Galería
-            const mainImage = document.getElementById('main-product-image');
-            const thumbs = document.querySelectorAll('.thumbnail-images .thumb');
-            if (mainImage && thumbs.length > 0) {
-                thumbs.forEach(t => {
-                    t.addEventListener('click', function() {
-                        mainImage.src = this.dataset.src || this.src;
-                        thumbs.forEach(x => x.classList.remove('activo'));
-                        this.classList.add('activo');
-                    });
-                });
-            }
-
-            // Cantidad
-            const qtyInput = document.getElementById('qty-input');
-            const qtyIncrease = document.getElementById('qty-increase');
-            const qtyDecrease = document.getElementById('qty-decrease');
-            const formCantidad = document.getElementById('form-cantidad');
-            const stockLimit = <?= isset($producto['stock']) && $producto['stock'] !== null ? (int)$producto['stock'] : 'null' ?>;
-
-            function setQty(val) {
-                val = Math.max(1, Math.floor(parseInt(val) || 1));
-                if (stockLimit !== null) val = Math.min(val, stockLimit);
-                qtyInput.value = val;
-                if (formCantidad) formCantidad.value = val;
-            }
-
-            if (qtyIncrease) qtyIncrease.addEventListener('click', () => setQty(parseInt(qtyInput.value) + 1));
-            if (qtyDecrease) qtyDecrease.addEventListener('click', () => setQty(parseInt(qtyInput.value) - 1));
-            if (qtyInput) qtyInput.addEventListener('change', () => setQty(qtyInput.value));
-            if (formCantidad) formCantidad.value = qtyInput ? qtyInput.value : '1';
-
-            // Collapsibles (para Descripción)
-            document.querySelectorAll('.collapsible-header').forEach(header => {
-                header.addEventListener('click', () => {
-                    const section = header.closest('.collapsible-section');
-                    // Si es la de especificaciones y está parcialmente visible, no hacer nada aquí
-                    if (section.classList.contains('partially-visible')) {
-                        return;
-                    }
-
-                    header.classList.toggle('active');
-                    const content = header.nextElementSibling;
-                    const arrow = header.querySelector('.arrow');
-
-                    if (header.classList.contains('active')) {
-                        content.style.display = 'block';
-                        if (arrow) arrow.innerHTML = '&#9650;';
-                    } else {
-                        content.style.display = 'none';
-                        if (arrow) arrow.innerHTML = '&#9660;';
-                    }
-                });
-            });
-
-            // Lógica para expandir especificaciones
-            const specsSection = document.querySelector('.partially-visible');
-            if (specsSection) {
-                const viewMoreButton = specsSection.querySelector('.view-more-specs');
-                const viewLessButton = specsSection.querySelector('.view-less-specs');
-                const header = specsSection.querySelector('.collapsible-header');
-                const content = specsSection.querySelector('.collapsible-content');
-
-                const expandSpecs = function(e) {
-                    if (specsSection.classList.contains('partially-visible')) {
-                        specsSection.classList.remove('partially-visible');
-                        if (!header.classList.contains('active')) {
-                            header.classList.add('active');
-                        }
-                        if (content) content.style.display = 'block';
-                        const arrow = header.querySelector('.arrow');
-                        if (arrow) arrow.innerHTML = '&#9650;';
-                        if (e) e.stopPropagation();
-                    }
-                };
-
-                const collapseSpecs = function(e) {
-                    if (!specsSection.classList.contains('partially-visible')) {
-                        specsSection.classList.add('partially-visible');
-                        if (header.classList.contains('active')) {
-                            header.classList.remove('active');
-                        }
-                        if (content) content.style.display = '';
-                        const arrow = header.querySelector('.arrow');
-                        if (arrow) arrow.innerHTML = '&#9660;';
-                        if (e) e.stopPropagation();
-                    }
-                };
-
-                if (viewMoreButton) {
-                    viewMoreButton.addEventListener('click', expandSpecs);
-                }
-                if (viewLessButton) {
-                    viewLessButton.addEventListener('click', collapseSpecs);
-                }
-                if (header) {
-                    header.addEventListener('click', expandSpecs, true);
-                }
-            }
-
-            // Enlaces con desplazamiento suave (smooth scroll)
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const targetId = this.getAttribute('href');
-                    const targetElement = document.querySelector(targetId);
-                    if (targetElement) {
-                        targetElement.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'start'
-                        });
-                    }
-                });
-            });
-
-        })();
+        // Pasar el stock al JavaScript
+        window.productStock = <?= isset($producto['stock']) && $producto['stock'] !== null ? (int)$producto['stock'] : 'null' ?>;
     </script>
+    <script src="<?= url('js/image-modal.js') ?>"></script>
+    <script src="<?= url('js/producto-descripcion.js') ?>"></script>
 </body>
 
 </html>

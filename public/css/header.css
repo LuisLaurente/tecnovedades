@@ -79,12 +79,18 @@
 /* --- 1. Logo (Izquierda) --- */
 .header-left {
   flex-shrink: 0; /* Evita que el logo se encoja */
+  /* Evitar que el contenedor obligue al logo a estirarse */
+  min-width: 0;
 }
 
 .logo-link .logo-image {
   display: block;
-  height: 50px; /* Altura del logo */
+  /* Preferir dimensiones naturales pero limitar el alto para mantener proporción */
+  max-height: 50px;
+  height: auto;
   width: auto;
+  max-width: 220px; /* evita que el logo se haga excesivamente ancho en pantallas pequeñas */
+  object-fit: contain; /* asegura que no se distorsione */
 }
 
 /* --- 2. Barra de Búsqueda (Centro) --- */
@@ -451,7 +457,10 @@
   }
 
   .header-left {
-    flex-basis: 50%; /* Logo ocupa la mitad */
+    /* No forzamos 50%: dejar tamaño automático para que el logo mantenga proporción
+       y no crezca en exceso al reducir el ancho del viewport */
+    flex: 0 0 auto;
+    flex-basis: auto;
   }
 
   .header-right {
@@ -476,7 +485,20 @@
   }
 
   .logo-link .logo-image {
-    height: 40px; /* Logo más pequeño en móviles */
+    /* Usar max-height para preservar relación de aspecto */
+    max-height: 32px; /* Logo más pequeño en móviles */
+    height: auto;
+    width: auto;
+    max-width: 140px;
+    object-fit: contain;
+  }
+
+  /* Ajuste adicional para pantallas muy pequeñas (ej. 320-375px) */
+  @media (max-width: 375px) {
+    .logo-link .logo-image {
+      max-height: 28px;
+      max-width: 120px;
+    }
   }
 
   .user-profile-button {
