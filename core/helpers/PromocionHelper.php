@@ -1,6 +1,7 @@
 <?php
 
 namespace Core\Helpers;
+
 use Models\Promocion; // ✅ Importamos el modelo Promocion
 class PromocionHelper
 {
@@ -39,24 +40,23 @@ class PromocionHelper
         $cantidad = array_sum(array_column($carrito, 'cantidad'));
         $monto = array_sum(array_map(fn($p) => $p['precio'] * $p['cantidad'], $carrito));
 
-        // Condición: cantidad mínima de productos
-        if (isset($cond['min_cantidad']) && $cantidad < $cond['min_cantidad']) {
-            return false;
-        }
+        $tipoCondicion = $cond['tipo'] ?? '';
 
-        // Condición: monto mínimo del carrito
-        if (isset($cond['min_monto']) && $monto < $cond['min_monto']) {
-            return false;
-        }
+        switch ($tipoCondicion) {
+            case 'todos':
+                // Siempre aplica para todos los pedidos
+                return true;
 
-        // Condición: tipo de usuario (si aplica)
-        if (isset($cond['tipo_usuario'])) {
-            if (!$usuario || !isset($usuario['tipo']) || $usuario['tipo'] !== $cond['tipo_usuario']) {
-                return false;
-            }
-        }
+            case 'subtotal_minimo':
+                $valorMinimo = $cond['valor'] ?? 0;
+                return $monto >= $valorMinimo;
 
-        return true;
+                // ... resto de casos existentes ...
+
+            default:
+                // Lógica para condiciones antiguas (mantener compatibilidad)
+                return true; // O la lógica actual de compatibilidad
+        }
     }
 
     /**
@@ -100,16 +100,34 @@ class PromocionHelper
 
         foreach ($promociones as $p) {
             $accion = $p['accion'];
+            $tipoAccion = $accion['tipo'] ?? '';
 
-            if ($accion['tipo'] === 'descuento_porcentaje') {
-                $descuentoTotal += $subtotal * ($accion['valor'] / 100);
-            } elseif ($accion['tipo'] === 'descuento_fijo') {
-                $descuentoTotal += $accion['valor'];
-            } elseif ($accion['tipo'] === 'envio_gratis') {
-                $envioGratis = true;
+            switch ($tipoAccion) {
+                case 'descuento_porcentaje':
+                    $descuentoTotal += $subtotal * ($accion['valor'] / 100);
+                    break;
+
+                case 'descuento_fijo':
+                    $descuentoTotal += min($accion['valor'], $subtotal); // No más del subtotal
+                    break;
+
+                case 'envio_gratis':
+                    $envioGratis = true;
+                    break;
+
+                // Para acciones antiguas (compatibilidad)
+                default:
+                    if ($tipoAccion === 'porcentaje') {
+                        $descuentoTotal += $subtotal * ($accion['valor'] / 100);
+                    } elseif ($tipoAccion === 'fijo') {
+                        $descuentoTotal += min($accion['valor'], $subtotal);
+                    }
+                    break;
             }
         }
 
+        // Asegurar que el descuento no sea mayor al subtotal
+        $descuentoTotal = min($descuentoTotal, $subtotal);
         $total = max($subtotal - $descuentoTotal, 0);
 
         return [

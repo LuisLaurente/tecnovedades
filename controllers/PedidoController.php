@@ -78,13 +78,25 @@ class PedidoController
             }
 
             $usuario = $_SESSION['usuario'];
-            $nombre = trim($_POST['nombre'] ?? '');
-            $telefono = trim($_POST['telefono'] ?? '');
-            $direccion = trim($_POST['direccion'] ?? '');
-            $distrito = trim($_POST['distrito'] ?? '');
-            $provincia = trim($_POST['provincia'] ?? '');
-            $departamento = trim($_POST['departamento'] ?? '');
-            $referencia = trim($_POST['referencia'] ?? '');
+            
+// ==================== DATOS DE ENVÍO ====================
+$envio_nombre = trim($_POST['nombre'] ?? '');
+$envio_celular = trim($_POST['telefono'] ?? '');
+$envio_ubicacion = trim($_POST['ubicacion'] ?? '');
+$envio_direccion = trim($_POST['direccion'] ?? '');
+$envio_distrito = trim($_POST['distrito'] ?? '');
+$envio_provincia = trim($_POST['provincia'] ?? '');
+$envio_departamento = trim($_POST['departamento'] ?? '');
+$envio_referencia = trim($_POST['referencia'] ?? '');
+            
+            // ==================== DATOS DE FACTURACIÓN ====================
+            $facturacion_tipo_documento = trim($_POST['facturacion_tipo_documento'] ?? '');
+            $facturacion_numero_documento = trim($_POST['facturacion_numero_documento'] ?? '');
+            $facturacion_nombre = trim($_POST['facturacion_nombre'] ?? '');
+            $facturacion_direccion = trim($_POST['facturacion_direccion'] ?? '');
+            $facturacion_email = trim($_POST['facturacion_email'] ?? '');
+            
+            // ==================== DATOS EXISTENTES ====================
             $direccion_id = $_POST['direccion_id'] ?? '';
             $guardar_direccion = isset($_POST['guardar_direccion']);
             $tipo_direccion = $_POST['tipo_direccion'] ?? 'casa';
@@ -93,13 +105,28 @@ class PedidoController
             $carrito = isset($_SESSION['carrito']) && is_array($_SESSION['carrito']) ? $_SESSION['carrito'] : [];
             $errores = [];
 
-            // Validaciones básicas
-            if ($nombre === '') $errores[] = 'El nombre es obligatorio.';
-            if ($telefono === '') $errores[] = 'El teléfono es obligatorio.';
-            if ($direccion === '') $errores[] = 'La dirección es obligatoria.';
-            if (!preg_match('/^[0-9\s\+\-\(\)]+$/', $telefono)) {
-                $errores[] = 'El teléfono solo debe contener números, espacios y símbolos válidos.';
+            // ==================== VALIDACIONES ====================
+            // Validaciones de envío
+            if ($envio_nombre === '') $errores[] = 'El nombre de envío es obligatorio.';
+            if ($envio_celular === '') $errores[] = 'El celular de envío es obligatorio.';
+            if ($envio_ubicacion === '') $errores[] = 'La ubicación de envío es obligatoria.';
+            if ($envio_direccion === '') $errores[] = 'La dirección de envío es obligatoria.';
+            
+            // Validaciones de facturación
+            if ($facturacion_tipo_documento === '') $errores[] = 'El tipo de documento es obligatorio.';
+            if ($facturacion_numero_documento === '') $errores[] = 'El número de documento es obligatorio.';
+            if ($facturacion_nombre === '') $errores[] = 'El nombre o razón social es obligatorio.';
+            if ($facturacion_direccion === '') $errores[] = 'La dirección fiscal es obligatoria.';
+            if ($facturacion_email === '') $errores[] = 'El correo electrónico es obligatorio.';
+            
+            if (!filter_var($facturacion_email, FILTER_VALIDATE_EMAIL)) {
+                $errores[] = 'El formato del correo electrónico no es válido.';
             }
+            
+            if (!preg_match('/^[0-9\s\+\-\(\)]+$/', $envio_celular)) {
+                $errores[] = 'El celular solo debe contener números, espacios y símbolos válidos.';
+            }
+            
             if (empty($carrito)) $errores[] = 'El carrito está vacío.';
 
             // Validar que todos los productos tengan precio
@@ -120,10 +147,17 @@ class PedidoController
                 $conexion = \Core\Database::getConexion();
                 $conexion->beginTransaction();
 
-                // Actualizar teléfono del usuario si es necesario
+                // ==================== CALCULAR COSTO DE ENVÍO ====================
+                $costo_envio = 0;
+                if ($envio_ubicacion === 'lima') {
+                    $costo_envio = 8.00;
+                } elseif ($envio_ubicacion === 'provincia') {
+                    $costo_envio = 12.00;
+                }
+
+                // ==================== ACTUALIZAR TELÉFONO DEL USUARIO ====================
                 $telefonoActual = null;
                 try {
-                    // Obtener teléfono actual del usuario
                     $stmt = $conexion->prepare("SELECT telefono FROM usuario_detalles WHERE usuario_id = ?");
                     $stmt->execute([$usuario['id']]);
                     $detalleUsuario = $stmt->fetch(\PDO::FETCH_ASSOC);
@@ -132,34 +166,31 @@ class PedidoController
                     // Si la tabla usuario_detalles no existe, continuar
                 }
                 
-                if ($telefono !== $telefonoActual) {
+                if ($envio_celular !== $telefonoActual) {
                     try {
-                        // Intentar actualizar en usuario_detalles (si existe)
                         $stmt = $conexion->prepare("UPDATE usuario_detalles SET telefono = ? WHERE usuario_id = ?");
-                        $stmt->execute([$telefono, $usuario['id']]);
+                        $stmt->execute([$envio_celular, $usuario['id']]);
                         
                         if ($stmt->rowCount() === 0) {
-                            // Si no existe el registro, crearlo
                             $stmt = $conexion->prepare("INSERT INTO usuario_detalles (usuario_id, telefono) VALUES (?, ?)");
-                            $stmt->execute([$usuario['id'], $telefono]);
+                            $stmt->execute([$usuario['id'], $envio_celular]);
                         }
                     } catch (Exception $e) {
-                        // Log del error pero continuar con el proceso
                         error_log("No se pudo actualizar teléfono en usuario_detalles: " . $e->getMessage());
                     }
                 }
 
-                // Manejar dirección de envío
-                $direccion_completa = $direccion;
-                if ($distrito || $provincia || $departamento) {
+                // ==================== MANEJAR DIRECCIÓN DE ENVÍO ====================
+                $direccion_completa = $envio_direccion;
+                if ($envio_distrito || $envio_provincia || $envio_departamento) {
                     $ubicacion = [];
-                    if ($distrito) $ubicacion[] = $distrito;
-                    if ($provincia) $ubicacion[] = $provincia;
-                    if ($departamento) $ubicacion[] = $departamento;
+                    if ($envio_distrito) $ubicacion[] = $envio_distrito;
+                    if ($envio_provincia) $ubicacion[] = $envio_provincia;
+                    if ($envio_departamento) $ubicacion[] = $envio_departamento;
                     $direccion_completa .= ', ' . implode(', ', $ubicacion);
                 }
-                if ($referencia) {
-                    $direccion_completa .= ' - ' . $referencia;
+                if ($envio_referencia) {
+                    $direccion_completa .= ' - ' . $envio_referencia;
                 }
 
                 // Determinar qué dirección usar
@@ -167,17 +198,14 @@ class PedidoController
                 $direccion_temporal = null;
 
                 if (!empty($direccion_id)) {
-                    // Se seleccionó una dirección existente
                     $direccion_id_para_pedido = $direccion_id;
                 } else {
-                    // Se ingresó una dirección nueva (temporal)
                     $direccion_temporal = $direccion_completa;
                 }
 
-                // Guardar nueva dirección si se solicitó y no se seleccionó una existente
+                // Guardar nueva dirección si se solicitó
                 if ($guardar_direccion && empty($direccion_id)) {
                     try {
-                        // Verificar si es la primera dirección (será principal)
                         $stmt = $conexion->prepare("SELECT COUNT(*) FROM direcciones WHERE usuario_id = ? AND activa = 1");
                         $stmt->execute([$usuario['id']]);
                         $es_primera = ($stmt->fetchColumn() == 0);
@@ -190,28 +218,30 @@ class PedidoController
                             $usuario['id'],
                             $tipo_direccion,
                             $nombre_direccion ?: ucfirst($tipo_direccion),
-                            $direccion,
-                            $distrito,
-                            $provincia,
-                            $departamento,
-                            $referencia,
+                            $envio_direccion,
+                            $envio_distrito,
+                            $envio_provincia,
+                            $envio_departamento,
+                            $envio_referencia,
                             $es_primera ? 1 : 0
                         ]);
                         
-                        // Actualizar la dirección ID para el pedido
                         $direccion_id_para_pedido = $conexion->lastInsertId();
-                        $direccion_temporal = null; // No necesitamos guardar como temporal
+                        $direccion_temporal = null;
                     } catch (Exception $e) {
-                        // Si las tablas no están migradas, usar dirección temporal
                         error_log("No se pudo guardar la dirección: " . $e->getMessage());
                     }
                 }
 
-                // Calcular totales con promociones
+                // ==================== CALCULAR TOTALES CON PROMOCIONES ====================
                 $promociones = PromocionHelper::evaluar($carrito, $usuario);
                 $totales = PromocionHelper::calcularTotales($carrito, $promociones);
+                
+                // Agregar costo de envío al total
+                $totales['costo_envio'] = $costo_envio;
+                $totales['total'] += $costo_envio;
 
-                // Aplicar cupón si existe
+                // ==================== APLICAR CUPÓN ====================
                 $cupon_aplicado = $_SESSION['cupon_aplicado'] ?? null;
                 $descuento_cupon = 0;
                 $cupon_id = null;
@@ -224,37 +254,40 @@ class PedidoController
                         $cupon_id = $aplicacion['cupon']['id'];
                         $cupon_codigo = $aplicacion['cupon']['codigo'];
                         $totales['descuento'] += $descuento_cupon;
-                        $totales['total'] = max($totales['subtotal'] - $totales['descuento'], 0);
+                        $totales['total'] = max($totales['subtotal'] - $totales['descuento'] + $costo_envio, 0);
                     }
                 }
 
-                // Preparar datos del cupón para el pedido
-                $cupon_data = null;
-                if ($cupon_id) {
-                    $cupon_data = [
-                        'cupon_id' => $cupon_id,
-                        'cupon_codigo' => $cupon_codigo,
-                        'descuento_cupon' => $descuento_cupon,
-                        'subtotal' => $totales['subtotal'],
-                        'descuento_promocion' => $totales['descuento'] - $descuento_cupon
-                    ];
-                }
+                // ==================== PREPARAR DATOS DEL PEDIDO ====================
+                $pedido_data = [
+                    'cupon_id' => $cupon_id,
+                    'cupon_codigo' => $cupon_codigo,
+                    'descuento_cupon' => $descuento_cupon,
+                    'subtotal' => $totales['subtotal'],
+                    'descuento_promocion' => $totales['descuento'] - $descuento_cupon,
+                    'costo_envio' => $costo_envio,
+                    // Datos de facturación
+                    'facturacion_tipo_documento' => $facturacion_tipo_documento,
+                    'facturacion_numero_documento' => $facturacion_numero_documento,
+                    'facturacion_nombre' => $facturacion_nombre,
+                    'facturacion_direccion' => $facturacion_direccion,
+                    'facturacion_email' => $facturacion_email
+                ];
 
-                // Crear pedido con información de cupón
-                $pedido_id = $this->pedidoModel->crear($usuario['id'], $totales['total'], 'pendiente', $cupon_data);
+                // ==================== CREAR PEDIDO ====================
+                $pedido_id = $this->pedidoModel->crear($usuario['id'], $totales['total'], 'pendiente', $pedido_data);
                 if (!$pedido_id) {
                     throw new Exception('No se pudo crear el pedido');
                 }
 
-                // Guardar la dirección del pedido en la tabla pedido_direcciones
+                // ==================== GUARDAR DIRECCIÓN DEL PEDIDO ====================
                 try {
                     $this->pedidoDireccionModel->crear($pedido_id, $direccion_id_para_pedido, $direccion_temporal);
                 } catch (Exception $e) {
-                    // Si la tabla pedido_direcciones no existe aún, continuar
                     error_log("No se pudo guardar la dirección del pedido: " . $e->getMessage());
                 }
 
-                // Guardar detalle del pedido
+                // ==================== GUARDAR DETALLE DEL PEDIDO ====================
                 foreach ($carrito as $item) {
                     $ok = $this->detalleModel->crear(
                         $pedido_id,
@@ -268,7 +301,7 @@ class PedidoController
                     }
                 }
 
-                // Registrar uso del cupón si se aplicó
+                // ==================== REGISTRAR USO DEL CUPÓN ====================
                 if ($cupon_id) {
                     CuponHelper::registrarUso($cupon_id, $usuario['id'], $pedido_id);
                     unset($_SESSION['cupon_aplicado']);
@@ -276,7 +309,7 @@ class PedidoController
 
                 $conexion->commit();
 
-                // Vaciar carrito y redirigir
+                // ==================== LIMPIAR Y REDIRIGIR ====================
                 $_SESSION['carrito'] = [];
                 unset($_SESSION['promociones']);
                 
@@ -293,6 +326,8 @@ class PedidoController
         }
     }
 
+    // ==================== MÉTODOS EXISTENTES (sin cambios) ====================
+    
     // Muestra un pedido específico
     public function ver($id)
     {
@@ -317,7 +352,6 @@ class PedidoController
         try {
             $pedidos = $this->pedidoModel->obtenerTodosConDirecciones();
         } catch (Exception $e) {
-            // Fallback si hay error con direcciones
             $pedidos = $this->pedidoModel->obtenerTodos();
         }
         require __DIR__ . '/../views/pedido/listar.php';
@@ -346,8 +380,6 @@ class PedidoController
             exit;
         }
 
-        // Por ahora usamos cliente_id = 1 como ejemplo
-        // En un sistema real, esto vendría del login del cliente
         $cliente_id = $_SESSION['cliente_id'] ?? 1;
         
         $resultado = CuponHelper::aplicarCupon($codigo, $cliente_id, $carrito);
@@ -398,7 +430,6 @@ class PedidoController
         
         $pedido = $this->pedidoModel->obtenerPorId($id);
         
-        // Obtener dirección del pedido para mostrar en la confirmación
         $direccion_pedido = null;
         try {
             $direccion_pedido = $this->pedidoDireccionModel->obtenerDireccionCompleta($id);
@@ -423,4 +454,42 @@ class PedidoController
             exit;
         }
     }
+    // En PedidoController.php o en un nuevo DireccionController.php
+public function eliminarDireccion()
+{
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $direccionId = $_POST['id'] ?? null;
+        
+        if (!$direccionId) {
+            echo json_encode(['success' => false, 'message' => 'ID de dirección no proporcionado']);
+            exit;
+        }
+        
+        try {
+            $conexion = \Core\Database::getConexion();
+            
+            // Verificar que la dirección pertenece al usuario
+            $usuario = $_SESSION['usuario'];
+            $stmt = $conexion->prepare("SELECT usuario_id FROM direcciones WHERE id = ?");
+            $stmt->execute([$direccionId]);
+            $direccion = $stmt->fetch(\PDO::FETCH_ASSOC);
+            
+            if (!$direccion || $direccion['usuario_id'] != $usuario['id']) {
+                echo json_encode(['success' => false, 'message' => 'No tienes permisos para eliminar esta dirección']);
+                exit;
+            }
+            
+            // Eliminar la dirección
+            $stmt = $conexion->prepare("UPDATE direcciones SET activa = 0 WHERE id = ?");
+            $stmt->execute([$direccionId]);
+            
+            echo json_encode(['success' => true, 'message' => 'Dirección eliminada correctamente']);
+            
+        } catch (Exception $e) {
+            error_log("Error al eliminar dirección: " . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Error al eliminar la dirección']);
+        }
+    }
+    exit;
+}
 }
