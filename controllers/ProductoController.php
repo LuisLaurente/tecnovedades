@@ -128,24 +128,6 @@ class ProductoController extends BaseController
             $porcentaje_visible = 0;
         }
 
-        // Validar imágenes (múltiples)
-        $imagenesValidas = [];
-        if (isset($_FILES['imagenes']) && !empty($_FILES['imagenes']['name'][0])) {
-            for ($i = 0; $i < count($_FILES['imagenes']['name']); $i++) {
-                if ($_FILES['imagenes']['error'][$i] === UPLOAD_ERR_OK) {
-                    $tmp = $_FILES['imagenes']['tmp_name'][$i];
-                    $tipo = mime_content_type($tmp);
-                    if (in_array($tipo, ['image/jpeg', 'image/png', 'image/webp'])) {
-                        $imagenesValidas[] = $i;
-                    } else {
-                        $errores[] = "La imagen " . $_FILES['imagenes']['name'][$i] . " debe ser JPG, PNG o WEBP.";
-                    }
-                } else {
-                    $errores[] = "Error al subir la imagen " . $_FILES['imagenes']['name'][$i] . " (código: " . $_FILES['imagenes']['error'][$i] . ")";
-                }
-            }
-        }
-
         if (!empty($errores)) {
             $_SESSION['flash_error'] = $errores;
             $categorias = Categoria::obtenerTodas();
@@ -190,48 +172,25 @@ class ProductoController extends BaseController
 
             $producto_id = $db->lastInsertId();
 
-            // === Subir y guardar imágenes ===
-            $uploadDir = dirname(__DIR__, 2) . '/public/uploads/';
-            if (!is_dir($uploadDir)) {
-                if (!mkdir($uploadDir, 0755, true)) {
-                    throw new Exception("No se pudo crear el directorio de uploads");
-                }
-            }
-            if (!is_writable($uploadDir)) {
-                // intento ajustar permisos (solo en entornos *nix; en Windows puede no aplicar)
-                @chmod($uploadDir, 0755);
+            // === Subir y guardar imágenes (VERSIÓN SIMPLE QUE FUNCIONA) ===
+            $rutaDestino = __DIR__ . '/../public/uploads/';
+
+            // Crear carpeta si no existe
+            if (!is_dir($rutaDestino)) {
+                mkdir($rutaDestino, 0777, true);
             }
 
             $imagenesSubidas = 0;
-            if (!empty($imagenesValidas)) {
-                foreach ($imagenesValidas as $i) {
-                    $tmpPath = $_FILES['imagenes']['tmp_name'][$i] ?? null;
-                    $nombreOriginal = $_FILES['imagenes']['name'][$i] ?? 'sin_nombre';
-                    if (!$tmpPath || !is_uploaded_file($tmpPath)) {
-                        $errores[] = "Archivo temporal inválido para $nombreOriginal.";
-                        continue;
-                    }
+            if (!empty($_FILES['imagenes']['name'][0])) {
+                foreach ($_FILES['imagenes']['tmp_name'] as $index => $tmpName) {
+                    $nombreOriginal = $_FILES['imagenes']['name'][$index];
+                    $nombreFinal = uniqid() . '_' . basename($nombreOriginal);
+                    $rutaFinal = $rutaDestino . $nombreFinal;
 
-                    $fileExtension = strtolower(pathinfo($nombreOriginal, PATHINFO_EXTENSION));
-                    // sanear extensión permitida
-                    if (!in_array($fileExtension, ['jpg', 'jpeg', 'png', 'webp'])) {
-                        $errores[] = "Extensión no permitida: $nombreOriginal";
-                        continue;
-                    }
-
-                    $nombreFinal = uniqid() . '_' . time() . '.' . $fileExtension;
-                    $destino = $uploadDir . $nombreFinal;
-
-                    if (move_uploaded_file($tmpPath, $destino)) {
+                    if (move_uploaded_file($tmpName, $rutaFinal)) {
                         if (ImagenProducto::guardar($producto_id, $nombreFinal)) {
                             $imagenesSubidas++;
-                        } else {
-                            // si falla guardar en BD, eliminar fichero
-                            @unlink($destino);
-                            $errores[] = "Error al guardar imagen en BD: $nombreOriginal";
                         }
-                    } else {
-                        $errores[] = "No se pudo mover la imagen: $nombreOriginal";
                     }
                 }
             }
@@ -274,11 +233,7 @@ class ProductoController extends BaseController
 
             $db->commit();
 
-            if (!empty($errores)) {
-                $_SESSION['flash_warning'] = 'Producto creado, pero hubo problemas con algunas imágenes: ' . implode('<br>', $errores);
-            } else {
-                $_SESSION['flash_success'] = "Producto creado correctamente. Imágenes subidas: $imagenesSubidas.";
-            }
+            $_SESSION['flash_success'] = "Producto creado correctamente. Imágenes subidas: $imagenesSubidas.";
         } catch (\Exception $e) {
             $db->rollBack();
             error_log("Error al guardar producto: " . $e->getMessage());
@@ -294,7 +249,6 @@ class ProductoController extends BaseController
         header("Location: " . url("producto/index"));
         exit;
     }
-
 
     public function editar($id)
     {
@@ -377,7 +331,6 @@ class ProductoController extends BaseController
         }
     }
 
-
     public function actualizar()
     {
         $db = \Core\Database::getInstance()->getConnection();
@@ -422,18 +375,27 @@ class ProductoController extends BaseController
         }
 
         // Validar nuevas imágenes si se suben
-        $imagenesValidas = [];
+        // ==================== PROCESAR NUEVAS IMÁGENES ====================
+        $imagenesSubidas = 0;
         if (isset($_FILES['imagenes']) && !empty($_FILES['imagenes']['name'][0])) {
-            for ($i = 0; $i < count($_FILES['imagenes']['name']); $i++) {
-                if ($_FILES['imagenes']['error'][$i] === UPLOAD_ERR_OK) {
-                    $tipo = mime_content_type($_FILES['imagenes']['tmp_name'][$i]);
-                    if (in_array($tipo, ['image/jpeg', 'image/png', 'image/webp'])) {
-                        $imagenesValidas[] = $i;
-                    } else {
-                        $errores[] = "La imagen " . $_FILES['imagenes']['name'][$i] . " debe ser JPG, PNG o WEBP.";
+            $uploadDir = __DIR__ . '/../public/uploads/';
+
+            // Crear directorio si no existe (simple)
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+
+            foreach ($_FILES['imagenes']['tmp_name'] as $index => $tmpName) {
+                if ($_FILES['imagenes']['error'][$index] === UPLOAD_ERR_OK) {
+                    $nombreOriginal = $_FILES['imagenes']['name'][$index];
+                    $nombreFinal = uniqid() . '_' . basename($nombreOriginal);
+                    $uploadPath = $uploadDir . $nombreFinal;
+
+                    if (move_uploaded_file($tmpName, $uploadPath)) {
+                        if (ImagenProducto::guardar($id, $nombreFinal)) {
+                            $imagenesSubidas++;
+                        }
                     }
-                } else {
-                    $errores[] = "Error al subir la imagen " . $_FILES['imagenes']['name'][$i] . " (código: " . $_FILES['imagenes']['error'][$i] . ")";
                 }
             }
         }
@@ -498,7 +460,7 @@ class ProductoController extends BaseController
             // ==================== PROCESAR NUEVAS IMÁGENES ====================
             $imagenesSubidas = 0;
             if (isset($_FILES['imagenes']) && !empty($_FILES['imagenes']['name'][0])) {
-                $uploadDir = dirname(__DIR__, 2) . '/public/uploads/';
+                $uploadDir = __DIR__ . '/../public/uploads/';
                 // Crear directorio si no existe
                 if (!is_dir($uploadDir)) {
                     if (!mkdir($uploadDir, 0755, true)) {
