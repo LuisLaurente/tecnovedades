@@ -504,11 +504,9 @@ class Producto
         $producto['precio_tachado'] = isset($producto['precio_tachado']) ? $this->formatearPrecio($producto['precio_tachado']) : null;
         $producto['porcentaje_descuento'] = isset($producto['porcentaje_descuento']) ? (float)$producto['porcentaje_descuento'] : 0;
 
-        // flags (aseguramos booleanos; default true si no existe para compatibilidad)
         $producto['precio_tachado_visible'] = isset($producto['precio_tachado_visible']) ? (bool)$producto['precio_tachado_visible'] : true;
         $producto['porcentaje_visible'] = isset($producto['porcentaje_visible']) ? (bool)$producto['porcentaje_visible'] : true;
 
-        // Si no hay precio tachado o no es mayor, ocultamos
         if (empty($producto['precio_tachado']) || (float)$producto['precio_tachado'] <= (float)$producto['precio']) {
             $producto['precio_tachado'] = null;
             $producto['porcentaje_descuento'] = 0;
@@ -516,13 +514,25 @@ class Producto
             $producto['porcentaje_visible'] = false;
         }
 
-        // Texto para badge solo si porcentaje_visible = true y porcentaje > 0
         $producto['texto_badge'] = ($producto['porcentaje_visible'] && $producto['porcentaje_descuento'] > 0)
             ? '-' . $this->formatearPrecio($producto['porcentaje_descuento']) . '%'
             : '';
 
+        // 🚀 Aquí obtenemos las imágenes de la tabla
+        $imagenes = ImagenProducto::obtenerPorProducto($producto['id']);
+        $producto['imagenes'] = array_map(function ($img) {
+            return "/uploads/" . $img['nombre_imagen'];
+        }, $imagenes);
+
+        // Si no hay imágenes, ponemos una por defecto
+        if (empty($producto['imagenes'])) {
+            $producto['imagenes'][] = "/TECNOVEDADES/public/uploads/default-product.png";
+        }
+
         return $producto;
     }
+
+
 
     private function buildWhereClause($minPrice, $maxPrice, $categoriaId, array $etiquetas, $visibleOnly)
     {

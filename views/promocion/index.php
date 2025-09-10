@@ -2,7 +2,8 @@
 // --- Función Auxiliar para describir la promoción ---
 // Esta función convierte los datos JSON de la promoción en un texto legible.
 if (!function_exists('describirPromocion')) {
-    function describirPromocion($condicion, $accion) {
+    function describirPromocion($condicion, $accion)
+    {
         $condicion = json_decode($condicion, true);
         $accion = json_decode($accion, true);
 
@@ -16,8 +17,18 @@ if (!function_exists('describirPromocion')) {
         switch ($tipoCondicion) {
             case 'subtotal_minimo':
                 $valorCond = number_format($condicion['valor'] ?? 0, 2);
-                $valorAcc = $accion['valor'] ?? 0;
-                return "Si el carrito supera S/ {$valorCond} → <strong>{$valorAcc}% de descuento</strong>";
+                if ($tipoAccion === 'descuento_porcentaje') {
+                    $valorAcc = $accion['valor'] ?? 0;
+                    return "Si el carrito supera S/ {$valorCond} → <strong>{$valorAcc}% de descuento</strong>";
+                }
+                if ($tipoAccion === 'descuento_fijo') {
+                    $valorAcc = number_format($accion['valor'] ?? 0, 2);
+                    return "Si el carrito supera S/ {$valorCond} → <strong>S/ {$valorAcc} de descuento</strong>";
+                }
+                if ($tipoAccion === 'envio_gratis') {
+                    return "Si el carrito supera S/ {$valorCond} → <strong>Envío Gratis</strong>";
+                }
+                break;
 
             case 'primera_compra':
                 return "Si es la primera compra del usuario → <strong>Envío Gratis</strong>";
@@ -37,12 +48,31 @@ if (!function_exists('describirPromocion')) {
                 break;
 
             case 'cantidad_producto_categoria':
-                 if ($tipoAccion === 'descuento_menor_valor') {
+                if ($tipoAccion === 'descuento_menor_valor') {
                     $catId = $condicion['categoria_id'] ?? 'N/A';
                     $cantidad = $condicion['cantidad_min'] ?? 'N';
                     $desc = $accion['valor'] ?? 0;
                     return "<strong>{$desc}% de descuento</strong> en el producto de menor valor al llevar {$cantidad} de la Categoría #{$catId}";
                 }
+                break;
+
+            case 'cantidad_total_productos':
+                $cantidadMin = $condicion['cantidad_min'] ?? 0;
+                if ($tipoAccion === 'compra_n_paga_m_general') {
+                    $lleva = $accion['cantidad_lleva'] ?? 'N';
+                    $paga = $accion['cantidad_paga'] ?? 'M';
+                    return "Al llevar {$cantidadMin} productos mezclados → <strong>Lleva {$lleva}, Paga {$paga} (el de menor valor gratis)</strong>";
+                }
+                if ($tipoAccion === 'descuento_enesimo_producto') {
+                    $numProducto = $accion['numero_producto'] ?? 'N';
+                    $descuento = $accion['descuento_porcentaje'] ?? 0;
+                    return "Al llevar {$cantidadMin} productos mezclados → <strong>{$descuento}% de descuento en el {$numProducto}º producto (menor valor)</strong>";
+                }
+                break;
+            case 'descuento_producto_mas_barato':
+                $cantidadMin = $condicion['cantidad_min'] ?? 0;
+                $desc = $accion['valor'] ?? 0;
+                return "Al llevar {$cantidadMin} productos mezclados → <strong>{$desc}% de descuento en el producto más barato</strong>";
                 break;
         }
         return 'Regla personalizada';
@@ -85,14 +115,26 @@ if (!function_exists('describirPromocion')) {
 
                         <!-- Panel de estadísticas -->
                         <?php
-                            $promocionModel = new \Models\Promocion();
-                            $stats = $promocionModel->obtenerEstadisticas();
+                        $promocionModel = new \Models\Promocion();
+                        $stats = $promocionModel->obtenerEstadisticas();
                         ?>
                         <div class="stats-panel">
-                            <div class="stat-card total"><div class="stat-number"><?= $stats['total'] ?></div><div class="stat-label">Total</div></div>
-                            <div class="stat-card activas"><div class="stat-number"><?= $stats['activas'] ?></div><div class="stat-label">Activas</div></div>
-                            <div class="stat-card vigentes"><div class="stat-number"><?= $stats['vigentes'] ?></div><div class="stat-label">Vigentes</div></div>
-                            <div class="stat-card vencidas"><div class="stat-number"><?= $stats['vencidas'] ?></div><div class="stat-label">Vencidas</div></div>
+                            <div class="stat-card total">
+                                <div class="stat-number"><?= $stats['total'] ?></div>
+                                <div class="stat-label">Total</div>
+                            </div>
+                            <div class="stat-card activas">
+                                <div class="stat-number"><?= $stats['activas'] ?></div>
+                                <div class="stat-label">Activas</div>
+                            </div>
+                            <div class="stat-card vigentes">
+                                <div class="stat-number"><?= $stats['vigentes'] ?></div>
+                                <div class="stat-label">Vigentes</div>
+                            </div>
+                            <div class="stat-card vencidas">
+                                <div class="stat-number"><?= $stats['vencidas'] ?></div>
+                                <div class="stat-label">Vencidas</div>
+                            </div>
                         </div>
 
                         <div class="action-buttons">
@@ -145,8 +187,7 @@ if (!function_exists('describirPromocion')) {
                                                     </td>
                                                     <td>
                                                         <div class="date-range">
-                                                            <strong>Inicio:</strong> <?= date('d/m/Y', strtotime($promocion['fecha_inicio'])) ?>  
-
+                                                            <strong>Inicio:</strong> <?= date('d/m/Y', strtotime($promocion['fecha_inicio'])) ?>
                                                             <strong>Fin:</strong> <?= date('d/m/Y', strtotime($promocion['fecha_fin'])) ?>
                                                         </div>
                                                     </td>
@@ -189,4 +230,5 @@ if (!function_exists('describirPromocion')) {
         </div>
     </div>
 </body>
+
 </html>

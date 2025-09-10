@@ -159,33 +159,33 @@ class Promocion
     public function obtenerEstadisticas()
     {
         $stats = [];
-        
+
         // Total de promociones
         $sql = "SELECT COUNT(*) as total FROM promociones";
         $stmt = $this->db->prepare($sql);
         $stmt->execute();
         $stats['total'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-        
+
         // Promociones activas
         $sql = "SELECT COUNT(*) as activas FROM promociones WHERE activo = 1";
         $stmt = $this->db->prepare($sql);
         $stmt->execute();
         $stats['activas'] = $stmt->fetch(PDO::FETCH_ASSOC)['activas'];
-        
+
         // Promociones vigentes
         $sql = "SELECT COUNT(*) as vigentes FROM promociones 
                 WHERE activo = 1 AND CURDATE() BETWEEN fecha_inicio AND fecha_fin";
         $stmt = $this->db->prepare($sql);
         $stmt->execute();
         $stats['vigentes'] = $stmt->fetch(PDO::FETCH_ASSOC)['vigentes'];
-        
+
         // Promociones vencidas
         $sql = "SELECT COUNT(*) as vencidas FROM promociones 
                 WHERE fecha_fin < CURDATE()";
         $stmt = $this->db->prepare($sql);
         $stmt->execute();
         $stats['vencidas'] = $stmt->fetch(PDO::FETCH_ASSOC)['vencidas'];
-        
+
         return $stats;
     }
 
@@ -194,7 +194,7 @@ class Promocion
      */
     public function toggleEstado($id)
     {
-         // Obtener el estado actual
+        // Obtener el estado actual
         $sql = "SELECT activo FROM promociones WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
@@ -213,7 +213,7 @@ class Promocion
         return $stmt->execute();
     }
 
-        /**
+    /**
      * Mapas para traducir condicion y accion a etiquetas legibles
      */
     private $condicionesMap = [
@@ -221,7 +221,13 @@ class Promocion
         'tipo_usuario'  => 'Tipo de Usuario',
         'todos'         => 'Todos los usuarios',
         'categoria'     => 'Categoría específica (ID)',
-        'producto'      => 'Producto específico (ID)'
+        'producto'      => 'Producto específico (ID)',
+        'cantidad_total_productos' => 'Cantidad total de productos',
+        'subtotal_minimo' => 'Monto mínimo del carrito',
+        'primera_compra' => 'Primera compra del usuario',
+        'cantidad_producto_identico' => 'Cantidad de un producto específico',
+        'cantidad_producto_categoria' => 'Cantidad de productos de una categoría'
+
     ];
 
     private $accionesMap = [
@@ -229,6 +235,12 @@ class Promocion
         'descuento_monto'      => 'Descuento fijo (S/)',
         'envio_gratis'         => 'Envío Gratis',
         'producto_gratis'      => 'Producto Gratis',
+        'compra_n_paga_m_general' => 'Promoción NxM General',
+        'descuento_enesimo_producto' => 'Descuento en N-ésimo producto',
+        'descuento_producto_mas_barato' => 'Descuento en el producto más barato',
+        'descuento_menor_valor' => 'Descuento en el producto de menor valor de categoría',
+        'descuento_enesima_unidad' => 'Descuento en la N-ésima unidad',
+        'compra_n_paga_m' => 'Promoción NxM en producto específico'
     ];
 
     /**
@@ -268,7 +280,7 @@ class Promocion
         return (json_last_error() === JSON_ERROR_NONE);
     }
 
-        /**
+    /**
      * Actualiza un campo específico de una promoción.
      * Es más eficiente que 'actualizar' para cambios puntuales.
      *
@@ -281,7 +293,7 @@ class Promocion
     {
         // Lista blanca de campos permitidos para evitar inyecciones SQL en los nombres de columna.
         $camposPermitidos = ['nombre', 'prioridad', 'activo', 'acumulable', 'exclusivo', 'fecha_inicio', 'fecha_fin'];
-        
+
         if (!in_array($campo, $camposPermitidos)) {
             // Si el campo no está en la lista, no hacemos nada para proteger la BD.
             return false;
@@ -289,12 +301,10 @@ class Promocion
 
         $sql = "UPDATE promociones SET {$campo} = :valor WHERE id = :id";
         $stmt = $this->db->prepare($sql);
-        
+
         return $stmt->execute([
             ':valor' => $valor,
             ':id'    => $id
         ]);
     }
-
 }
-

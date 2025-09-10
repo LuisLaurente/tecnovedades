@@ -16,7 +16,7 @@ class ImagenController
 
         if ($imagen) {
             // Eliminamos el archivo del servidor desde /uploads/
-            $ruta = __DIR__ . '/../public/uploads/' . $imagen['nombre_imagen'];
+            $ruta = dirname(__DIR__, 2) . '/public/uploads/' . $imagen['nombre_imagen'];
             if (file_exists($ruta)) {
                 unlink($ruta);
             }
@@ -34,34 +34,56 @@ class ImagenController
         exit;
     }
 
-    public function subir()
-    {
-        if (!isset($_FILES['imagen']) || $_FILES['imagen']['error'] !== UPLOAD_ERR_OK) {
-            echo "❌ Error al subir la imagen.";
-            return;
-        }
+public function subir()
+{
+    echo "<pre>";
 
-        $producto_id = $_POST['producto_id'] ?? null;
-        if (!$producto_id) {
-            echo "❌ No se recibió ID de producto.";
-            return;
-        }
+    // 1️⃣ Ver todo el array de archivos subidos
+    echo "=== DEBUG _FILES ===\n";
+    var_dump($_FILES);
 
-        $nombreOriginal = $_FILES['imagen']['name'];
-        $nombreFinal = uniqid() . '_' . basename($nombreOriginal);
-        $tmpPath = $_FILES['imagen']['tmp_name'];
-        $destino = __DIR__ . '/../public/uploads/' . $nombreFinal;
+    // 2️⃣ Ver todo el POST
+    echo "\n=== DEBUG _POST ===\n";
+    var_dump($_POST);
 
-        if (!move_uploaded_file($tmpPath, $destino)) {
-            echo "❌ No se pudo mover la imagen al destino.";
-            return;
-        }
-
-        // Guardar en base de datos
-        \Models\ImagenProducto::guardar($producto_id, $nombreFinal);
-
-        // ✅ Redirigir correctamente a la edición del producto con url()
-        header("Location: " . url("producto/editar/$producto_id"));
+    // 3️⃣ Validación inicial
+    if (!isset($_FILES['imagen']) || $_FILES['imagen']['error'] !== UPLOAD_ERR_OK) {
+        echo "\n❌ Error: no se recibió la imagen o hubo un error al subir.";
         exit;
     }
+
+    $producto_id = $_POST['producto_id'] ?? null;
+    if (!$producto_id) {
+        echo "\n❌ Error: no se recibió ID de producto.";
+        exit;
+    }
+
+    $nombreOriginal = $_FILES['imagen']['name'];
+    $nombreFinal = uniqid() . '_' . basename($nombreOriginal);
+    $tmpPath = $_FILES['imagen']['tmp_name'];
+
+    // 4️⃣ Ruta destino
+    $destino = dirname(__DIR__, 2) . '/public/uploads/' . $nombreFinal;
+
+    echo "\n=== DEBUG RUTAS ===\n";
+    echo "TmpPath: $tmpPath\n";
+    echo "Destino: $destino\n";
+
+    // 5️⃣ Probar movimiento
+    if (!move_uploaded_file($tmpPath, $destino)) {
+        echo "\n❌ No se pudo mover la imagen al destino.";
+        exit;
+    }
+
+    echo "\n✅ Imagen movida correctamente.\n";
+
+    // Guardar en base de datos
+    \Models\ImagenProducto::guardar($producto_id, $nombreFinal);
+
+    echo "✅ Guardada en BD con nombre: $nombreFinal\n";
+
+    echo "</pre>";
+    exit;
+}
+
 }

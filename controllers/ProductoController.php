@@ -84,7 +84,7 @@ class ProductoController extends BaseController
         $categorias = Categoria::obtenerTodas();
         $etiquetas = (new Etiqueta())->obtenerTodas();
         $productoModel = new Producto();
-$allProducts = $productoModel->obtenerVisibles();// Para productos relacionados en la vista
+        $allProducts = $productoModel->obtenerVisibles(); // Para productos relacionados en la vista
         require_once __DIR__ . '/../views/producto/crear.php';
     }
 
@@ -133,7 +133,8 @@ $allProducts = $productoModel->obtenerVisibles();// Para productos relacionados 
         if (isset($_FILES['imagenes']) && !empty($_FILES['imagenes']['name'][0])) {
             for ($i = 0; $i < count($_FILES['imagenes']['name']); $i++) {
                 if ($_FILES['imagenes']['error'][$i] === UPLOAD_ERR_OK) {
-                    $tipo = mime_content_type($_FILES['imagenes']['tmp_name'][$i]);
+                    $tmp = $_FILES['imagenes']['tmp_name'][$i];
+                    $tipo = mime_content_type($tmp);
                     if (in_array($tipo, ['image/jpeg', 'image/png', 'image/webp'])) {
                         $imagenesValidas[] = $i;
                     } else {
@@ -150,14 +151,14 @@ $allProducts = $productoModel->obtenerVisibles();// Para productos relacionados 
             $categorias = Categoria::obtenerTodas();
             $etiquetas = (new Etiqueta())->obtenerTodas();
             $productoModel = new Producto();
-$allProducts = $productoModel->obtenerVisibles();
+            $allProducts = $productoModel->obtenerVisibles();
             require __DIR__ . '/../views/producto/crear.php';
             return;
         }
 
         $db->beginTransaction();
         try {
-            // Capturar los campos adicionales
+            // Campos adicionales
             $especificaciones = trim($_POST['especificaciones'] ?? '');
             $productos_relacionados_input = $_POST['productos_relacionados'] ?? [];
             $productos_relacionados_input = array_map('intval', (array)$productos_relacionados_input);
@@ -165,12 +166,12 @@ $allProducts = $productoModel->obtenerVisibles();
 
             // INSERT del producto
             $stmt = $db->prepare("INSERT INTO productos 
-        (nombre, descripcion, precio, precio_tachado, porcentaje_descuento, 
-         precio_tachado_visible, porcentaje_visible, stock, visible, destacado,
-         especificaciones, productos_relacionados) 
-        VALUES (:nombre, :descripcion, :precio, :precio_tachado, :porcentaje_descuento, 
-        :precio_tachado_visible, :porcentaje_visible, :stock, :visible, :destacado,
-        :especificaciones, :productos_relacionados)");
+            (nombre, descripcion, precio, precio_tachado, porcentaje_descuento, 
+             precio_tachado_visible, porcentaje_visible, stock, visible, destacado,
+             especificaciones, productos_relacionados) 
+            VALUES (:nombre, :descripcion, :precio, :precio_tachado, :porcentaje_descuento, 
+            :precio_tachado_visible, :porcentaje_visible, :stock, :visible, :destacado,
+            :especificaciones, :productos_relacionados)");
 
             $stmt->execute([
                 ':nombre' => $nombre,
@@ -189,19 +190,35 @@ $allProducts = $productoModel->obtenerVisibles();
 
             $producto_id = $db->lastInsertId();
 
-            // Subir y guardar imágenes usando el modelo (correcto con producto_id)
-            $uploadDir = __DIR__ . '/../public/uploads/';
+            // === Subir y guardar imágenes ===
+            $uploadDir = dirname(__DIR__, 2) . '/public/uploads/';
             if (!is_dir($uploadDir)) {
                 if (!mkdir($uploadDir, 0755, true)) {
                     throw new Exception("No se pudo crear el directorio de uploads");
                 }
             }
+            if (!is_writable($uploadDir)) {
+                // intento ajustar permisos (solo en entornos *nix; en Windows puede no aplicar)
+                @chmod($uploadDir, 0755);
+            }
+
             $imagenesSubidas = 0;
             if (!empty($imagenesValidas)) {
                 foreach ($imagenesValidas as $i) {
-                    $tmpPath = $_FILES['imagenes']['tmp_name'][$i];
-                    $nombreOriginal = $_FILES['imagenes']['name'][$i];
-                    $fileExtension = pathinfo($nombreOriginal, PATHINFO_EXTENSION);
+                    $tmpPath = $_FILES['imagenes']['tmp_name'][$i] ?? null;
+                    $nombreOriginal = $_FILES['imagenes']['name'][$i] ?? 'sin_nombre';
+                    if (!$tmpPath || !is_uploaded_file($tmpPath)) {
+                        $errores[] = "Archivo temporal inválido para $nombreOriginal.";
+                        continue;
+                    }
+
+                    $fileExtension = strtolower(pathinfo($nombreOriginal, PATHINFO_EXTENSION));
+                    // sanear extensión permitida
+                    if (!in_array($fileExtension, ['jpg', 'jpeg', 'png', 'webp'])) {
+                        $errores[] = "Extensión no permitida: $nombreOriginal";
+                        continue;
+                    }
+
                     $nombreFinal = uniqid() . '_' . time() . '.' . $fileExtension;
                     $destino = $uploadDir . $nombreFinal;
 
@@ -209,7 +226,8 @@ $allProducts = $productoModel->obtenerVisibles();
                         if (ImagenProducto::guardar($producto_id, $nombreFinal)) {
                             $imagenesSubidas++;
                         } else {
-                            unlink($destino); // Rollback si falla BD
+                            // si falla guardar en BD, eliminar fichero
+                            @unlink($destino);
                             $errores[] = "Error al guardar imagen en BD: $nombreOriginal";
                         }
                     } else {
@@ -238,7 +256,7 @@ $allProducts = $productoModel->obtenerVisibles();
                 }
             }
 
-            // Variantes (si el form las envía)
+            // Variantes
             if (isset($_POST['variantes']) && !empty($_POST['variantes']['talla'][0])) {
                 $tallas = $_POST['variantes']['talla'] ?? [];
                 $colores = $_POST['variantes']['color'] ?? [];
@@ -255,7 +273,12 @@ $allProducts = $productoModel->obtenerVisibles();
             }
 
             $db->commit();
-            $_SESSION['flash_success'] = "Producto creado correctamente. Imágenes subidas: $imagenesSubidas.";
+
+            if (!empty($errores)) {
+                $_SESSION['flash_warning'] = 'Producto creado, pero hubo problemas con algunas imágenes: ' . implode('<br>', $errores);
+            } else {
+                $_SESSION['flash_success'] = "Producto creado correctamente. Imágenes subidas: $imagenesSubidas.";
+            }
         } catch (\Exception $e) {
             $db->rollBack();
             error_log("Error al guardar producto: " . $e->getMessage());
@@ -263,7 +286,7 @@ $allProducts = $productoModel->obtenerVisibles();
             $categorias = Categoria::obtenerTodas();
             $etiquetas = (new Etiqueta())->obtenerTodas();
             $productoModel = new Producto();
-$allProducts = $productoModel->obtenerVisibles();
+            $allProducts = $productoModel->obtenerVisibles();
             require __DIR__ . '/../views/producto/crear.php';
             return;
         }
@@ -271,6 +294,7 @@ $allProducts = $productoModel->obtenerVisibles();
         header("Location: " . url("producto/index"));
         exit;
     }
+
 
     public function editar($id)
     {
@@ -290,19 +314,25 @@ $allProducts = $productoModel->obtenerVisibles();
         }
 
         try {
-            // 🔹 Asegurar que el campo 'destacado' exista
+            // Asegurar estructura mínima
             if (!isset($producto['destacado'])) {
                 $producto['destacado'] = 0;
             }
 
-            // 🔹 Procesar productos_relacionados desde JSON
+            // Procesar productos_relacionados: solo decodificar si es string (JSON)
             if (!empty($producto['productos_relacionados'])) {
-                $producto['productos_relacionados'] = json_decode($producto['productos_relacionados'], true) ?: [];
+                if (is_string($producto['productos_relacionados'])) {
+                    $producto['productos_relacionados'] = json_decode($producto['productos_relacionados'], true) ?: [];
+                } elseif (is_array($producto['productos_relacionados'])) {
+                    // ya es array, dejarlo
+                } else {
+                    $producto['productos_relacionados'] = [];
+                }
             } else {
                 $producto['productos_relacionados'] = [];
             }
 
-            // 🔹 Obtener datos relacionados
+            // Obtener datos relacionados
             $db = \Core\Database::getInstance()->getConnection();
 
             // Variantes del producto
@@ -323,14 +353,14 @@ $allProducts = $productoModel->obtenerVisibles();
             $stmt->execute([$id]);
             $categoriasAsignadas = array_column($stmt->fetchAll(\PDO::FETCH_ASSOC), 'id_categoria');
 
-            // Imágenes del producto
+            // Imágenes del producto (array de filas: id, producto_id, nombre_imagen)
             $imagenes = ImagenProducto::obtenerPorProducto($id);
 
             // Todos los productos para "productos relacionados" (excluyendo el actual)
             $productoModel = new Producto();
             $allProductsQuery = $productoModel->obtenerVisibles();
             $allProducts = array_filter($allProductsQuery, function ($p) use ($id) {
-                return $p['id'] != $id; // Excluir el producto actual
+                return $p['id'] != $id;
             });
 
             // Variables para la vista
@@ -340,14 +370,13 @@ $allProducts = $productoModel->obtenerVisibles();
             // Cargar la vista
             require __DIR__ . '/../views/producto/editar.php';
         } catch (\Exception $e) {
-            // Log del error
             error_log("Error al cargar producto para editar (ID: $id): " . $e->getMessage());
-
             $_SESSION['flash_error'] = 'Error al cargar el producto. Por favor, inténtelo de nuevo.';
             header('Location: ' . url('producto/index'));
             exit;
         }
     }
+
 
     public function actualizar()
     {
@@ -469,8 +498,7 @@ $allProducts = $productoModel->obtenerVisibles();
             // ==================== PROCESAR NUEVAS IMÁGENES ====================
             $imagenesSubidas = 0;
             if (isset($_FILES['imagenes']) && !empty($_FILES['imagenes']['name'][0])) {
-                $uploadDir = __DIR__ . '/../public/uploads/';
-
+                $uploadDir = dirname(__DIR__, 2) . '/public/uploads/';
                 // Crear directorio si no existe
                 if (!is_dir($uploadDir)) {
                     if (!mkdir($uploadDir, 0755, true)) {
