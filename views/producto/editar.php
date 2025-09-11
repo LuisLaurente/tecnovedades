@@ -4,8 +4,7 @@
 <div class="form-container">
     <h2>✏️ Editar Producto</h2>
 
-    <form action="<?= url('producto/actualizar/' . $producto['id']) ?>" method="POST" enctype="multipart/form-data">
-        <input type="hidden" name="id" value="<?= $producto['id'] ?>">
+<form action="<?= url('producto/actualizar') ?>" method="POST" enctype="multipart/form-data">        <input type="hidden" name="id" value="<?= $producto['id'] ?>">
 
         <!-- Nombre -->
         <div class="form-group">

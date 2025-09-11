@@ -15,8 +15,9 @@ class ImagenController
         $imagen = $stmt->fetch();
 
         if ($imagen) {
-            // Eliminamos el archivo del servidor desde /uploads/
+            // ✅ Ruta CORREGIDA - misma estructura que funciona
             $ruta = __DIR__ . '/../public/uploads/' . $imagen['nombre_imagen'];
+            
             if (file_exists($ruta)) {
                 unlink($ruta);
             }
@@ -36,32 +37,39 @@ class ImagenController
 
     public function subir()
     {
+        // 1️⃣ Validación inicial
         if (!isset($_FILES['imagen']) || $_FILES['imagen']['error'] !== UPLOAD_ERR_OK) {
-            echo "❌ Error al subir la imagen.";
-            return;
+            $_SESSION['error'] = "No se recibió la imagen o hubo un error al subir.";
+            header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? url('producto')));
+            exit;
         }
 
         $producto_id = $_POST['producto_id'] ?? null;
         if (!$producto_id) {
-            echo "❌ No se recibió ID de producto.";
-            return;
+            $_SESSION['error'] = "No se recibió ID de producto.";
+            header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? url('producto')));
+            exit;
         }
 
         $nombreOriginal = $_FILES['imagen']['name'];
         $nombreFinal = uniqid() . '_' . basename($nombreOriginal);
         $tmpPath = $_FILES['imagen']['tmp_name'];
+
+        // 2️⃣ Ruta destino CORREGIDA
         $destino = __DIR__ . '/../public/uploads/' . $nombreFinal;
 
+        // 3️⃣ Probar movimiento
         if (!move_uploaded_file($tmpPath, $destino)) {
-            echo "❌ No se pudo mover la imagen al destino.";
-            return;
+            $_SESSION['error'] = "No se pudo mover la imagen al destino.";
+            header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? url('producto')));
+            exit;
         }
 
-        // Guardar en base de datos
+        // 4️⃣ Guardar en base de datos
         \Models\ImagenProducto::guardar($producto_id, $nombreFinal);
 
-        // ✅ Redirigir correctamente a la edición del producto con url()
-        header("Location: " . url("producto/editar/$producto_id"));
+        $_SESSION['success'] = "Imagen subida correctamente: $nombreFinal";
+        header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? url('producto')));
         exit;
     }
 }

@@ -75,7 +75,7 @@ if (!isset($categorias)) {
     <!-- Contenedor de categorías pegado al pie del hero (permanecerá dentro del mismo contenedor 100vh) -->
     <div class="categories-carousel-container">
       <div class="container">
-        <div class="section-title">
+        <div class="section-title" id="categorias-section">
           <h2 class="fade-text">Categorías</h2>
           <div class="line"></div>
         </div>
@@ -196,6 +196,35 @@ if (!isset($categorias)) {
 
   <!-- SCRIPTS -->
   <script>
+    document.addEventListener("DOMContentLoaded", () => {
+    const targetId = "categorias-section";
+    const target = document.getElementById(targetId);
+
+    // 👉 1. Interceptar clics en el link dentro de la misma página
+    const link = document.querySelector(`a[href$="#${targetId}"]`);
+    if (link && target) {
+      link.addEventListener("click", function(e) {
+        e.preventDefault();
+        target.scrollIntoView({
+          behavior: "smooth",
+          block: "center"
+        });
+        // Actualizar hash en la URL sin que el navegador haga scroll automático
+        history.pushState(null, "", `#${targetId}`);
+      });
+    }
+
+    // 👉 2. Si vienes desde otra página con hash (#categorias-section)
+    if (window.location.hash === `#${targetId}` && target) {
+      // Esperar un momento a que cargue todo antes de centrar
+      setTimeout(() => {
+        target.scrollIntoView({
+          behavior: "smooth",
+          block: "center"
+        });
+      }, 300); // puedes ajustar el delay
+    }
+  });
     // --- Banner simple fade ---
     (function() {
       const slides = document.querySelectorAll('.hero-slide');
