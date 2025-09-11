@@ -109,26 +109,26 @@ class Promocion
     public function actualizar($id, $data)
     {
         $sql = "UPDATE promociones SET 
-                    codigo = :codigo,
-                    nombre = :nombre,
-                    condicion = :condicion,
-                    accion = :accion,
-                    acumulable = :acumulable,
-                    exclusivo = :exclusivo,
-                    prioridad = :prioridad,
-                    activo = :activo,
-                    fecha_inicio = :fecha_inicio,
-                    fecha_fin = :fecha_fin,
-                    tipo = :tipo
-                WHERE id = :id";
+                codigo = :codigo,
+                nombre = :nombre,
+                condicion = :condicion,
+                accion = :accion,
+                acumulable = :acumulable,
+                exclusivo = :exclusivo,
+                prioridad = :prioridad,
+                activo = :activo,
+                fecha_inicio = :fecha_inicio,
+                fecha_fin = :fecha_fin,
+                tipo = :tipo
+            WHERE id = :id";
 
         $stmt = $this->db->prepare($sql);
 
         return $stmt->execute([
             ':codigo'       => $data['codigo'],
             ':nombre'       => $data['nombre'],
-            ':condicion'    => json_encode($data['condicion']),
-            ':accion'       => json_encode($data['accion']),
+            ':condicion'    => $data['condicion'],    // ← SIN json_encode
+            ':accion'       => $data['accion'],       // ← SIN json_encode
             ':acumulable'   => $data['acumulable'],
             ':exclusivo'    => $data['exclusivo'],
             ':prioridad'    => $data['prioridad'],

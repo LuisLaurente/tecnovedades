@@ -2,17 +2,23 @@
 // --- Función Auxiliar para describir la promoción ---
 // Esta función convierte los datos JSON de la promoción en un texto legible.
 if (!function_exists('describirPromocion')) {
-    function describirPromocion($condicion, $accion)
+    function describirPromocion($condicion, $accion, $tipo = null)
     {
         $condicion = json_decode($condicion, true);
         $accion = json_decode($accion, true);
 
-        if (!$condicion || !$accion) {
+        if (!$condicion || !$accion || empty($condicion['tipo']) || empty($accion['tipo'])) {
+            error_log("Error en describirPromocion: Condicion=" . json_encode($condicion) . ", Accion=" . json_encode($accion));
             return '<span class="text-red-500">Error en datos</span>';
         }
 
-        $tipoCondicion = $condicion['tipo'] ?? 'desconocida';
-        $tipoAccion = $accion['tipo'] ?? 'desconocida';
+        $tipoCondicion = $condicion['tipo'];
+        $tipoAccion = $accion['tipo'];
+
+        // Validar consistencia con el campo tipo, si se pasa
+        if ($tipo && $tipo !== $tipoCondicion) {
+            error_log("Inconsistencia en tipo: DB=$tipo, Condicion=$tipoCondicion");
+        }
 
         switch ($tipoCondicion) {
             case 'subtotal_minimo':
@@ -31,7 +37,10 @@ if (!function_exists('describirPromocion')) {
                 break;
 
             case 'primera_compra':
-                return "Si es la primera compra del usuario → <strong>Envío Gratis</strong>";
+                if ($tipoAccion === 'envio_gratis') {
+                    return "Si es la primera compra del usuario → <strong>Envío Gratis</strong>";
+                }
+                break;
 
             case 'cantidad_producto_identico':
                 $prodId = $condicion['producto_id'] ?? 'N/A';
@@ -63,18 +72,23 @@ if (!function_exists('describirPromocion')) {
                     $paga = $accion['cantidad_paga'] ?? 'M';
                     return "Al llevar {$cantidadMin} productos mezclados → <strong>Lleva {$lleva}, Paga {$paga} (el de menor valor gratis)</strong>";
                 }
-                if ($tipoAccion === 'descuento_enesimo_producto') {
-                    $numProducto = $accion['numero_producto'] ?? 'N';
-                    $descuento = $accion['descuento_porcentaje'] ?? 0;
-                    return "Al llevar {$cantidadMin} productos mezclados → <strong>{$descuento}% de descuento en el {$numProducto}º producto (menor valor)</strong>";
+                if ($tipoAccion === 'descuento_enesimo_producto' || $tipoAccion === 'descuento_producto_mas_barato') {
+                    $descuento = $accion['valor'] ?? $accion['descuento_porcentaje'] ?? 0;
+                    return "Al llevar {$cantidadMin} productos mezclados → <strong>{$descuento}% de descuento en el producto más barato</strong>";
                 }
                 break;
-            case 'descuento_producto_mas_barato':
-                $cantidadMin = $condicion['cantidad_min'] ?? 0;
-                $desc = $accion['valor'] ?? 0;
-                return "Al llevar {$cantidadMin} productos mezclados → <strong>{$desc}% de descuento en el producto más barato</strong>";
+
+            case 'todos':
+                if ($tipoAccion === 'envio_gratis') {
+                    return "<strong>Envío Gratis</strong> para cualquier pedido";
+                }
                 break;
+
+            default:
+                error_log("Tipo de condición desconocido: $tipoCondicion, Accion: $tipoAccion");
+                return 'Regla personalizada';
         }
+        error_log("Combinación no soportada: Condicion=$tipoCondicion, Accion=$tipoAccion");
         return 'Regla personalizada';
     }
 }

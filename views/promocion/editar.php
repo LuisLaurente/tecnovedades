@@ -106,7 +106,6 @@
             </main>
         </div>
     </div>
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // --- DATOS DE LA PROMOCIÓN ---
@@ -150,32 +149,32 @@
             tipoReglaSelect.addEventListener('change', () => manejarCambioDeRegla());
 
             function determinarReglaActual() {
-                const tipo = promocion.tipo || '';
                 const cond = promocion.condicion || {};
                 const acc = promocion.accion || {};
 
-                // Mapeo basado en tipo y acción
-                if (tipo === 'subtotal_minimo' && acc.tipo === 'descuento_porcentaje') return 'descuento_subtotal';
-                if (tipo === 'primera_compra' && acc.tipo === 'envio_gratis') return 'envio_gratis_primera_compra';
-                if (tipo === 'cantidad_producto_identico' && acc.tipo === 'compra_n_paga_m') return 'nxm_producto';
-                if (tipo === 'cantidad_producto_identico' && acc.tipo === 'descuento_enesima_unidad') return 'descuento_enesima_unidad';
-                if (tipo === 'cantidad_producto_categoria' && acc.tipo === 'descuento_menor_valor') return 'descuento_menor_valor_categoria';
-                if (tipo === 'cantidad_total_productos' && acc.tipo === 'compra_n_paga_m_general') return 'nxm_general';
-                if (tipo === 'cantidad_total_productos' && (acc.tipo === 'descuento_enesimo_producto' || acc.tipo === 'descuento_producto_mas_barato')) return 'descuento_enesimo_producto';
+                const tipoCondicion = cond.tipo || '';
+                const tipoAccion = acc.tipo || '';
 
-                // Nuevos casos para envío gratis
-                if (tipo === 'todos' && acc.tipo === 'envio_gratis') return 'envio_gratis_general';
-                if (tipo === 'subtotal_minimo' && acc.tipo === 'envio_gratis') return 'envio_gratis_monto_minimo';
+                // Mapeo completo de todas las reglas
+                if (tipoCondicion === 'subtotal_minimo' && tipoAccion === 'descuento_porcentaje') return 'descuento_subtotal';
+                if (tipoCondicion === 'primera_compra' && tipoAccion === 'envio_gratis') return 'envio_gratis_primera_compra';
+                if (tipoCondicion === 'cantidad_producto_identico' && tipoAccion === 'compra_n_paga_m') return 'nxm_producto';
+                if (tipoCondicion === 'cantidad_producto_identico' && tipoAccion === 'descuento_enesima_unidad') return 'descuento_enesima_unidad';
+                if (tipoCondicion === 'cantidad_producto_categoria' && tipoAccion === 'descuento_menor_valor') return 'descuento_menor_valor_categoria';
+                if (tipoCondicion === 'cantidad_total_productos' && tipoAccion === 'compra_n_paga_m_general') return 'nxm_general';
+                if (tipoCondicion === 'cantidad_total_productos' && tipoAccion === 'descuento_producto_mas_barato') return 'descuento_enesimo_producto';
+                if (tipoCondicion === 'todos' && tipoAccion === 'envio_gratis') return 'envio_gratis_general';
+                if (tipoCondicion === 'subtotal_minimo' && tipoAccion === 'envio_gratis') return 'envio_gratis_monto_minimo';
 
-                return tipo || 'general'; // Usamos el tipo de la promoción si no se mapea
+                return '';
             }
 
-            function manejarCambioDeRegla(valores = null) {
+            function manejarCambioDeRegla() {
                 const regla = tipoReglaSelect.value;
                 camposDinamicosContainer.innerHTML = '';
 
-                const cond = valores ? valores.condicion || {} : promocion.condicion || {};
-                const acc = valores ? valores.accion || {} : promocion.accion || {};
+                const cond = promocion.condicion || {};
+                const acc = promocion.accion || {};
 
                 const tipoCondicionInput = document.createElement('input');
                 tipoCondicionInput.type = 'hidden';
@@ -190,118 +189,125 @@
                         tipoCondicionInput.value = 'subtotal_minimo';
                         tipoAccionInput.value = 'descuento_porcentaje';
                         camposDinamicosContainer.innerHTML = `
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label class="form-label">Monto mínimo del carrito (S/)</label>
-                            <input type="number" name="cond_subtotal_minimo" class="form-input" value="${cond.valor || ''}" required min="0" step="0.01">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Porcentaje de descuento (%)</label>
-                            <input type="number" name="accion_valor_descuento" class="form-input" value="${acc.valor || ''}" required min="0" max="100" step="0.01">
-                        </div>
-                    </div>`;
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Monto mínimo del carrito (S/)</label>
+                                <input type="number" name="cond_subtotal_minimo" class="form-input" value="${cond.valor || ''}" required min="0" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Porcentaje de descuento (%)</label>
+                                <input type="number" name="accion_valor_descuento" class="form-input" value="${acc.valor || ''}" required min="0" max="100" step="0.01">
+                            </div>
+                        </div>`;
                         break;
+
                     case 'envio_gratis_primera_compra':
                         tipoCondicionInput.value = 'primera_compra';
                         tipoAccionInput.value = 'envio_gratis';
                         camposDinamicosContainer.innerHTML = `<p class="info-text">Esta regla no necesita configuración adicional.</p>`;
                         break;
+
                     case 'nxm_producto':
                         tipoCondicionInput.value = 'cantidad_producto_identico';
                         tipoAccionInput.value = 'compra_n_paga_m';
                         camposDinamicosContainer.innerHTML = `
-                    <p class="info-text">Aplica para un producto específico. Ej: Lleva 3, Paga 2.</p>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label class="form-label">ID del Producto</label>
-                            <input type="number" name="cond_producto_id" class="form-input" value="${cond.producto_id || ''}" required min="1">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Cantidad que lleva (N)</label>
-                            <input type="number" name="accion_cantidad_lleva" class="form-input" value="${acc.cantidad_lleva || ''}" required min="1">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Cantidad que paga (M)</label>
-                            <input type="number" name="accion_cantidad_paga" class="form-input" value="${acc.cantidad_paga || ''}" required min="1">
-                        </div>
-                    </div>`;
+                        <p class="info-text">Aplica para un producto específico. Ej: Lleva 3, Paga 2.</p>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">ID del Producto</label>
+                                <input type="number" name="cond_producto_id" class="form-input" value="${cond.producto_id || ''}" required min="1">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Cantidad que lleva (N)</label>
+                                <input type="number" name="accion_cantidad_lleva" class="form-input" value="${acc.cantidad_lleva || ''}" required min="2">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Cantidad que paga (M)</label>
+                                <input type="number" name="accion_cantidad_paga" class="form-input" value="${acc.cantidad_paga || ''}" required min="1">
+                            </div>
+                        </div>`;
                         break;
+
                     case 'descuento_enesima_unidad':
                         tipoCondicionInput.value = 'cantidad_producto_identico';
                         tipoAccionInput.value = 'descuento_enesima_unidad';
                         camposDinamicosContainer.innerHTML = `
-                    <p class="info-text">Aplica un descuento a una unidad específica. Ej: 50% en la 3ra unidad.</p>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label class="form-label">ID del Producto</label>
-                            <input type="number" name="cond_producto_id" class="form-input" value="${cond.producto_id || ''}" required min="1">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">N-ésima unidad a descontar</label>
-                            <input type="number" name="accion_numero_unidad" class="form-input" value="${acc.numero_unidad || ''}" required min="1">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Porcentaje de descuento (%)</label>
-                            <input type="number" name="accion_descuento_unidad" class="form-input" value="${acc.descuento_unidad || ''}" required min="0" max="100" step="0.01">
-                        </div>
-                    </div>`;
+                        <p class="info-text">Aplica un descuento a una unidad específica. Ej: 50% en la 3ra unidad.</p>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">ID del Producto</label>
+                                <input type="number" name="cond_producto_id" class="form-input" value="${cond.producto_id || ''}" required min="1">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">N-ésima unidad a descontar</label>
+                                <input type="number" name="accion_numero_unidad" class="form-input" value="${acc.numero_unidad || ''}" required min="2">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Porcentaje de descuento (%)</label>
+                                <input type="number" name="accion_descuento_unidad" class="form-input" value="${acc.descuento_unidad || ''}" required min="0" max="100" step="0.01">
+                            </div>
+                        </div>`;
                         break;
+
                     case 'descuento_menor_valor_categoria':
                         tipoCondicionInput.value = 'cantidad_producto_categoria';
                         tipoAccionInput.value = 'descuento_menor_valor';
                         camposDinamicosContainer.innerHTML = `
-                    <p class="info-text">Aplica un descuento al producto más barato dentro de una categoría seleccionada.</p>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label class="form-label">ID de la Categoría</label>
-                            <input type="number" name="cond_categoria_id" class="form-input" value="${cond.categoria_id || ''}" required min="1">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Cantidad mínima de productos</label>
-                            <input type="number" name="cond_cantidad_min_categoria" class="form-input" value="${cond.cantidad_min || ''}" required min="1">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Porcentaje de descuento (%)</label>
-                            <input type="number" name="accion_descuento_menor_valor" class="form-input" value="${acc.valor || ''}" required min="0" max="100" step="0.01">
-                        </div>
-                    </div>`;
+                        <p class="info-text">Aplica un descuento al producto más barato dentro de una categoría seleccionada.</p>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">ID de la Categoría</label>
+                                <input type="number" name="cond_categoria_id" class="form-input" value="${cond.categoria_id || ''}" required min="1">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Cantidad mínima de productos</label>
+                                <input type="number" name="cond_cantidad_min_categoria" class="form-input" value="${cond.cantidad_min || ''}" required min="2">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Porcentaje de descuento (%)</label>
+                                <input type="number" name="accion_descuento_menor_valor" class="form-input" value="${acc.valor || ''}" required min="0" max="100" step="0.01">
+                            </div>
+                        </div>`;
                         break;
+
                     case 'nxm_general':
                         tipoCondicionInput.value = 'cantidad_total_productos';
                         tipoAccionInput.value = 'compra_n_paga_m_general';
                         camposDinamicosContainer.innerHTML = `
-                    <p class="info-text">Aplica para cualquier combinación de productos. Ej: Lleva 3, Paga 2 (el de menor valor gratis).</p>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label class="form-label">Cantidad mínima de productos</label>
-                            <input type="number" name="cond_cantidad_total" class="form-input" value="${cond.cantidad_min || ''}" required min="1">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Cantidad que lleva (N)</label>
-                            <input type="number" name="accion_cantidad_lleva_general" class="form-input" value="${acc.cantidad_lleva || ''}" required min="1">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Cantidad que paga (M)</label>
-                            <input type="number" name="accion_cantidad_paga_general" class="form-input" value="${acc.cantidad_paga || ''}" required min="1">
-                        </div>
-                    </div>`;
+                        <p class="info-text">Aplica para cualquier combinación de productos. Ej: Lleva 3, Paga 2 (el de menor valor gratis).</p>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Cantidad mínima de productos</label>
+                                <input type="number" name="cond_cantidad_total" class="form-input" value="${cond.cantidad_min || ''}" required min="2">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Cantidad que lleva (N)</label>
+                                <input type="number" name="accion_cantidad_lleva_general" class="form-input" value="${acc.cantidad_lleva || ''}" required min="2">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Cantidad que paga (M)</label>
+                                <input type="number" name="accion_cantidad_paga_general" class="form-input" value="${acc.cantidad_paga || ''}" required min="1">
+                            </div>
+                        </div>`;
                         break;
+
                     case 'descuento_enesimo_producto':
                         tipoCondicionInput.value = 'cantidad_total_productos';
                         tipoAccionInput.value = 'descuento_producto_mas_barato';
                         camposDinamicosContainer.innerHTML = `
-                    <p class="info-text">Aplica un descuento al producto de menor valor cuando se compran N productos.</p>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label class="form-label">Cantidad mínima de productos</label>
-                            <input type="number" name="cond_cantidad_total" class="form-input" value="${cond.cantidad_min || ''}" required min="1">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Porcentaje de descuento (%)</label>
-                            <input type="number" name="accion_descuento_porcentaje" class="form-input" value="${acc.valor || ''}" required min="0" max="100" step="0.01">
-                        </div>
-                    </div>`;
+                        <p class="info-text">Aplica un descuento al producto más barato al llevar una cantidad mínima de productos.</p>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Cantidad mínima de productos</label>
+                                <input type="number" name="cond_cantidad_total" class="form-input" value="${cond.cantidad_min || ''}" required min="2">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Porcentaje de descuento (%)</label>
+                                <input type="number" name="accion_descuento_porcentaje" class="form-input" value="${acc.valor || ''}" required min="0" max="100" step="0.01">
+                            </div>
+                        </div>`;
                         break;
+
                     case 'envio_gratis_general':
                         tipoCondicionInput.value = 'todos';
                         tipoAccionInput.value = 'envio_gratis';
@@ -317,27 +323,35 @@
                             <input type="number" name="cond_subtotal_minimo" class="form-input" value="${cond.valor || ''}" required min="0" step="0.01">
                         </div>`;
                         break;
+
                     default:
                         tipoCondicionInput.value = promocion.tipo || 'general';
                         tipoAccionInput.value = acc.tipo || '';
                         camposDinamicosContainer.innerHTML = `<p class="info-text">Regla personalizada. No se puede editar desde este formulario.</p>`;
                         break;
                 }
-                if (regla) {
-                    camposDinamicosContainer.prepend(tipoAccionInput);
-                    camposDinamicosContainer.prepend(tipoCondicionInput);
-                }
+
+                camposDinamicosContainer.prepend(tipoAccionInput);
+                camposDinamicosContainer.prepend(tipoCondicionInput);
             }
+
+            // Validación del formulario
+            document.getElementById('promocionForm').addEventListener('submit', function(e) {
+                const tipoRegla = document.getElementById('tipo_regla').value;
+                if (!tipoRegla) {
+                    e.preventDefault();
+                    alert('Por favor, selecciona un tipo de regla para la promoción.');
+                    return false;
+                }
+            });
 
             // --- INICIALIZACIÓN DEL FORMULARIO AL CARGAR ---
             const reglaActual = determinarReglaActual();
             if (reglaActual) {
                 tipoReglaSelect.value = reglaActual;
-                manejarCambioDeRegla(promocion);
+                manejarCambioDeRegla();
             } else {
                 console.warn('No se pudo determinar la regla actual para la promoción:', promocion);
-                tipoReglaSelect.value = '';
-                manejarCambioDeRegla(promocion);
             }
         });
     </script>
