@@ -92,12 +92,15 @@ $totalEncontrados = $totalProductos;
                     <div class="page-header">
                         <?php if (!empty($termino)): ?>
                             <h1 class="page-title">Resultados para: "<?= htmlspecialchars($termino, ENT_QUOTES, 'UTF-8') ?>"</h1>
-                        <?php elseif (!empty($categoriaActual)): ?>
-                            <h1 class="page-title"><?= htmlspecialchars($categoriaActual['nombre'], ENT_QUOTES, 'UTF-8') ?></h1>
+
+                        <?php elseif (!empty($categoriaActual) && !empty($categoriaActual['nombre'])): ?>
+                            <h1 class="page-title">Solo <?= htmlspecialchars($categoriaActual['nombre'], ENT_QUOTES, 'UTF-8') ?></h1>
+
                         <?php else: ?>
                             <h1 class="page-title">Todos los Productos</h1>
                         <?php endif; ?>
                     </div>
+
 
                     <!-- Barra de herramientas superior (Resultados y Ordenamiento) -->
                     <div class="top-toolbar">

@@ -281,8 +281,9 @@ function categoria_url($cat)
               // 🔹 Solo en la primera columna agregamos "Todas las categorías"
               if ($i === 0) {
                 echo '<div class="category-item-with-children">';
-                echo '<a href="' . url("") . '#categorias-section" class="category-item parent font-semibold text-blue-600">Todas las categorías</a>';
+                echo '<a href="' . url("home/busqueda") . '" class="category-item parent font-semibold text-blue-600">Todas las categorías</a>';
                 echo '</div>';
+
               }
               // 🔹 Renderizamos el resto de categorías normalmente
               foreach ($chunk as $c) {

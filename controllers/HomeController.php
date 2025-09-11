@@ -51,6 +51,9 @@ class HomeController extends BaseController
     {
         $productoModel = new Producto();
 
+        // Término de búsqueda
+        $termino = isset($_GET['termino']) ? trim($_GET['termino']) : '';
+
         // --- Validación de filtros ---
         $validacionFiltros = \Core\Helpers\Validator::validarFiltrosGET($_GET);
         $minPrice = $validacionFiltros['filtros_validos']['min_price'] ?? null;
@@ -76,7 +79,8 @@ class HomeController extends BaseController
             $orden,
             true,
             $productosPorPagina,
-            $offset
+            $offset,
+            $termino // si tu método soporta término, si no, ignora este argumento
         );
 
         $totalFiltrados = $productoModel->contarFiltrados(
@@ -84,7 +88,8 @@ class HomeController extends BaseController
             $maxPrice,
             $categoriaId,
             $etiquetasSeleccionadas,
-            true
+            true,
+            $termino // idem
         );
 
         $totalPaginas = (int) max(1, ceil($totalFiltrados / $productosPorPagina));
@@ -100,6 +105,20 @@ class HomeController extends BaseController
         $categoriasDisponibles = Categoria::obtenerPadres();
         $etiquetaModel = new Etiqueta();
         $todasEtiquetas = $etiquetaModel->obtenerTodas();
+
+        // --- Determinar la categoría actual (para el título dinámico) ---
+        $categoriaActual = null;
+        if ($categoriaId) {
+            if (class_exists('\Models\Categoria') && method_exists('\Models\Categoria', 'obtenerPorId')) {
+                $categoriaActual = \Models\Categoria::obtenerPorId($categoriaId);
+            } else {
+                // Fallback simple si no existe método en el modelo
+                $db = \Core\Database::getInstance()->getConnection();
+                $stmt = $db->prepare('SELECT id, nombre FROM categorias WHERE id = :id LIMIT 1');
+                $stmt->execute([':id' => $categoriaId]);
+                $categoriaActual = $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
+            }
+        }
 
         // --- Query base para links ---
         $currentQuery = $_GET;
@@ -127,12 +146,16 @@ class HomeController extends BaseController
         // --- Vista completa ---
         $this->render('home/busqueda', [
             'productos' => $productos,
-            'categorias' => $categoriasDisponibles,
+            'categoriasDisponibles' => $categoriasDisponibles, // mantengo el nombre que usa tu vista
+            'categorias' => $categoriasDisponibles, // adicional por seguridad
             'etiquetas' => $todasEtiquetas,
             'paginaActual' => $paginaActual,
             'totalPaginas' => $totalPaginas,
             'totalFiltrados' => $totalFiltrados,
             'query' => $currentQuery,
+            'termino' => $termino,
+            'categoriaActual' => $categoriaActual
         ]);
     }
+
 }
