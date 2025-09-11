@@ -91,47 +91,77 @@ class PromocionController
     /**
      * Actualiza una promoción existente en la base de datos.
      */
-public function actualizar($id)
-{
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        header("Location: " . url('promocion/editar/' . $id));
+    public function actualizar($id)
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header("Location: " . url('promocion/editar/' . $id));
+            exit;
+        }
+
+        try {
+            $promocionExistente = $this->promocionModel->obtenerPorId($id);
+            if (!$promocionExistente) {
+                throw new \Exception("Promoción no encontrada.");
+            }
+
+            // Validar tipo_condicion
+            $tipoCondicion = $_POST['tipo_condicion'] ?? null;
+            $tiposValidos = [
+                'subtotal_minimo',
+                'primera_compra',
+                'cantidad_producto_identico',
+                'cantidad_producto_categoria',
+                'cantidad_total_productos',
+                'todos'
+            ];
+            if (!$tipoCondicion || !in_array($tipoCondicion, $tiposValidos)) {
+                throw new \Exception("Tipo de condición inválido: " . ($tipoCondicion ?: 'no proporcionado'));
+            }
+
+            // Obtener los JSON strings
+            $condicionJson = $this->construirCondicion($_POST);
+            $accionJson = $this->construirAccion($_POST);
+
+            // Convertir a arrays para validar
+            $condicionArray = json_decode($condicionJson, true);
+            $accionArray = json_decode($accionJson, true);
+
+            // Validar los arrays
+            if (empty($condicionArray['tipo']) || empty($accionArray['tipo'])) {
+                error_log("JSON inválido - Condicion: " . $condicionJson . ", Accion: " . $accionJson);
+                throw new \Exception("Error al construir la regla de la promoción.");
+            }
+
+            // Usar los JSON strings en los datos
+            $datos = [
+                'nombre'       => $_POST['nombre'] ?? '',
+                'prioridad'    => $_POST['prioridad'] ?? 3,
+                'fecha_inicio' => $_POST['fecha_inicio'] ?? '',
+                'fecha_fin'    => $_POST['fecha_fin'] ?? '',
+                'activo'       => isset($_POST['activo']) ? 1 : 0,
+                'acumulable'   => isset($_POST['acumulable']) ? 1 : 0,
+                'exclusivo'    => isset($_POST['exclusivo']) ? 1 : 0,
+                'condicion'    => $condicionJson,  // ← CORREGIDO: Usar el JSON string
+                'accion'       => $accionJson,     // ← CORREGIDO: Usar el JSON string
+                'tipo'         => $tipoCondicion,  // Forzar consistencia
+                'codigo'       => $promocionExistente['codigo']
+            ];
+
+            $resultado = $this->promocionModel->actualizar($id, $datos);
+
+            if ($resultado) {
+                $_SESSION['mensaje'] = "✅ Promoción actualizada correctamente.";
+                header("Location: " . url('promocion/index'));
+            } else {
+                throw new \Exception("No se pudo actualizar la promoción.");
+            }
+        } catch (\Exception $e) {
+            error_log("Error en actualizar promoción: " . $e->getMessage());
+            $_SESSION['error'] = "❌ " . $e->getMessage();
+            header("Location: " . url('promocion/editar/' . $id));
+        }
         exit;
     }
-
-    try {
-        $promocionExistente = $this->promocionModel->obtenerPorId($id);
-        if (!$promocionExistente) {
-            throw new \Exception("Promoción no encontrada.");
-        }
-
-        $datos = [
-            'nombre'       => $_POST['nombre'] ?? '',
-            'prioridad'    => $_POST['prioridad'] ?? 3,
-            'fecha_inicio' => $_POST['fecha_inicio'] ?? '',
-            'fecha_fin'    => $_POST['fecha_fin'] ?? '',
-            'activo'       => isset($_POST['activo']) ? 1 : 0,
-            'acumulable'   => isset($_POST['acumulable']) ? 1 : 0,
-            'exclusivo'    => isset($_POST['exclusivo']) ? 1 : 0,
-            'condicion'    => $this->construirCondicion($_POST),
-            'accion'       => $this->construirAccion($_POST),
-            'tipo'         => $_POST['tipo_condicion'] ?? $promocionExistente['tipo'], // Preservar tipo existente
-            'codigo'       => $promocionExistente['codigo'] // Mantener el código existente
-        ];
-
-        $resultado = $this->promocionModel->actualizar($id, $datos);
-
-        if ($resultado) {
-            $_SESSION['mensaje'] = "✅ Promoción actualizada correctamente.";
-            header("Location: " . url('promocion/index'));
-        } else {
-            throw new \Exception("No se pudo actualizar la promoción.");
-        }
-    } catch (\Exception $e) {
-        $_SESSION['error'] = "❌ " . $e->getMessage();
-        header("Location: " . url('promocion/editar/' . $id));
-    }
-    exit;
-}
 
     /**
      * Construye el array de condición basado en los datos del POST.
@@ -141,112 +171,153 @@ public function actualizar($id)
     {
         $tipoCondicion = $post['tipo_condicion'] ?? '';
         if (empty($tipoCondicion)) {
+            error_log("Error: tipo_condicion no proporcionado en POST: " . json_encode($post));
             throw new \Exception("El tipo de condición no se especificó. Por favor, seleccione una regla válida.");
         }
 
         $condicion = ['tipo' => $tipoCondicion];
 
         switch ($tipoCondicion) {
+            case 'todos':
+                break;
             case 'subtotal_minimo':
-                $condicion['valor'] = (float)($post['cond_subtotal_minimo'] ?? 0);
+                if (!isset($post['cond_subtotal_minimo'])) {
+                    error_log("Error: cond_subtotal_minimo no proporcionado para subtotal_minimo");
+                    throw new \Exception("El monto mínimo del carrito es obligatorio.");
+                }
+                $condicion['valor'] = (float)($post['cond_subtotal_minimo']);
                 if ($condicion['valor'] <= 0) {
                     throw new \Exception("El monto mínimo del carrito debe ser mayor a 0.");
                 }
                 break;
             case 'primera_compra':
-                // No necesita valor adicional.
                 break;
             case 'cantidad_producto_identico':
-                $condicion['producto_id'] = (int)($post['cond_producto_id'] ?? 0);
-                $condicion['cantidad_min'] = (int)($post['cond_cantidad_min'] ?? 1);
+                if (!isset($post['cond_producto_id']) || !isset($post['cond_cantidad_min'])) {
+                    error_log("Error: cond_producto_id o cond_cantidad_min no proporcionados");
+                    throw new \Exception("El ID del producto y la cantidad mínima son obligatorios.");
+                }
+                $condicion['producto_id'] = (int)($post['cond_producto_id']);
+                $condicion['cantidad_min'] = (int)($post['cond_cantidad_min']);
                 if ($condicion['producto_id'] <= 0 || $condicion['cantidad_min'] <= 0) {
                     throw new \Exception("El ID del producto y la cantidad mínima deben ser mayores a 0.");
                 }
                 break;
             case 'cantidad_producto_categoria':
-                $condicion['categoria_id'] = (int)($post['cond_categoria_id'] ?? 0);
-                $condicion['cantidad_min'] = (int)($post['cond_cantidad_min_categoria'] ?? 1);
+                if (!isset($post['cond_categoria_id']) || !isset($post['cond_cantidad_min_categoria'])) {
+                    error_log("Error: cond_categoria_id o cond_cantidad_min_categoria no proporcionados");
+                    throw new \Exception("El ID de la categoría y la cantidad mínima son obligatorios.");
+                }
+                $condicion['categoria_id'] = (int)($post['cond_categoria_id']);
+                $condicion['cantidad_min'] = (int)($post['cond_cantidad_min_categoria']);
                 if ($condicion['categoria_id'] <= 0 || $condicion['cantidad_min'] <= 0) {
                     throw new \Exception("El ID de la categoría y la cantidad mínima deben ser mayores a 0.");
                 }
                 break;
             case 'cantidad_total_productos':
-                $condicion['cantidad_min'] = (int)($post['cond_cantidad_total'] ?? 0);
+                if (!isset($post['cond_cantidad_total'])) {
+                    error_log("Error: cond_cantidad_total no proporcionado");
+                    throw new \Exception("La cantidad mínima de productos es obligatoria.");
+                }
+                $condicion['cantidad_min'] = (int)($post['cond_cantidad_total']);
                 if ($condicion['cantidad_min'] <= 0) {
                     throw new \Exception("La cantidad mínima de productos debe ser mayor a 0.");
                 }
                 break;
             default:
+                error_log("Error: Tipo de condición no reconocido: " . $tipoCondicion);
                 throw new \Exception("Tipo de condición no reconocido: " . htmlspecialchars($tipoCondicion));
         }
 
         return json_encode($condicion);
     }
 
-    /**
-     * Construye el array de acción basado en los datos del POST.
-     * @return string JSON con la estructura de la acción.
-     */
- private function construirAccion($post)
-{
-    $tipoAccion = $post['tipo_accion'] ?? '';
-    if (empty($tipoAccion)) {
-        throw new \Exception("El tipo de acción no se especificó. Por favor, seleccione una regla válida.");
+    private function construirAccion($post)
+    {
+        $tipoAccion = $post['tipo_accion'] ?? '';
+        if (empty($tipoAccion)) {
+            error_log("Error: tipo_accion no proporcionado en POST: " . json_encode($post));
+            throw new \Exception("El tipo de acción no se especificó. Por favor, seleccione una regla válida.");
+        }
+
+        $accion = ['tipo' => $tipoAccion];
+
+        switch ($tipoAccion) {
+            case 'descuento_porcentaje':
+            case 'descuento_fijo':
+                if (!isset($post['accion_valor_descuento'])) {
+                    error_log("Error: accion_valor_descuento no proporcionado");
+                    throw new \Exception("El valor del descuento es obligatorio.");
+                }
+                $accion['valor'] = (float)($post['accion_valor_descuento']);
+                if ($accion['valor'] <= 0) {
+                    throw new \Exception("El valor del descuento debe ser mayor a 0.");
+                }
+                break;
+            case 'envio_gratis':
+                break;
+            case 'compra_n_paga_m':
+                if (!isset($post['accion_cantidad_lleva']) || !isset($post['accion_cantidad_paga'])) {
+                    error_log("Error: accion_cantidad_lleva o accion_cantidad_paga no proporcionados");
+                    throw new \Exception("Las cantidades para la promoción N x M son obligatorias.");
+                }
+                $accion['cantidad_lleva'] = (int)($post['accion_cantidad_lleva']);
+                $accion['cantidad_paga'] = (int)($post['accion_cantidad_paga']);
+                if ($accion['cantidad_lleva'] <= $accion['cantidad_paga'] || $accion['cantidad_paga'] <= 0) {
+                    throw new \Exception("Valores inválidos para la promoción N x M. 'Lleva' debe ser mayor que 'Paga' y ambos deben ser mayores a 0.");
+                }
+                break;
+            case 'compra_n_paga_m_general':
+                if (!isset($post['accion_cantidad_lleva_general']) || !isset($post['accion_cantidad_paga_general'])) {
+                    error_log("Error: accion_cantidad_lleva_general o accion_cantidad_paga_general no proporcionados");
+                    throw new \Exception("Las cantidades para la promoción N x M General son obligatorias.");
+                }
+                $accion['cantidad_lleva'] = (int)($post['accion_cantidad_lleva_general']);
+                $accion['cantidad_paga'] = (int)($post['accion_cantidad_paga_general']);
+                if ($accion['cantidad_lleva'] <= $accion['cantidad_paga'] || $accion['cantidad_paga'] <= 0) {
+                    throw new \Exception("Valores inválidos para la promoción N x M General. 'Lleva' debe ser mayor que 'Paga' y ambos deben ser mayores a 0.");
+                }
+                $accion['aplica_a'] = 'menor_valor';
+                break;
+            case 'descuento_enesima_unidad':
+                if (!isset($post['accion_numero_unidad']) || !isset($post['accion_descuento_unidad'])) {
+                    error_log("Error: accion_numero_unidad o accion_descuento_unidad no proporcionados");
+                    throw new \Exception("La unidad y el descuento para la N-ésima unidad son obligatorios.");
+                }
+                $accion['numero_unidad'] = (int)($post['accion_numero_unidad']);
+                $accion['descuento_unidad'] = (float)($post['accion_descuento_unidad']);
+                if ($accion['numero_unidad'] <= 1 || $accion['descuento_unidad'] <= 0) {
+                    throw new \Exception("Valores inválidos para el descuento en la N-ésima unidad. La unidad debe ser mayor a 1 y el descuento mayor a 0.");
+                }
+                break;
+            case 'descuento_menor_valor':
+                if (!isset($post['accion_descuento_menor_valor'])) {
+                    error_log("Error: accion_descuento_menor_valor no proporcionado");
+                    throw new \Exception("El porcentaje de descuento para el producto de menor valor es obligatorio.");
+                }
+                $accion['valor'] = (float)($post['accion_descuento_menor_valor']);
+                if ($accion['valor'] <= 0) {
+                    throw new \Exception("El porcentaje de descuento para el producto de menor valor debe ser mayor a 0.");
+                }
+                break;
+            case 'descuento_enesimo_producto':
+                if (!isset($post['accion_descuento_porcentaje'])) {
+                    error_log("Error: accion_descuento_porcentaje no proporcionado");
+                    throw new \Exception("El porcentaje de descuento para el producto de menor valor es obligatorio.");
+                }
+                $accion['valor'] = (float)($post['accion_descuento_porcentaje']);
+                if ($accion['valor'] <= 0) {
+                    throw new \Exception("El porcentaje de descuento para el producto de menor valor debe ser mayor a 0.");
+                }
+                $accion['aplica_a'] = 'menor_valor';
+                break;
+            default:
+                error_log("Error: Tipo de acción no reconocido: " . $tipoAccion);
+                throw new \Exception("Tipo de acción no reconocido: " . htmlspecialchars($tipoAccion));
+        }
+
+        return json_encode($accion);
     }
-
-    $accion = ['tipo' => $tipoAccion];
-
-    switch ($tipoAccion) {
-        case 'descuento_porcentaje':
-        case 'descuento_fijo':
-            $accion['valor'] = (float)($post['accion_valor_descuento'] ?? 0);
-            if ($accion['valor'] <= 0) {
-                throw new \Exception("El valor del descuento debe ser mayor a 0.");
-            }
-            break;
-        case 'envio_gratis':
-            break;
-        case 'compra_n_paga_m':
-            $accion['cantidad_lleva'] = (int)($post['accion_cantidad_lleva'] ?? 0);
-            $accion['cantidad_paga'] = (int)($post['accion_cantidad_paga'] ?? 0);
-            if ($accion['cantidad_lleva'] <= $accion['cantidad_paga'] || $accion['cantidad_paga'] <= 0) {
-                throw new \Exception("Valores inválidos para la promoción N x M. 'Lleva' debe ser mayor que 'Paga' y ambos deben ser mayores a 0.");
-            }
-            break;
-        case 'compra_n_paga_m_general':
-            $accion['cantidad_lleva'] = (int)($post['accion_cantidad_lleva_general'] ?? 0);
-            $accion['cantidad_paga'] = (int)($post['accion_cantidad_paga_general'] ?? 0);
-            if ($accion['cantidad_lleva'] <= $accion['cantidad_paga'] || $accion['cantidad_paga'] <= 0) {
-                throw new \Exception("Valores inválidos para la promoción N x M General. 'Lleva' debe ser mayor que 'Paga' y ambos deben ser mayores a 0.");
-            }
-            $accion['aplica_a'] = 'menor_valor';
-            break;
-        case 'descuento_enesima_unidad':
-            $accion['numero_unidad'] = (int)($post['accion_numero_unidad'] ?? 0);
-            $accion['descuento_unidad'] = (float)($post['accion_descuento_unidad'] ?? 0);
-            if ($accion['numero_unidad'] <= 1 || $accion['descuento_unidad'] <= 0) {
-                throw new \Exception("Valores inválidos para el descuento en la N-ésima unidad. La unidad debe ser mayor a 1 y el descuento mayor a 0.");
-            }
-            break;
-        case 'descuento_menor_valor':
-            $accion['valor'] = (float)($post['accion_descuento_menor_valor'] ?? 0);
-            if ($accion['valor'] <= 0) {
-                throw new \Exception("El porcentaje de descuento para el producto de menor valor debe ser mayor a 0.");
-            }
-            break;
-        case 'descuento_producto_mas_barato':
-            $accion['valor'] = (float)($post['accion_descuento_porcentaje'] ?? 0);
-            if ($accion['valor'] <= 0) {
-                throw new \Exception("El porcentaje de descuento para el producto de menor valor debe ser mayor a 0.");
-            }
-            $accion['aplica_a'] = 'menor_valor';
-            break;
-        default:
-            throw new \Exception("Tipo de acción no reconocido: " . htmlspecialchars($tipoAccion));
-    }
-
-    return json_encode($accion);
-}
 
     /**
      * Elimina una promoción de forma permanente.
