@@ -22,6 +22,8 @@
     });
 </script>
 <body>
+                <?php include_once __DIR__ . '/../admin/includes/header.php'; ?>
+
     <div class="flex h-screen">
         <!-- Incluir navegación lateral fija -->
         <div class="fixed inset-y-0 left-0 z-50">
@@ -30,7 +32,6 @@
         <main class="flex-1 p-2 bg-gray-50 overflow-y-auto">
             <!-- Incluir header superior fijo -->
             <div class="sticky top-0 z-40">
-                <?php include_once __DIR__ . '/../admin/includes/header.php'; ?>
             </div>
 
             <div class="flex-1 p-6 bg-gray-50 overflow-y-auto">

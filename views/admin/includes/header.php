@@ -187,7 +187,15 @@ function categoria_url($cat)
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-4 0-7 2-7 4v2h14v-2c0-2-3-4-7-4z" />
               </svg>
-              <span class="dropdown-item-text">Mi Perfil</span>
+              <span class="dropdown-item-text">Mi Cuenta</span>
+            </a>
+            <div class="dropdown-divider"></div>
+            <a href="<?= url('/usuario/pedidos') ?>" class="dropdown-item" role="menuitem">
+              <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7M3 7l9-4 9 4" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7M8 11V7" />
+              </svg>
+              <span class="dropdown-item-text">Mis Pedidos</span>
             </a>
             <div class="dropdown-divider"></div>
             <a href="<?= url('/auth/logout') ?>" class="dropdown-item logout-item" role="menuitem">

@@ -3,6 +3,8 @@
 <?php include_once __DIR__ . '/../admin/includes/head.php'; ?>
 
 <body>
+                <?php include_once __DIR__ . '/../admin/includes/header.php'; ?>
+
     <div class="flex h-screen">
         <!-- Incluir navegación lateral fija -->
         <div class="fixed inset-y-0 left-0 z-50">
@@ -13,12 +15,11 @@
         <main class="flex-1 p-2 bg-gray-50 overflow-y-auto ">
             <!-- Incluir header superior fijo -->
             <div class="sticky top-0 z-40 ">
-                <?php include_once __DIR__ . '/../admin/includes/header.php'; ?>
             </div>
 
             <div class="flex-1 p-2 bg-gray-50 overflow-y-auto">
                 <div class="max-w-4xl mx-auto p-4 bg-white shadow-md rounded-lg">
-                    <h1 class="text-2xl font-bold mb-4">👤 Mi Perfil</h1>
+                    <h1 class="text-2xl font-bold mb-4">👤 Mi Cuenta</h1>
 
                     <!-- Mensajes -->
                     <?php if (!empty($_GET['success'])): ?>
@@ -189,24 +190,7 @@
                         </div>
 
                         <!-- Seguridad -->
-                        <div class="bg-white shadow rounded-lg border">
-                            <div class="px-4 py-5 sm:p-6">
-                                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
-                                    🔒 Seguridad
-                                </h3>
-                                <div class="bg-gray-50 p-4 rounded-lg">
-                                    <div class="flex items-center">
-                                        <svg class="h-5 w-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                                        </svg>
-                                        <div>
-                                            <span class="text-sm font-medium text-gray-700">Contraseña protegida</span>
-                                            <p class="text-xs text-gray-500">Para cambiar tu contraseña, contacta al administrador del sistema.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        
                         <?php if (isCliente()): ?>
                                             <!-- Botón Mis Pedidos para clientes -->
                                             <a href="<?= url('/usuario/pedidos') ?>"
