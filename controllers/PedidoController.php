@@ -25,6 +25,32 @@ class PedidoController
         $this->pedidoDireccionModel = new PedidoDireccion();
     }
 
+    private function convertirCarritoParaPromociones($carrito)
+    {
+        $carritoParaPromociones = [];
+
+        foreach ($carrito as $item) {
+            // Obtener datos del producto
+            $producto = \Models\Producto::obtenerPorId($item['producto_id']);
+            if ($producto) {
+                $carritoParaPromociones[] = [
+                    'id' => $producto['id'],
+                    'nombre' => $producto['nombre'],
+                    'precio' => (float)$item['precio'],
+                    'cantidad' => (int)$item['cantidad'],
+                    'categoria_id' => $producto['categoria_id'] ?? null,
+                    // Estos campos se completarán por PromocionHelper
+                    'precio_final' => 0,
+                    'descuento_aplicado' => 0,
+                    'promociones' => []
+                ];
+            }
+        }
+
+        return $carritoParaPromociones;
+    }
+
+
     // Página de pre-checkout para usuarios no autenticados
     public function precheckout()
     {
@@ -42,8 +68,14 @@ class PedidoController
 
         // Calcular totales para mostrar en la página
         $usuario = null; // Usuario no autenticado
-        $promociones = PromocionHelper::evaluar($carrito, $usuario);
-        $totales = PromocionHelper::calcularTotales($carrito, $promociones);
+        $carritoParaPromociones = $this->convertirCarritoParaPromociones($carrito);
+        $resultado = PromocionHelper::aplicarPromociones($carritoParaPromociones, $usuario);
+        $totales = [
+            'subtotal' => $resultado['subtotal'],
+            'descuento' => $resultado['descuento'],
+            'total' => $resultado['total'],
+            'envio_gratis' => $resultado['envio_gratis']
+        ];
 
         require __DIR__ . '/../views/pedido/precheckout.php';
     }
@@ -60,9 +92,14 @@ class PedidoController
         $carrito = $_SESSION['carrito'] ?? [];
         $usuario = $_SESSION['usuario'] ?? null;
 
-        // Evaluar promociones nuevamente antes de procesar pedido
-        $promociones = PromocionHelper::evaluar($carrito, $usuario);
-        $totales = PromocionHelper::calcularTotales($carrito, $promociones);
+        $carritoParaPromociones = $this->convertirCarritoParaPromociones($carrito);
+        $resultado = PromocionHelper::aplicarPromociones($carritoParaPromociones, $usuario);
+        $totales = [
+            'subtotal' => $resultado['subtotal'],
+            'descuento' => $resultado['descuento'],
+            'total' => $resultado['total'],
+            'envio_gratis' => $resultado['envio_gratis']
+        ];
 
         require __DIR__ . '/../views/pedido/checkout_nuevo.php';
     }
@@ -78,30 +115,30 @@ class PedidoController
             }
 
             $usuario = $_SESSION['usuario'];
-            
-// ==================== DATOS DE ENVÍO ====================
-$envio_nombre = trim($_POST['nombre'] ?? '');
-$envio_celular = trim($_POST['telefono'] ?? '');
-$envio_ubicacion = trim($_POST['ubicacion'] ?? '');
-$envio_direccion = trim($_POST['direccion'] ?? '');
-$envio_distrito = trim($_POST['distrito'] ?? '');
-$envio_provincia = trim($_POST['provincia'] ?? '');
-$envio_departamento = trim($_POST['departamento'] ?? '');
-$envio_referencia = trim($_POST['referencia'] ?? '');
-            
+
+            // ==================== DATOS DE ENVÍO ====================
+            $envio_nombre = trim($_POST['nombre'] ?? '');
+            $envio_celular = trim($_POST['telefono'] ?? '');
+            $envio_ubicacion = trim($_POST['ubicacion'] ?? '');
+            $envio_direccion = trim($_POST['direccion'] ?? '');
+            $envio_distrito = trim($_POST['distrito'] ?? '');
+            $envio_provincia = trim($_POST['provincia'] ?? '');
+            $envio_departamento = trim($_POST['departamento'] ?? '');
+            $envio_referencia = trim($_POST['referencia'] ?? '');
+
             // ==================== DATOS DE FACTURACIÓN ====================
             $facturacion_tipo_documento = trim($_POST['facturacion_tipo_documento'] ?? '');
             $facturacion_numero_documento = trim($_POST['facturacion_numero_documento'] ?? '');
             $facturacion_nombre = trim($_POST['facturacion_nombre'] ?? '');
             $facturacion_direccion = trim($_POST['facturacion_direccion'] ?? '');
             $facturacion_email = trim($_POST['facturacion_email'] ?? '');
-            
+
             // ==================== DATOS EXISTENTES ====================
             $direccion_id = $_POST['direccion_id'] ?? '';
             $guardar_direccion = isset($_POST['guardar_direccion']);
             $tipo_direccion = $_POST['tipo_direccion'] ?? 'casa';
             $nombre_direccion = trim($_POST['nombre_direccion'] ?? '');
-            
+
             $carrito = isset($_SESSION['carrito']) && is_array($_SESSION['carrito']) ? $_SESSION['carrito'] : [];
             $errores = [];
 
@@ -111,22 +148,22 @@ $envio_referencia = trim($_POST['referencia'] ?? '');
             if ($envio_celular === '') $errores[] = 'El celular de envío es obligatorio.';
             if ($envio_ubicacion === '') $errores[] = 'La ubicación de envío es obligatoria.';
             if ($envio_direccion === '') $errores[] = 'La dirección de envío es obligatoria.';
-            
+
             // Validaciones de facturación
             if ($facturacion_tipo_documento === '') $errores[] = 'El tipo de documento es obligatorio.';
             if ($facturacion_numero_documento === '') $errores[] = 'El número de documento es obligatorio.';
             if ($facturacion_nombre === '') $errores[] = 'El nombre o razón social es obligatorio.';
             if ($facturacion_direccion === '') $errores[] = 'La dirección fiscal es obligatoria.';
             if ($facturacion_email === '') $errores[] = 'El correo electrónico es obligatorio.';
-            
+
             if (!filter_var($facturacion_email, FILTER_VALIDATE_EMAIL)) {
                 $errores[] = 'El formato del correo electrónico no es válido.';
             }
-            
+
             if (!preg_match('/^[0-9\s\+\-\(\)]+$/', $envio_celular)) {
                 $errores[] = 'El celular solo debe contener números, espacios y símbolos válidos.';
             }
-            
+
             if (empty($carrito)) $errores[] = 'El carrito está vacío.';
 
             // Validar que todos los productos tengan precio
@@ -165,12 +202,12 @@ $envio_referencia = trim($_POST['referencia'] ?? '');
                 } catch (Exception $e) {
                     // Si la tabla usuario_detalles no existe, continuar
                 }
-                
+
                 if ($envio_celular !== $telefonoActual) {
                     try {
                         $stmt = $conexion->prepare("UPDATE usuario_detalles SET telefono = ? WHERE usuario_id = ?");
                         $stmt->execute([$envio_celular, $usuario['id']]);
-                        
+
                         if ($stmt->rowCount() === 0) {
                             $stmt = $conexion->prepare("INSERT INTO usuario_detalles (usuario_id, telefono) VALUES (?, ?)");
                             $stmt->execute([$usuario['id'], $envio_celular]);
@@ -225,7 +262,7 @@ $envio_referencia = trim($_POST['referencia'] ?? '');
                             $envio_referencia,
                             $es_primera ? 1 : 0
                         ]);
-                        
+
                         $direccion_id_para_pedido = $conexion->lastInsertId();
                         $direccion_temporal = null;
                     } catch (Exception $e) {
@@ -233,10 +270,20 @@ $envio_referencia = trim($_POST['referencia'] ?? '');
                     }
                 }
 
-                // ==================== CALCULAR TOTALES CON PROMOCIONES ====================
-                $promociones = PromocionHelper::evaluar($carrito, $usuario);
-                $totales = PromocionHelper::calcularTotales($carrito, $promociones);
-                
+                $carritoParaPromociones = $this->convertirCarritoParaPromociones($carrito);
+                $resultado = PromocionHelper::aplicarPromociones($carritoParaPromociones, $usuario);
+                $totales = [
+                    'subtotal' => $resultado['subtotal'],
+                    'descuento' => $resultado['descuento'],
+                    'total' => $resultado['total'],
+                    'envio_gratis' => $resultado['envio_gratis']
+                ];
+
+                // Considerar envío gratis por promoción
+                if ($resultado['envio_gratis']) {
+                    $costo_envio = 0;
+                }
+
                 // Agregar costo de envío al total
                 $totales['costo_envio'] = $costo_envio;
                 $totales['total'] += $costo_envio;
@@ -246,7 +293,7 @@ $envio_referencia = trim($_POST['referencia'] ?? '');
                 $descuento_cupon = 0;
                 $cupon_id = null;
                 $cupon_codigo = null;
-                
+
                 if ($cupon_aplicado) {
                     $aplicacion = CuponHelper::aplicarCupon($cupon_aplicado['codigo'], $usuario['id'], $carrito);
                     if ($aplicacion['exito']) {
@@ -257,6 +304,12 @@ $envio_referencia = trim($_POST['referencia'] ?? '');
                         $totales['total'] = max($totales['subtotal'] - $totales['descuento'] + $costo_envio, 0);
                     }
                 }
+                // En el método registrar():
+                $nombres_promociones = [];
+                foreach ($resultado['promociones_aplicadas'] as $promoData) {
+                    $nombres_promociones[] = $promoData['promocion']['nombre'];
+                }
+                
 
                 // ==================== PREPARAR DATOS DEL PEDIDO ====================
                 $pedido_data = [
@@ -266,6 +319,7 @@ $envio_referencia = trim($_POST['referencia'] ?? '');
                     'subtotal' => $totales['subtotal'],
                     'descuento_promocion' => $totales['descuento'] - $descuento_cupon,
                     'costo_envio' => $costo_envio,
+                    'promociones_aplicadas' => json_encode($resultado['promociones_aplicadas']),
                     // Datos de facturación
                     'facturacion_tipo_documento' => $facturacion_tipo_documento,
                     'facturacion_numero_documento' => $facturacion_numero_documento,
@@ -312,10 +366,9 @@ $envio_referencia = trim($_POST['referencia'] ?? '');
                 // ==================== LIMPIAR Y REDIRIGIR ====================
                 $_SESSION['carrito'] = [];
                 unset($_SESSION['promociones']);
-                
+
                 header('Location: ' . url('pedido/confirmacion/' . $pedido_id));
                 exit;
-
             } catch (Exception $e) {
                 $conexion->rollback();
                 error_log("Error en PedidoController::registrar: " . $e->getMessage());
@@ -327,24 +380,71 @@ $envio_referencia = trim($_POST['referencia'] ?? '');
     }
 
     // ==================== MÉTODOS EXISTENTES (sin cambios) ====================
-    
+
     // Muestra un pedido específico
-    public function ver($id)
-    {
-        $pedido = $this->pedidoModel->obtenerPorId($id);
-        $detalles = $this->detalleModel->obtenerPorPedido($id);
-        
-        // Obtener dirección del pedido
-        $direccion_pedido = null;
-        try {
-            $direccion_pedido = $this->pedidoDireccionModel->obtenerDireccionCompleta($id);
-        } catch (Exception $e) {
-            error_log("Error obteniendo dirección del pedido: " . $e->getMessage());
-            $direccion_pedido = 'Dirección no disponible';
-        }
-        
-        require __DIR__ . '/../views/pedido/ver.php';
+// En Controllers/PedidoController.php
+
+public function ver($id)
+{
+    $pedido = $this->pedidoModel->obtenerPorId($id);
+    $detalles = $this->detalleModel->obtenerPorPedido($id);
+
+    // Obtener dirección del pedido
+    $direccion_pedido = null;
+    try {
+        $direccion_pedido = $this->pedidoDireccionModel->obtenerDireccionCompleta($id);
+    } catch (Exception $e) {
+        error_log("Error obteniendo dirección del pedido: " . $e->getMessage());
+        $direccion_pedido = 'Dirección no disponible';
     }
+
+    // Obtener información del cupón si existe
+    $cupon_info = null;
+    if (!empty($pedido['cupon_id'])) {
+        $cuponModel = new \Models\Cupon();
+        $cupon = $cuponModel->obtenerPorId($pedido['cupon_id']);
+        if ($cupon) {
+            $cupon_info = [
+                'codigo' => $cupon['codigo'],
+                'tipo' => $cupon['tipo'],
+                'valor' => $cupon['valor'],
+                'descuento_aplicado' => $pedido['descuento_cupon']
+            ];
+        }
+    }
+
+    // Obtener nombres y montos de promociones aplicadas
+    $promociones_aplicadas = [];
+    if (!empty($pedido['promociones_aplicadas'])) {
+        // Intenta decodificar el JSON.
+        $promociones_json = json_decode($pedido['promociones_aplicadas'], true);
+
+        // Verifica si la decodificación fue exitosa y el resultado es un array.
+        if (json_last_error() === JSON_ERROR_NONE && is_array($promociones_json)) {
+            $promociones_aplicadas = $promociones_json;
+        } else {
+            // Si la decodificación falla, asume que es el formato antiguo (cadena de texto)
+            $nombres = explode(', ', $pedido['promociones_aplicadas']);
+            foreach ($nombres as $nombre) {
+                // Guarda cada nombre con un monto 'N/A' ya que no se puede recuperar.
+                $promociones_aplicadas[] = [
+                    'nombre' => $nombre,
+                    'monto' => 'N/A'
+                ];
+            }
+        }
+    }
+    
+    // Si no hay promociones guardadas pero sí un descuento total, muestra la genérica.
+    if (empty($promociones_aplicadas) && !empty($pedido['descuento_promocion']) && $pedido['descuento_promocion'] > 0) {
+        $promociones_aplicadas[] = [
+            'nombre' => 'Promociones varias',
+            'monto' => $pedido['descuento_promocion']
+        ];
+    }
+    
+    require __DIR__ . '/../views/pedido/ver.php';
+}
 
     // Lista todos los pedidos
     public function listar()
@@ -361,7 +461,7 @@ $envio_referencia = trim($_POST['referencia'] ?? '');
     public function aplicarCupon()
     {
         header('Content-Type: application/json');
-        
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['exito' => false, 'mensaje' => 'Método no permitido']);
             exit;
@@ -369,7 +469,7 @@ $envio_referencia = trim($_POST['referencia'] ?? '');
 
         $codigo = trim($_POST['codigo'] ?? '');
         $carrito = $_SESSION['carrito'] ?? [];
-        
+
         if (empty($codigo)) {
             echo json_encode(['exito' => false, 'mensaje' => 'Código de cupón requerido']);
             exit;
@@ -381,13 +481,13 @@ $envio_referencia = trim($_POST['referencia'] ?? '');
         }
 
         $cliente_id = $_SESSION['cliente_id'] ?? 1;
-        
+
         $resultado = CuponHelper::aplicarCupon($codigo, $cliente_id, $carrito);
-        
+
         if ($resultado['exito']) {
             $_SESSION['cupon_aplicado'] = $resultado['cupon'];
         }
-        
+
         echo json_encode($resultado);
         exit;
     }
@@ -396,7 +496,7 @@ $envio_referencia = trim($_POST['referencia'] ?? '');
     public function quitarCupon()
     {
         CuponHelper::limpiarCuponSesion();
-        
+
         if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
             header('Content-Type: application/json');
             echo json_encode(['exito' => true, 'mensaje' => 'Cupón removido']);
@@ -427,9 +527,9 @@ $envio_referencia = trim($_POST['referencia'] ?? '');
             echo "ID de pedido no especificado.";
             return;
         }
-        
+
         $pedido = $this->pedidoModel->obtenerPorId($id);
-        
+
         $direccion_pedido = null;
         try {
             $direccion_pedido = $this->pedidoDireccionModel->obtenerDireccionCompleta($id);
@@ -437,7 +537,7 @@ $envio_referencia = trim($_POST['referencia'] ?? '');
             error_log("Error obteniendo dirección del pedido: " . $e->getMessage());
             $direccion_pedido = 'Dirección no disponible';
         }
-        
+
         require __DIR__ . '/../views/pedido/confirmacion.php';
     }
 
@@ -455,41 +555,40 @@ $envio_referencia = trim($_POST['referencia'] ?? '');
         }
     }
     // En PedidoController.php o en un nuevo DireccionController.php
-public function eliminarDireccion()
-{
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $direccionId = $_POST['id'] ?? null;
-        
-        if (!$direccionId) {
-            echo json_encode(['success' => false, 'message' => 'ID de dirección no proporcionado']);
-            exit;
-        }
-        
-        try {
-            $conexion = \Core\Database::getConexion();
-            
-            // Verificar que la dirección pertenece al usuario
-            $usuario = $_SESSION['usuario'];
-            $stmt = $conexion->prepare("SELECT usuario_id FROM direcciones WHERE id = ?");
-            $stmt->execute([$direccionId]);
-            $direccion = $stmt->fetch(\PDO::FETCH_ASSOC);
-            
-            if (!$direccion || $direccion['usuario_id'] != $usuario['id']) {
-                echo json_encode(['success' => false, 'message' => 'No tienes permisos para eliminar esta dirección']);
+    public function eliminarDireccion()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $direccionId = $_POST['id'] ?? null;
+
+            if (!$direccionId) {
+                echo json_encode(['success' => false, 'message' => 'ID de dirección no proporcionado']);
                 exit;
             }
-            
-            // Eliminar la dirección
-            $stmt = $conexion->prepare("UPDATE direcciones SET activa = 0 WHERE id = ?");
-            $stmt->execute([$direccionId]);
-            
-            echo json_encode(['success' => true, 'message' => 'Dirección eliminada correctamente']);
-            
-        } catch (Exception $e) {
-            error_log("Error al eliminar dirección: " . $e->getMessage());
-            echo json_encode(['success' => false, 'message' => 'Error al eliminar la dirección']);
+
+            try {
+                $conexion = \Core\Database::getConexion();
+
+                // Verificar que la dirección pertenece al usuario
+                $usuario = $_SESSION['usuario'];
+                $stmt = $conexion->prepare("SELECT usuario_id FROM direcciones WHERE id = ?");
+                $stmt->execute([$direccionId]);
+                $direccion = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+                if (!$direccion || $direccion['usuario_id'] != $usuario['id']) {
+                    echo json_encode(['success' => false, 'message' => 'No tienes permisos para eliminar esta dirección']);
+                    exit;
+                }
+
+                // Eliminar la dirección
+                $stmt = $conexion->prepare("UPDATE direcciones SET activa = 0 WHERE id = ?");
+                $stmt->execute([$direccionId]);
+
+                echo json_encode(['success' => true, 'message' => 'Dirección eliminada correctamente']);
+            } catch (Exception $e) {
+                error_log("Error al eliminar dirección: " . $e->getMessage());
+                echo json_encode(['success' => false, 'message' => 'Error al eliminar la dirección']);
+            }
         }
+        exit;
     }
-    exit;
-}
 }

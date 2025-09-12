@@ -65,9 +65,32 @@ if (!empty($carrito)) {
     }
 }
 
+// Convertir carrito para promociones
+$carritoParaPromociones = [];
+foreach ($carrito as $item) {
+    $producto = $productoModel->obtenerPorId($item['producto_id']);
+    if ($producto) {
+        $carritoParaPromociones[] = [
+            'id' => $producto['id'],
+            'nombre' => $producto['nombre'],
+            'precio' => (float)$item['precio'],
+            'cantidad' => (int)$item['cantidad'],
+            'categoria_id' => $producto['categoria_id'] ?? null,
+            'precio_final' => 0,
+            'descuento_aplicado' => 0,
+            'promociones' => []
+        ];
+    }
+}
+
 // Calcular promociones y totales
-$promociones = PromocionHelper::evaluar($carrito, $usuario);
-$totales = PromocionHelper::calcularTotales($carrito, $promociones);
+$resultado = PromocionHelper::aplicarPromociones($carritoParaPromociones, $usuario);
+$totales = [
+    'subtotal' => $resultado['subtotal'],
+    'descuento' => $resultado['descuento'],
+    'total' => $resultado['total'],
+    'envio_gratis' => $resultado['envio_gratis']
+];
 
 // Aplicar cupón si existe
 $cupon_aplicado = $_SESSION['cupon_aplicado'] ?? null;

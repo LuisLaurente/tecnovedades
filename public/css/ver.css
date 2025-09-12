@@ -500,3 +500,35 @@
     margin-bottom: 2px;
   }
 }
+/* Estilos para promociones y cupones */
+.promotions-list, .coupons-list {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.promotion-item, .coupon-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: white;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    border-left: 4px solid #3498db;
+}
+
+.promotion-name, .coupon-code {
+    font-weight: 500;
+    flex: 1;
+}
+
+.promotion-discount, .coupon-discount {
+    color: #27ae60;
+    font-weight: bold;
+}
+
+.text-success {
+    color: #27ae60 !important;
+}

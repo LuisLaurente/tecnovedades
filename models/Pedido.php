@@ -18,32 +18,34 @@ class Pedido
     {
         if ($pedido_data) {
             $stmt = $this->db->prepare("
-                INSERT INTO pedidos (
-                    cliente_id, 
-                    monto_total, 
-                    estado, 
-                    cupon_id, 
-                    cupon_codigo, 
-                    descuento_cupon, 
-                    subtotal, 
-                    descuento_promocion,
-                    costo_envio,
-                    facturacion_tipo_documento,
-                    facturacion_numero_documento,
-                    facturacion_nombre,
-                    facturacion_direccion,
-                    facturacion_email
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ");
+            INSERT INTO pedidos (
+                cliente_id, 
+                monto_total, 
+                estado, 
+                cupon_id, 
+                cupon_codigo, 
+                descuento_cupon, 
+                subtotal, 
+                descuento_promocion,
+                promociones_aplicadas,  -- ← ¡NUEVO CAMPO AQUÍ!
+                costo_envio,
+                facturacion_tipo_documento,
+                facturacion_numero_documento,
+                facturacion_nombre,
+                facturacion_direccion,
+                facturacion_email
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)  -- ← Un parámetro más aquí
+        ");
             $stmt->execute([
-                $usuario_id, 
-                $monto_total, 
+                $usuario_id,
+                $monto_total,
                 $estado,
                 $pedido_data['cupon_id'] ?? null,
                 $pedido_data['cupon_codigo'] ?? null,
                 $pedido_data['descuento_cupon'] ?? 0.00,
                 $pedido_data['subtotal'] ?? 0.00,
                 $pedido_data['descuento_promocion'] ?? 0.00,
+                $pedido_data['promociones_aplicadas'] ?? null,  // ← ¡NUEVO CAMPO AQUÍ!
                 $pedido_data['costo_envio'] ?? 0.00,
                 $pedido_data['facturacion_tipo_documento'] ?? null,
                 $pedido_data['facturacion_numero_documento'] ?? null,

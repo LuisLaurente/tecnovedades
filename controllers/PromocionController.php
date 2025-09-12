@@ -244,16 +244,27 @@ class PromocionController
 
         switch ($tipoAccion) {
             case 'descuento_porcentaje':
-            case 'descuento_fijo':
                 if (!isset($post['accion_valor_descuento'])) {
                     error_log("Error: accion_valor_descuento no proporcionado");
-                    throw new \Exception("El valor del descuento es obligatorio.");
+                    throw new \Exception("El porcentaje de descuento es obligatorio.");
                 }
                 $accion['valor'] = (float)($post['accion_valor_descuento']);
                 if ($accion['valor'] <= 0) {
-                    throw new \Exception("El valor del descuento debe ser mayor a 0.");
+                    throw new \Exception("El porcentaje de descuento debe ser mayor a 0.");
                 }
                 break;
+
+            case 'descuento_fijo':
+                if (!isset($post['accion_valor_descuento_fijo'])) {
+                    error_log("Error: accion_valor_descuento_fijo no proporcionado");
+                    throw new \Exception("El monto fijo de descuento es obligatorio.");
+                }
+                $accion['valor'] = (float)($post['accion_valor_descuento_fijo']);
+                if ($accion['valor'] <= 0) {
+                    throw new \Exception("El monto fijo de descuento debe ser mayor a 0.");
+                }
+                break;
+
             case 'envio_gratis':
                 break;
             case 'compra_n_paga_m':
