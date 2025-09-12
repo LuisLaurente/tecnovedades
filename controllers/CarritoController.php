@@ -41,7 +41,7 @@ class CarritoController
         exit; // ¡Crucial! Detiene el script para no enviar HTML extra.
     }
 
-    /**
+/**
      * Obtiene el estado completo y actualizado del carrito.
      * Centraliza toda la lógica de cálculo (promociones, cupones, totales)
      * para ser usada tanto por las vistas normales como por las respuestas AJAX.
@@ -55,18 +55,97 @@ class CarritoController
         $carrito = $_SESSION['carrito'] ?? [];
         $usuario = $_SESSION['usuario'] ?? null;
 
-        // 1. Evaluar promociones
-        $promociones = PromocionHelper::evaluar($carrito, $usuario);
-        $_SESSION['promociones'] = $promociones;
+        // Si el carrito está vacío, retornar estado vacío
+        if (empty($carrito)) {
+            return [
+                'items' => [],
+                'itemDetails' => [],
+                'totals' => [
+                    'subtotal' => 0,
+                    'descuento' => 0,
+                    'descuento_cupon' => 0,
+                    'total' => 0,
+                    'envio_gratis' => false
+                ],
+                'promotions' => [],
+                'coupon' => null,
+                'itemCount' => 0
+            ];
+        }
 
-        // 2. Calcular totales base con promociones
-        $totales = PromocionHelper::calcularTotales($carrito, $promociones);
+        // 1. Convertir carrito de sesión al formato que espera PromocionHelper
+        $carritoParaPromociones = [];
+        $productosDetallados = [];
+        
+        foreach ($carrito as $clave => $item) {
+            $producto = Producto::obtenerPorId($item['producto_id']);
+            if ($producto) {
+                // Para PromocionHelper
+                $carritoParaPromociones[] = [
+                    'id' => $producto['id'],
+                    'nombre' => $producto['nombre'],
+                    'precio' => (float)$item['precio'], // Usar precio del carrito (puede ser diferente si cambió)
+                    'cantidad' => (int)$item['cantidad'],
+                    'categoria_id' => $producto['categoria_id'] ?? null,
+                    // Estos campos se completarán por PromocionHelper
+                    'precio_final' => 0,
+                    'descuento_aplicado' => 0,
+                    'promociones' => []
+                ];
+                
+                // Para la respuesta detallada
+                $primera = ImagenProducto::obtenerPrimeraPorProducto((int)$item['producto_id']);
+                $imagenUrl = ($primera && !empty($primera['nombre_imagen']))
+                    ? url('uploads/' . $primera['nombre_imagen'])
+                    : null;
+                    
+                $productosDetallados[$clave] = [
+                    'clave' => $clave,
+                    'producto_id' => $item['producto_id'],
+                    'nombre' => $producto['nombre'],
+                    'cantidad' => $item['cantidad'],
+                    'precio' => (float)$item['precio'],
+                    'subtotal' => (float)$item['precio'] * $item['cantidad'],
+                    'imagen' => $imagenUrl,
+                    'talla' => $item['talla'] ?? null,
+                    'color' => $item['color'] ?? null,
+                    // Estos se actualizarán después con las promociones
+                    'precio_final' => (float)$item['precio'] * $item['cantidad'],
+                    'descuento_aplicado' => 0,
+                    'promociones_aplicadas' => []
+                ];
+            }
+        }
 
-        // 3. Aplicar cupón si existe y es válido
+        // 2. Aplicar promociones usando PromocionHelper
+        $resultadoPromociones = PromocionHelper::aplicarPromociones($carritoParaPromociones, $usuario);
+        
+        // 3. Actualizar productos detallados con información de promociones
+        $indicePromocion = 0;
+        foreach ($productosDetallados as $clave => &$productoDetallado) {
+            if (isset($carritoParaPromociones[$indicePromocion])) {
+                $itemConPromocion = $carritoParaPromociones[$indicePromocion];
+                $productoDetallado['precio_final'] = $itemConPromocion['precio_final'];
+                $productoDetallado['descuento_aplicado'] = $itemConPromocion['descuento_aplicado'];
+                $productoDetallado['promociones_aplicadas'] = $itemConPromocion['promociones'] ?? [];
+                $indicePromocion++;
+            }
+        }
+
+        // 4. Preparar totales desde el resultado de promociones
+        $totales = [
+            'subtotal' => $resultadoPromociones['subtotal'],
+            'descuento' => $resultadoPromociones['descuento'],
+            'total' => $resultadoPromociones['total'],
+            'envio_gratis' => $resultadoPromociones['envio_gratis'],
+            'descuento_cupon' => 0
+        ];
+
+        // 5. Aplicar cupón si existe y es válido
         $cupon_aplicado = CuponHelper::obtenerCuponAplicado();
         $descuento_cupon = 0;
 
-        if ($cupon_aplicado && !empty($carrito) && $usuario) {
+        if ($cupon_aplicado && $usuario) {
             $productosParaValidacion = $this->getProductosDetalladosParaValidacion($carrito);
             $aplicacionCupon = CuponHelper::aplicarCupon(
                 $cupon_aplicado['codigo'],
@@ -77,6 +156,8 @@ class CarritoController
 
             if ($aplicacionCupon['exito']) {
                 $descuento_cupon = $aplicacionCupon['descuento'];
+                $totales['descuento_cupon'] = $descuento_cupon;
+                $totales['total'] = max(0, $totales['total'] - $descuento_cupon);
             } else {
                 CuponHelper::limpiarCuponSesion();
                 $cupon_aplicado = null;
@@ -87,41 +168,15 @@ class CarritoController
             $cupon_aplicado = null;
         }
 
-        // 4. Recalcular totales finales con el descuento del cupón
-        $totales['descuento_cupon'] = $descuento_cupon;
-        $totales['total'] = max(0, ($totales['subtotal'] ?? 0) - ($totales['descuento'] ?? 0) - $descuento_cupon);
+        // 6. Guardar promociones en sesión para acceso posterior
+        $_SESSION['promociones'] = $resultadoPromociones['promociones_aplicadas'];
 
-        // 5. Obtener detalles de los productos para la respuesta
-        $productosDetallados = [];
-        if (!empty($carrito)) {
-            foreach ($carrito as $clave => $item) {
-                $producto = Producto::obtenerPorId($item['producto_id']);
-                if ($producto) {
-                    // ✅ Traer primera imagen
-                    $primera = ImagenProducto::obtenerPrimeraPorProducto((int)$item['producto_id']);
-                    $imagenUrl = ($primera && !empty($primera['nombre_imagen']))
-                        ? url('uploads/' . $primera['nombre_imagen'])
-                        : null;
-                    // Preparamos un array limpio para la respuesta JSON
-                    $productosDetallados[$clave] = [
-                        'clave' => $clave,
-                        'producto_id' => $item['producto_id'],
-                        'nombre' => $producto['nombre'],
-                        'cantidad' => $item['cantidad'],
-                        'precio' => (float)$item['precio'],
-                        'subtotal' => (float)$item['precio'] * $item['cantidad'],
-                        'imagen'       => $imagenUrl, 
-                    ];
-                }
-            }
-        }
-
-        // 6. Devolver el estado completo
+        // 7. Devolver el estado completo
         return [
             'items' => array_values($productosDetallados), // Array indexado para iterar en JS
             'itemDetails' => $productosDetallados,         // Array asociativo para búsquedas por clave
             'totals' => $totales,
-            'promotions' => $promociones,
+            'promotions' => $resultadoPromociones['promociones_aplicadas'],
             'coupon' => $cupon_aplicado,
             'itemCount' => array_sum(array_column($carrito, 'cantidad'))
         ];

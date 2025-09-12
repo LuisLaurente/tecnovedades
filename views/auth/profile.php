@@ -1,214 +1,83 @@
 <!DOCTYPE html>
 <html lang="es">
 <?php include_once __DIR__ . '/../admin/includes/head.php'; ?>
+<link rel="stylesheet" href="<?= url('css/profile.css') ?>">
 
 <body>
-                <?php include_once __DIR__ . '/../admin/includes/header.php'; ?>
+    <?php include_once __DIR__ . '/../admin/includes/header.php'; ?>
 
     <div class="flex h-screen">
         <!-- Incluir navegación lateral fija -->
         <div class="fixed inset-y-0 left-0 z-50">
             <?php include __DIR__ . '/../admin/includes/navbar.php'; ?>
         </div>
-         <div class="flex-1 flex flex-col min-h-screen">
 
-        <main class="flex-1 p-2 bg-gray-50 overflow-y-auto ">
-            <!-- Incluir header superior fijo -->
-            <div class="sticky top-0 z-40 ">
-            </div>
+        <div class="flex-1 flex flex-col min-h-screen">
+            <main class="flex-1 p-2 bg-gray-50 overflow-y-auto main-content">
+                <!-- El sticky header superior se manejaba en la plantilla -->
+                <div class="sticky top-0 z-40"></div>
 
-            <div class="flex-1 p-2 bg-gray-50 overflow-y-auto">
-                <div class="max-w-4xl mx-auto p-4 bg-white shadow-md rounded-lg">
-                    <h1 class="text-2xl font-bold mb-4">👤 Mi Cuenta</h1>
+                <div class="profile-container">
+                    <h1>Mi Cuenta</h1>
 
                     <!-- Mensajes -->
                     <?php if (!empty($_GET['success'])): ?>
-                        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
+                        <div class="message success-message">
                             <?= htmlspecialchars($_GET['success']) ?>
                         </div>
                     <?php endif; ?>
 
                     <?php if (!empty($_GET['error'])): ?>
-                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+                        <div class="message error-message">
                             <?= htmlspecialchars($_GET['error']) ?>
                         </div>
                     <?php endif; ?>
 
-                    <div class="grid grid-cols-1 gap-6">
-                        <!-- Información del perfil -->
-                        <div class="bg-white shadow rounded-lg border">
-                            <div class="px-4 py-5 sm:p-6">
-                                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
-                                    📝 Información Personal
-                                </h3>
-
-                                <form method="POST" action="<?= url('/auth/updateProfile') ?>">
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <!-- Nombre -->
-                                        <div>
-                                            <label for="nombre" class="block text-sm font-medium text-gray-700">
-                                                Nombre completo
-                                            </label>
-                                            <input type="text"
-                                                name="nombre"
-                                                id="nombre"
-                                                value="<?= htmlspecialchars($usuario['nombre']) ?>"
-                                                required
-                                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                        </div>
-
-                                        <!-- Email -->
-                                        <div>
-                                            <label for="email" class="block text-sm font-medium text-gray-700">
-                                                Correo electrónico
-                                            </label>
-                                            <input type="email"
-                                                name="email"
-                                                id="email"
-                                                value="<?= htmlspecialchars($usuario['email']) ?>"
-                                                required
-                                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                        </div>
-
-                                        <!-- Información de solo lectura -->
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">
-                                                Rol asignado
-                                            </label>
-                                            <div class="mt-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md">
-                                                <span class="text-sm text-gray-900"><?= htmlspecialchars($rol['descripcion']) ?></span>
-                                                <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                    <?= htmlspecialchars($rol['nombre']) ?>
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        <!-- Estado de cuenta -->
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">
-                                                Estado de cuenta
-                                            </label>
-                                            <div class="mt-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md">
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $usuario['activo'] ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' ?>">
-                                                    <?= $usuario['activo'] ? '✅ Activa' : '❌ Inactiva' ?>
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Permisos -->
-                                    <div class="mt-6">
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                                            🔑 Permisos asignados
-                                        </label>
-                                        <div class="flex flex-wrap gap-2">
-                                            <?php 
-
-                                            // Asegurar que permisos es un array
-                                            $permisos = $rol['permisos'] ?? [];
-                                            if (is_string($permisos)) {
-                                                $permisos = json_decode($permisos, true) ?: [];
-                                            }
-                                            if (!empty($permisos) && is_array($permisos)): ?>
-                                                <?php foreach ($permisos as $permiso): ?>
-                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                        <?= htmlspecialchars($permiso) ?>
-                                                    </span>
-                                                <?php endforeach; ?>
-                                            <?php else: ?>
-                                                <span class="text-sm text-gray-500">Sin permisos específicos</span>
-                                            <?php endif; ?>
-                                        </div>
-                                    </div>
-                                                    
-                                    <!-- Botones -->
-                                     
-                                    <div class="mt-6 flex justify-end space-x-3">
-                                        <button type="submit"
-                                            class="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                            💾 Guardar cambios
-                                        </button>
-                                    </div>
-                                </form>
+                    <div class="profile-card">
+                        <h3>Información Personal</h3>
+                        <form method="POST" action="<?= url('/auth/updateProfile') ?>">
+                            <div class="form-group">
+                                <label for="nombre">Nombre completo</label>
+                                <input type="text"
+                                    name="nombre"
+                                    id="nombre"
+                                    value="<?= htmlspecialchars($usuario['nombre']) ?>"
+                                    required>
                             </div>
-                        </div>
 
-                        <!-- Información de sesión -->
-                        <div class="bg-white shadow rounded-lg border">
-                            <div class="px-4 py-5 sm:p-6">
-                                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
-                                    🕒 Información de Sesión
-                                </h3>
-
-                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                    <div class="bg-blue-50 p-4 rounded-lg">
-                                        <dt class="text-sm font-medium text-gray-500">Sesión iniciada</dt>
-                                        <dd class="mt-1 text-lg font-semibold text-blue-600">
-                                            <?= date('H:i:s', $_SESSION['login_time'] ?? time()) ?>
-                                        </dd>
-                                        <dd class="text-xs text-gray-500">
-                                            <?= date('d/m/Y', $_SESSION['login_time'] ?? time()) ?>
-                                        </dd>
-                                    </div>
-
-                                    <div class="bg-green-50 p-4 rounded-lg">
-                                        <dt class="text-sm font-medium text-gray-500">Última actividad</dt>
-                                        <dd class="mt-1 text-lg font-semibold text-green-600">
-                                            <?= date('H:i:s', $_SESSION['last_activity'] ?? time()) ?>
-                                        </dd>
-                                        <dd class="text-xs text-gray-500">
-                                            <?= date('d/m/Y', $_SESSION['last_activity'] ?? time()) ?>
-                                        </dd>
-                                    </div>
-
-                                    <div class="bg-purple-50 p-4 rounded-lg">
-                                        <dt class="text-sm font-medium text-gray-500">ID de usuario</dt>
-                                        <dd class="mt-1 text-lg font-semibold text-purple-600">
-                                            #<?= $usuario['id'] ?>
-                                        </dd>
-                                        <dd class="text-xs text-gray-500">
-                                            Identificador único
-                                        </dd>
-                                    </div>
-
-                                    <div class="bg-yellow-50 p-4 rounded-lg">
-                                        <dt class="text-sm font-medium text-gray-500">Tiempo de sesión</dt>
-                                        <dd class="mt-1 text-lg font-semibold text-yellow-600">
-                                            <?php
-                                            $tiempoSesion = time() - ($_SESSION['login_time'] ?? time());
-                                            $horas = floor($tiempoSesion / 3600);
-                                            $minutos = floor(($tiempoSesion % 3600) / 60);
-                                            echo sprintf('%02d:%02d', $horas, $minutos);
-                                            ?>
-                                        </dd>
-                                        <dd class="text-xs text-gray-500">
-                                            Horas:Minutos
-                                        </dd>
-                                    </div>
-                                </div>
+                            <div class="form-group">
+                                <label for="email">Correo electrónico</label>
+                                <input type="email"
+                                    name="email"
+                                    id="email"
+                                    value="<?= htmlspecialchars($usuario['email']) ?>"
+                                    required readonly>
                             </div>
-                        </div>
 
-                        <!-- Seguridad -->
-                        
-                        <?php if (isCliente()): ?>
-                                            <!-- Botón Mis Pedidos para clientes -->
-                                            <a href="<?= url('/usuario/pedidos') ?>"
-                                            
-                                                class="flex items-center justify-center w-full md:w-auto px-4 py-2 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-md shadow hover:from-violet-600 hover:to-purple-700 transition-all duration-200 text-sm font-medium">
-                                                📦 Mis Pedidos
-                                            </a>
-                                        <?php endif; ?>
+                            <div class="button-group">
+                                <button type="submit" class="button primary-button">
+                                    Guardar cambios
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Botón Mis Pedidos para clientes -->
+                    <div class="orders-card">
+                        <h3>Mis Pedidos</h3>
+                        <a href="<?= url('/usuario/pedidos') ?>" class="button orders-button">
+                            Ver mis pedidos
+                        </a>
                     </div>
                 </div>
-            </div>
 
-            <div class="mt-4">
-                <?php include_once __DIR__ . '/../admin/includes/footer.php'; ?>
-            </div>
-        </main>
-         </div>
+                
+            </main>
+        </div>
     </div>
+    <div class="mt-4">
+                    <?php include_once __DIR__ . '/../admin/includes/footer.php'; ?>
+                </div>
 </body>
 
 </html>
