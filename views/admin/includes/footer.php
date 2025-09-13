@@ -33,24 +33,24 @@
                 <div class="footer-links-column">
                     <h6 class="links-title">Productos</h6>
                     <ul class="links-list">
-                        <li><a href="#">- Ofertas</a></li>
-                        <li><a href="#">- Novedades</a></li>
-                        <li><a href="#">- Más vendidos</a></li>
-                        <li><a href="#">- Destacados</a></li>
+                        <li><a href="<?= url('home/busqueda?orden=ofertas') ?>">Ofertas</a></li>
+                        <li><a href="<?= url('home/busqueda?orden=novedades') ?>">Novedades</a></li>
+                        <li><a href="<?= url('home/busqueda?orden=mas_vendidos') ?>">Más vendidos</a></li>
+                        <li><a href="<?= url('home/busqueda?orden=destacados') ?>">Destacados</a></li>
                     </ul>
                 </div>
                 <div class="footer-links-column">
                     <h6 class="links-title">Nosotros</h6>
                     <ul class="links-list">
-                        <li><a href="#">- Contáctanos</a></li>
-                        <li><a href="#" id="open-terms-footer">- Términos y condiciones</a></li>
+                        <li><a href="<?= url('info/contacto') ?>">Contáctanos</a></li>
+                        <li><a href="#" id="open-terms-footer">Términos y condiciones</a></li>
                     </ul>
                 </div>
                 <div class="footer-links-column">
                     <h6 class="links-title">Tu cuenta</h6>
                     <ul class="links-list">
-                        <li><a href="#">- Historial</a></li>
-                        <li><a href="#">- Cupones</a></li>
+                        <li><a href="<?= url('usuario/pedidos') ?>">Historial Pedidos</a></li>
+                        <li><a href="<?= url('auth/profile') ?>">Mi cuenta</a></li>
                     </ul>
                 </div>
             </div>

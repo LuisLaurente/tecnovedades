@@ -320,11 +320,13 @@
 /* Estilos específicos para el dropdown de categorías */
 .categories-dropdown {
   left: 0;
-  right: auto;
+  right: 0;
   display: flex;
   padding: 20px;
   gap: 20px;
-  min-width: 700px; /* Ancho del mega-menú */
+  width: 700px; /* Ancho fijo para desktop */
+  max-width: calc(100vw - 40px); /* Evita desbordamiento horizontal */
+  box-sizing: border-box;
 }
 
 .user-profile-container.open .profile-dropdown,
@@ -476,6 +478,30 @@
 
   .top-bar { display: none; } /* Ocultar barra superior en móvil */
   .category-links { display: none; } /* Ocultar links de categorías en móvil */
+  
+  /* Hacer el dropdown de categorías responsivo en tablets */
+  .categories-dropdown {
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+  
+  .category-column {
+    flex: none;
+    width: 100%;
+  }
+  
+  .category-item.parent {
+    font-size: 15px;
+    margin-bottom: 8px;
+  }
+  
+  .subcategory-item a {
+    font-size: 13px;
+    padding: 4px 0;
+  }
 }
 
 @media (max-width: 480px) {
@@ -513,5 +539,31 @@
   .cart-icon, .user-icon {
     width: 22px;
     height: 22px;
+  }
+  
+  /* Dropdown de categorías en móviles */
+  .categories-dropdown {
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+    max-height: 50vh;
+    overflow-y: auto;
+    width: calc(100vw - 20px);
+    left: -10px;
+  }
+  
+  .category-column {
+    flex: none;
+    width: 100%;
+  }
+  
+  .category-item.parent {
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+  
+  .subcategory-item a {
+    font-size: 12px;
+    padding: 3px 0;
   }
 }
