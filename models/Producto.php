@@ -109,18 +109,41 @@ class Producto
             case 'nombre_desc':
                 $orderSql = " ORDER BY p.nombre DESC";
                 break;
+            case 'ofertas':
+                // Productos con precio tachado y descuento visible, ordenados por porcentaje de descuento
+                $orderSql = " ORDER BY (CASE WHEN p.precio_tachado IS NOT NULL AND p.precio_tachado > p.precio AND p.precio_tachado_visible = 1 THEN 0 ELSE 1 END), p.porcentaje_descuento DESC";
+                break;
+            case 'novedades':
+            case 'fecha_desc':
+                // Productos más recientes por fecha de creación
+                $orderSql = " ORDER BY p.created_at DESC";
+                break;
+            case 'mas_vendidos':
+            case 'ventas_desc':
+                // Productos más vendidos calculando desde detalle_pedido
+                $orderSql = " ORDER BY total_vendido DESC, p.id DESC";
+                break;
+            case 'destacados':
+                // Productos destacados primero
+                $orderSql = " ORDER BY p.destacado DESC, p.id DESC";
+                break;
+            case 'relevancia':
             default:
-                // si existe columna destacado, puedes ordenar por ella primero
-                $prodCols = $this->getTableColumns('productos');
-                if (in_array('destacado', $prodCols, true)) {
-                    $orderSql = " ORDER BY p.destacado DESC, p.id DESC";
-                } else {
-                    $orderSql = " ORDER BY p.id DESC";
-                }
+                // Productos destacados primero, luego por más recientes
+                $orderSql = " ORDER BY p.destacado DESC, p.id DESC";
                 break;
         }
 
-        $sql = "SELECT p.* FROM productos p" . $whereSql . $orderSql;
+        // Para ordenamiento por más vendidos, necesitamos hacer JOIN con detalle_pedido
+        if ($orden === 'mas_vendidos' || $orden === 'ventas_desc') {
+            $sql = "SELECT p.*, COALESCE(SUM(dp.cantidad), 0) as total_vendido 
+                    FROM productos p 
+                    LEFT JOIN detalle_pedido dp ON p.id = dp.producto_id" 
+                    . $whereSql . 
+                    " GROUP BY p.id" . $orderSql;
+        } else {
+            $sql = "SELECT p.* FROM productos p" . $whereSql . $orderSql;
+        }
 
         if (is_numeric($limit) && is_numeric($offset)) {
             $sql .= " LIMIT :limit OFFSET :offset";

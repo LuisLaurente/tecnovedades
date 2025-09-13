@@ -110,6 +110,10 @@ $totalEncontrados = $totalProductos;
                             <label class="sort-label" for="sortSelect">Ordenar por:</label>
                             <select class="sort-select" id="sortSelect" name="orden" form="filterForm">
                                 <option value="relevancia" <?= (($_GET['orden'] ?? '') === 'relevancia') ? 'selected' : '' ?>>Relevancia</option>
+                                <option value="ofertas" <?= (($_GET['orden'] ?? '') === 'ofertas') ? 'selected' : '' ?>>Ofertas</option>
+                                <option value="novedades" <?= (($_GET['orden'] ?? '') === 'novedades') ? 'selected' : '' ?>>Novedades</option>
+                                <option value="mas_vendidos" <?= (($_GET['orden'] ?? '') === 'mas_vendidos') ? 'selected' : '' ?>>Más vendidos</option>
+                                <option value="destacados" <?= (($_GET['orden'] ?? '') === 'destacados') ? 'selected' : '' ?>>Destacados</option>
                                 <option value="nombre_asc" <?= (($_GET['orden'] ?? '') === 'nombre_asc') ? 'selected' : '' ?>>Nombre: A - Z</option>
                                 <option value="nombre_desc" <?= (($_GET['orden'] ?? '') === 'nombre_desc') ? 'selected' : '' ?>>Nombre: Z - A</option>
                                 <option value="precio_asc" <?= (($_GET['orden'] ?? '') === 'precio_asc') ? 'selected' : '' ?>>Precio: Menor a Mayor</option>
