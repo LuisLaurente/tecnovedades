@@ -1,5 +1,6 @@
+
 <?php
-// header.php (completo)
+// header.php (reemplazar el archivo actual con este)
 // Asegurarnos session + $cantidadEnCarrito disponible
 if (session_status() === PHP_SESSION_NONE) {
   session_start();
@@ -50,30 +51,25 @@ $parentCategories = [];
 
 try {
   if (class_exists('\Models\Categoria') && method_exists('\Models\Categoria', 'obtenerTodas')) {
-    // Idealmente este método debe devolver id_padre; si no, usa el fallback SQL.
     $raw = \Models\Categoria::obtenerTodas();
   } else {
     $db = \Core\Database::getInstance()->getConnection();
-    // IMPORTANTE: aquí asumo que la columna padre se llama `id_padre`. Cámbiala si tu columna tiene otro nombre.
     $stmt = $db->prepare("SELECT id, nombre, IFNULL(slug, id) AS slug, activo, COALESCE(id_padre, 0) AS id_padre, orden FROM categorias WHERE activo = 1 ORDER BY orden ASC, nombre ASC");
     $stmt->execute();
     $raw = $stmt->fetchAll(PDO::FETCH_ASSOC);
   }
 
-  // Normalizar
   if (!is_array($raw)) {
     $raw = json_decode(json_encode($raw), true) ?: [];
   }
   $allCategories = $raw;
 
-  // Agrupar por id_padre
   $itemsByParent = [];
   foreach ($allCategories as $c) {
     $pid = isset($c['id_padre']) && ($c['id_padre'] !== '') ? (int)$c['id_padre'] : 0;
     $itemsByParent[$pid][] = $c;
   }
 
-  // Builder recursivo (closure)
   $buildTree = function ($parentId) use (&$itemsByParent, &$buildTree) {
     $branch = [];
     if (!isset($itemsByParent[$parentId])) return [];
@@ -85,7 +81,6 @@ try {
     return $branch;
   };
 
-  // Tree de nivel superior (asumo id_padre = 0 para padres)
   $categoriasTree = $buildTree(0);
   $parentCategories = $itemsByParent[0] ?? [];
 } catch (\Throwable $e) {
@@ -93,45 +88,34 @@ try {
   $allCategories = $categoriasTree = $parentCategories = [];
 }
 
-
-// Helper para generar URL de categoría. Ajusta la ruta si tu routing es distinto.
-// Ejemplos comunes: 'categoria/ver/{slug}' o 'producto/categoria/{slug}'
 function categoria_url($cat)
 {
-  // Priorizar id si existe (tu URL actual usa ?categoria=6), 
-  // si no, usar slug (por si prefieres buscar por slug).
   $identifier = '';
   if (isset($cat['id']) && $cat['id'] !== '') {
     $identifier = $cat['id'];
   } elseif (isset($cat['slug']) && $cat['slug'] !== '') {
     $identifier = $cat['slug'];
   }
-
-  // Construir URL usando el helper url() para respetar el base path (/TECNOVEDADES/public en local)
-  // Resultado ejemplo: http://localhost/TECNOVEDADES/public/home/busqueda?categoria=6
   return url('home/busqueda') . '?categoria=' . rawurlencode($identifier);
+}
+
+/* Flag para abrir el modal si viene error del servidor o query param */
+$openLoginModalOnLoad = false;
+$loginErrorMsg = null;
+if (!empty($_SESSION['login_error'])) {
+  $openLoginModalOnLoad = true;
+  $loginErrorMsg = $_SESSION['login_error'];
+  // unsetear para no repetir en siguiente request
+  unset($_SESSION['login_error']);
+}
+if (!empty($_GET['open_login']) && $_GET['open_login'] == '1') {
+  $openLoginModalOnLoad = true;
 }
 ?>
 
 <link rel="stylesheet" href="<?= url('css/header.css') ?>">
-<!--
-<div class="top-bar">
-  <div class="top-bar-content">
-    <nav class="top-links">
-      <a href="#" class="top-link">Empresa</a>
-      <a href="#" class="top-link">Novedades</a>
-      <a href="#" class="top-link">Atención al Cliente</a>
-      <a href="#" class="top-link">Contacto</a>
-    </nav>
-    <div class="social-icons">
-      <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
-      <a href="#" class="social-icon"><i class="fab fa-tiktok"></i></a>
-      <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
-    </div>
-  </div>
-</div>
--->
-<div class="sticky-header-wrapper">  <!-- <<-- AÑADIR ESTE DIV ENVOLVENTE -->
+
+<div class="sticky-header-wrapper">
 <header class="main-header">
   <div class="header-content">
 
@@ -157,7 +141,6 @@ function categoria_url($cat)
           autocomplete="off" />
         <div id="autocomplete-results" class="autocomplete-results" role="listbox" aria-expanded="false"></div>
         <button type="submit" class="search-button" aria-label="Buscar">
-          <!-- ícono lupa -->
           <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M21 21l-4.35-4.35M10 18a8 8 0 100-16 8 8 0 000 16z" />
@@ -169,7 +152,6 @@ function categoria_url($cat)
     <!-- Perfil: contenedor envuelve botón + dropdown (para evitar gaps) -->
     <div class="user-profile-container" id="userProfileContainer">
       <button class="user-profile-button" id="userProfileButton" aria-haspopup="true" aria-expanded="false" aria-label="Abrir menú de usuario">
-        <!-- Icono persona minimalista -->
         <svg class="user-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="32" height="32" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-4 0-7 2-7 4v2h14v-2c0-2-3-4-7-4z" />
@@ -182,37 +164,20 @@ function categoria_url($cat)
       <div class="profile-dropdown" id="profileDropdown" role="menu" aria-hidden="true">
         <div class="dropdown-options">
           <?php if (isset($_SESSION['user_id'])): ?>
-            <a href="<?= url('/auth/profile') ?>" class="dropdown-item" role="menuitem">
-              <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-4 0-7 2-7 4v2h14v-2c0-2-3-4-7-4z" />
-              </svg>
-              <span class="dropdown-item-text">Mi Cuenta</span>
-            </a>
+            <a href="<?= url('/auth/profile') ?>" class="dropdown-item" role="menuitem">Mi Cuenta</a>
             <div class="dropdown-divider"></div>
-            <a href="<?= url('/usuario/pedidos') ?>" class="dropdown-item" role="menuitem">
-              <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7M3 7l9-4 9 4" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7M8 11V7" />
-              </svg>
-              <span class="dropdown-item-text">Mis Pedidos</span>
-            </a>
+            <a href="<?= url('/usuario/pedidos') ?>" class="dropdown-item" role="menuitem">Mis Pedidos</a>
             <div class="dropdown-divider"></div>
-            <a href="<?= url('/auth/logout') ?>" class="dropdown-item logout-item" role="menuitem">
-              <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M17 16l4-4m0 0l-4-4m4 4H7" />
-              </svg>
-              <span class="dropdown-item-text">Cerrar Sesión</span>
-            </a>
+            <a href="<?= url('/auth/logout') ?>" class="dropdown-item logout-item" role="menuitem">Cerrar Sesión</a>
           <?php else: ?>
-            <a href="<?= url('/auth/login') ?>" class="dropdown-item login-item" role="menuitem">
-              <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
+            <!-- Botón que abre el modal -->
+            <button type="button" class="dropdown-item login-item" id="openLoginModalBtn" role="menuitem" aria-haspopup="dialog">
+              <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M5 12h14M12 5l7 7-7 7" />
               </svg>
               <span class="dropdown-item-text">Iniciar Sesión</span>
-            </a>
+            </button>
           <?php endif; ?>
         </div>
       </div>
@@ -221,7 +186,6 @@ function categoria_url($cat)
     <!-- Carrito (a la derecha del perfil) -->
     <div class="cart-section">
       <a href="<?= url('carrito/ver') ?>" class="cart-button" aria-label="Ver carrito">
-        <!-- Icono carrito minimalista -->
         <svg class="cart-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="32" height="32" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M2 6h2l2 12h12l2-8H6M16 18a2 2 0 11-4 0 2 2 0 014 0zm-6 0a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -283,9 +247,8 @@ function categoria_url($cat)
                 echo '<div class="category-item-with-children">';
                 echo '<a href="' . url("home/busqueda") . '" class="category-item parent font-semibold text-blue-600">Todas las categorías</a>';
                 echo '</div>';
-
               }
-              // 🔹 Renderizamos el resto de categorías normalmente
+
               foreach ($chunk as $c) {
                 $nombre = htmlspecialchars($c['nombre'] ?? 'Sin nombre', ENT_QUOTES, 'UTF-8');
                 $href = htmlspecialchars(categoria_url($c), ENT_QUOTES, 'UTF-8');
@@ -324,12 +287,183 @@ function categoria_url($cat)
     </div>
   </div>
 </div> <!-- <<-- CERRAR EL DIV ENVOLVENTE -->
+
 <!-- Exponer BASE_URL para JS -->
 <script>
   const BASE_URL = "<?= rtrim(url(''), '/') ?>";
+  const OPEN_LOGIN_MODAL_ON_LOAD = <?= $openLoginModalOnLoad ? 'true' : 'false' ?>;
 </script>
 
-<!-- Autocomplete + dropdown profile behavior -->
+<!-- Modal de login (insertado en header para no navegar a nueva página) -->
+<div id="loginModal" class="login-modal " aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle">
+  <div class="max-w-md w-full space-y-8 p-8">
+  <div class="login-modal-overlay" id="loginModalOverlay" tabindex="-1"></div>
+
+  <div class="login-modal-panel" id="loginModalPanel" role="document" aria-describedby="loginModalDesc">
+    <button type="button" class="login-modal-close" id="loginModalClose" aria-label="Cerrar">&times;</button>
+
+    <!-- Header -->
+    <div class="text-center" style="margin-bottom:1rem;">
+      <h2 id="loginModalTitle" class="mt-2 text-3xl font-extrabold text-gray-900">Bytebox</h2>
+      <p id="loginModalDesc" class="mt-1 text-sm text-gray-600">Inicia sesión en tu cuenta</p>
+    </div>
+
+    <!-- Mensajes de error -->
+    <?php if (!empty($loginErrorMsg)): ?>
+      <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 login-error" role="alert">
+        <?= htmlspecialchars($loginErrorMsg) ?>
+      </div>
+    <?php endif; ?>
+
+    <!-- Botones de login social -->
+    <?php
+// Intentar incluir partial login_social desde varias ubicaciones razonables
+$loginSocialIncluded = false;
+$pathsToTry = [
+  __DIR__ . '/login_social.php',                // donde podría estar si pusiste el partial junto al header
+  __DIR__ . '/../auth/login_social.php',       // views/includes -> views/auth
+  __DIR__ . '/../../views/auth/login_social.php',
+  __DIR__ . '/../../auth/login_social.php',
+  __DIR__ . '/../../views/includes/login_social.php'
+];
+
+foreach ($pathsToTry as $p) {
+  if (file_exists($p)) {
+    include $p;
+    $loginSocialIncluded = true;
+    break;
+  }
+}
+
+// Si no se encontró el partial, mostramos un fallback (enlaces a endpoints OAuth).
+if (!$loginSocialIncluded):
+?>
+  <div class="login-social-row" style="display:flex;gap:0.5rem;flex-direction:column;margin-bottom:1rem;">
+    <a href="<?= url('auth/oauth/google') ?>" class="social-btn google-btn"
+       style="display:inline-flex;align-items:center;gap:8px;padding:10px;border-radius:6px;border:1px solid #d1d5db;text-decoration:none;">
+      <!-- Google SVG simple -->
+      <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+        <path fill="#EA4335" d="M24 9.5c3.54 0 6.7 1.23 9.2 3.24l6.86-6.86C36.43 3.01 30.55 1 24 1 14.97 1 6.96 6.6 3.06 14.86l7.83 6.09C12.9 16.05 18.85 9.5 24 9.5z"/>
+      </svg>
+      <span style="font-size:14px;color:#111;">Continuar con Google</span>
+    </a>
+
+    <a href="<?= url('auth/oauth/facebook') ?>" class="social-btn fb-btn"
+       style="display:inline-flex;align-items:center;gap:8px;padding:10px;border-radius:6px;border:1px solid #d1d5db;text-decoration:none;">
+      <!-- Facebook simple -->
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+        <path fill="#1877F2" d="M22 12.07C22 6.49 17.52 2 12 2S2 6.49 2 12.07C2 17.09 5.66 21.21 10.44 22v-7.07H8.08v-2.86h2.36V9.84c0-2.34 1.39-3.63 3.52-3.63 1.02 0 2.09.18 2.09.18v2.3h-1.18c-1.16 0-1.52.72-1.52 1.46v1.76h2.59l-.41 2.86h-2.18V22C18.34 21.21 22 17.09 22 12.07z"/>
+      </svg>
+      <span style="font-size:14px;color:#111;">Continuar con Facebook</span>
+    </a>
+  </div>
+<?php
+endif;
+?>
+
+
+    <!-- Formulario de login -->
+    <form id="loginModalForm" method="POST" action="<?= url('/auth/authenticate') ?>">
+      <?= (function(){ 
+        if (class_exists('\Core\Helpers\CsrfHelper')) 
+          return \Core\Helpers\CsrfHelper::tokenField('login_form'); 
+        return ''; 
+      })() ?>
+
+      <input type="hidden" name="redirect" 
+             value="<?= htmlspecialchars($_SERVER['REQUEST_URI'] ?? url('home/index'), ENT_QUOTES, 'UTF-8') ?>">
+
+      <div class="modal-row">
+        <label for="loginEmail">Correo Electrónico</label>
+        <input id="email" 
+                               name="email" 
+                               type="email" 
+                               autocomplete="email" 
+                               required 
+                               class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                               placeholder="tu@email.com"
+                               value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
+      </div>
+
+      <div class="modal-row">
+        <label for="loginPassword">Contraseña</label>
+        <input id="password" 
+                               name="password" 
+                               type="password" 
+                               autocomplete="current-password" 
+                               required 
+                               class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                               placeholder="••••••••">
+      </div>
+
+      <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input id="remember" 
+                               name="remember" 
+                               type="checkbox" 
+                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="remember" class="ml-2 block text-sm text-gray-700">
+                            Recordarme
+                        </label>
+                    </div>
+
+                    <div class="text-sm">
+                        <a href="#" class="font-medium text-blue-600 hover:text-blue-500">
+                            ¿Olvidaste tu contraseña?
+                        </a>
+                    </div>
+                </div>
+
+      <!-- Submit button -->
+                <div>
+                    <button type="submit" 
+                            class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-200">
+                        <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                            <svg class="h-5 w-5 text-blue-500 group-hover:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                            </svg>
+                        </span>
+                        Iniciar Sesión
+                    </button>
+                </div>
+    </form>
+    <!-- Botón para regresar a la tienda -->
+            <div class="mt-6 text-center">
+                <a href="<?= url('home/index') ?>" class="inline-block px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded font-medium transition">&larr; Regresar a la tienda</a>
+            </div>
+  </div>
+  <!-- Footer -->
+        <div class="text-center">
+            <p class="text-sm text-white opacity-75">
+                © <?= date('Y') ?> Bytebox. Todos los derechos reservados.
+            </p>
+        </div>
+        </div>
+</div>
+
+
+<!-- Estilos del modal (puedes mover a header.css) -->
+<style>
+  .login-modal { display:none; position:fixed; inset:0; z-index:2200; align-items:flex-start; justify-content:center; padding:3rem 1rem; }
+  .login-modal.open { display:flex; }
+  .login-modal-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.55); backdrop-filter: blur(2px); }
+  .login-modal-panel { position:relative; z-index:1; width:100%; max-width:520px; background:#ffffff; border-radius:10px; box-shadow:0 12px 40px rgba(0,0,0,0.35); padding:1.25rem; }
+  .login-modal-close { position:absolute; right:10px; top:10px; border:0; background:transparent; font-size:20px; cursor:pointer; }
+  .login-error { background:#ffe6e6; border:1px solid #ffbdbd; color:#700; padding:0.6rem; border-radius:6px; margin-bottom:0.8rem; }
+  .modal-row { margin-bottom:0.75rem; }
+  .modal-row label { display:block; font-size:0.9rem; margin-bottom:0.25rem; color:#333; }
+  .modal-row input[type="email"], .modal-row input[type="password"] { width:100%; padding:0.6rem 0.75rem; border:1px solid #d1d5db; border-radius:6px; box-sizing:border-box; }
+  .modal-submit { display:inline-flex; align-items:center; justify-content:center; background:#2563eb; color:white; border:none; padding:0.6rem 1rem; border-radius:6px; cursor:pointer; }
+  .modal-submit:hover { background:#1e40af; }
+  .modal-small { font-size:0.9rem; color:#444; }
+  .login-social-row { margin-bottom:0.6rem; }
+  @media (max-width:640px) {
+    .login-modal { align-items:flex-start; padding-top:1.5rem; }
+    .login-modal-panel { margin:0 12px; width:calc(100% - 24px); }
+  }
+</style>
+
+<!-- Autocomplete + dropdown profile behavior + modal JS -->
 <script>
   document.addEventListener('DOMContentLoaded', function() {
 
@@ -338,19 +472,13 @@ function categoria_url($cat)
     const resultsContainer = document.getElementById('autocomplete-results');
     let debounceTimeout;
 
-    // small helper to escape text for innerHTML injection
     function escapeHtml(str) {
       if (!str) return '';
-      return String(str).replace(/[&<>"']/g, s => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
-      } [s]));
+      return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
     }
 
     function hideResults() {
+      if (!resultsContainer) return;
       resultsContainer.style.display = 'none';
       resultsContainer.innerHTML = '';
       resultsContainer.setAttribute('aria-expanded', 'false');
@@ -367,16 +495,11 @@ function categoria_url($cat)
         clearTimeout(debounceTimeout);
         debounceTimeout = setTimeout(() => {
           fetch(`${BASE_URL}/producto/autocomplete?q=${encodeURIComponent(q)}`)
-            .then(resp => {
-              if (!resp.ok) throw new Error('Network error');
-              return resp.json();
-            })
+            .then(resp => { if (!resp.ok) throw new Error('Network error'); return resp.json(); })
             .then(data => {
+              if (!resultsContainer) return;
               resultsContainer.innerHTML = '';
-              if (!Array.isArray(data) || data.length === 0) {
-                hideResults();
-                return;
-              }
+              if (!Array.isArray(data) || data.length === 0) { hideResults(); return; }
 
               data.forEach(item => {
                 const div = document.createElement('div');
@@ -390,7 +513,6 @@ function categoria_url($cat)
                   </div>
                 `;
                 div.addEventListener('click', () => {
-                  // Redirigir a la ficha del producto
                   window.location.href = `${BASE_URL}/producto/ver/${encodeURIComponent(item.id)}`;
                 });
                 resultsContainer.appendChild(div);
@@ -403,11 +525,11 @@ function categoria_url($cat)
               console.error('Autocomplete error', err);
               hideResults();
             });
-        }, 250); // debounce
+        }, 250);
       });
 
       document.addEventListener('click', (e) => {
-        if (!resultsContainer.contains(e.target) && e.target !== input) {
+        if (resultsContainer && !resultsContainer.contains(e.target) && e.target !== input) {
           hideResults();
         }
       });
@@ -419,35 +541,36 @@ function categoria_url($cat)
     let profileCloseTimeout = null;
 
     if (profileContainer) {
-      // show immediately on enter
       profileContainer.addEventListener('mouseenter', () => {
         clearTimeout(profileCloseTimeout);
         profileContainer.classList.add('open');
         profileDropdown.setAttribute('aria-hidden', 'false');
-        document.getElementById('userProfileButton').setAttribute('aria-expanded', 'true');
+        const btn = document.getElementById('userProfileButton');
+        if (btn) btn.setAttribute('aria-expanded', 'true');
       });
 
-      // start a small timeout on leave to allow cursor to reach dropdown
       profileContainer.addEventListener('mouseleave', () => {
         profileCloseTimeout = setTimeout(() => {
           profileContainer.classList.remove('open');
           profileDropdown.setAttribute('aria-hidden', 'true');
-          document.getElementById('userProfileButton').setAttribute('aria-expanded', 'false');
-        }, 200); // 200ms tolerancia
+          const btn = document.getElementById('userProfileButton');
+          if (btn) btn.setAttribute('aria-expanded', 'false');
+        }, 200);
       });
 
-      // keyboard accessibility: toggle on focus/blur
       profileContainer.addEventListener('focusin', () => {
         clearTimeout(profileCloseTimeout);
         profileContainer.classList.add('open');
         profileDropdown.setAttribute('aria-hidden', 'false');
-        document.getElementById('userProfileButton').setAttribute('aria-expanded', 'true');
+        const btn = document.getElementById('userProfileButton');
+        if (btn) btn.setAttribute('aria-expanded', 'true');
       });
       profileContainer.addEventListener('focusout', () => {
         profileCloseTimeout = setTimeout(() => {
           profileContainer.classList.remove('open');
           profileDropdown.setAttribute('aria-hidden', 'true');
-          document.getElementById('userProfileButton').setAttribute('aria-expanded', 'false');
+          const btn = document.getElementById('userProfileButton');
+          if (btn) btn.setAttribute('aria-expanded', 'false');
         }, 200);
       });
     }
@@ -489,5 +612,82 @@ function categoria_url($cat)
       });
     }
 
-  });
+    /* ---------- Login modal logic ---------- */
+    const openLoginBtn = document.getElementById('openLoginModalBtn');
+    const loginModal = document.getElementById('loginModal');
+    const loginOverlay = document.getElementById('loginModalOverlay');
+    const loginPanel = document.getElementById('loginModalPanel');
+    const loginClose = document.getElementById('loginModalClose');
+    const loginEmail = document.getElementById('loginEmail');
+    const loginForm = document.getElementById('loginModalForm');
+
+    // helpers to open/close
+    const previouslyFocused = { el: null };
+    function openLoginModal() {
+      if (!loginModal) return;
+      previouslyFocused.el = document.activeElement;
+      loginModal.classList.add('open');
+      loginModal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      // focus first input
+      if (loginEmail) {
+        setTimeout(() => loginEmail.focus(), 50);
+      } else if (loginPanel) {
+        const first = loginPanel.querySelector('input,button,select,textarea');
+        if (first) first.focus();
+      }
+    }
+
+    function closeLoginModal() {
+      if (!loginModal) return;
+      loginModal.classList.remove('open');
+      loginModal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      // restore focus
+      try { if (previouslyFocused.el) previouslyFocused.el.focus(); } catch (e){}
+    }
+
+    if (openLoginBtn) {
+      openLoginBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        openLoginModal();
+      });
+    }
+
+    if (loginClose) loginClose.addEventListener('click', closeLoginModal);
+    if (loginOverlay) loginOverlay.addEventListener('click', (e) => {
+      // si clic en el overlay => cerrar
+      if (e.target === loginOverlay) closeLoginModal();
+    });
+
+    // cerrar con Escape
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        if (loginModal && loginModal.classList.contains('open')) {
+          closeLoginModal();
+        }
+      }
+    });
+
+    // simple validation en cliente para evitar submit vacío
+    if (loginForm) {
+      loginForm.addEventListener('submit', function(e) {
+        const emailVal = (document.getElementById('loginEmail') || {}).value || '';
+        const passVal = (document.getElementById('loginPassword') || {}).value || '';
+        if (!emailVal || !passVal) {
+          e.preventDefault();
+          alert('Por favor completa email y contraseña');
+          return false;
+        }
+        // allow normal submit (server will authenticate)
+      });
+    }
+
+    // Abrir automáticamente si el servidor lo indicó
+    if (OPEN_LOGIN_MODAL_ON_LOAD) {
+      // small timeout so the DOM layout stabilizes
+      setTimeout(openLoginModal, 80);
+    }
+
+  }); // DOMContentLoaded end
 </script>
