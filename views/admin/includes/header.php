@@ -425,12 +425,18 @@ endif;
                         </span>
                         Iniciar Sesión
                     </button>
+                    <div class="text-center text-sm text-gray-700"> ¿No tienes una cuenta?
+                        <a href="<?= url('auth/registro?redirect=' . urlencode('carrito/ver')) ?>" class="btn-secondary font-medium text-blue-600 hover:text-blue-500">
+                            Crea una
+                        </a>.
+                    </div>
                 </div>
     </form>
     <!-- Botón para regresar a la tienda -->
             <div class="mt-6 text-center">
                 <a href="<?= url('home/index') ?>" class="inline-block px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded font-medium transition">&larr; Regresar a la tienda</a>
             </div>
+            
   </div>
   <!-- Footer -->
         <div class="text-center">
