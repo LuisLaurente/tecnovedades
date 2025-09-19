@@ -104,6 +104,26 @@ if (!isset($categorias)) {
     <!-- ===================== FIN HERO + CATEGORÍAS ===================== -->
     <!-- ===================== PRODUCTOS DESTACADOS (CARRUSEL INFINITO) ===================== -->
  
+        <section class="featured-products">
+      <div class="container">
+        <div class="section-title">
+          <h2>Productos Destacados</h2>
+          <div class="line"></div>
+        </div>
+      </div>
+      <!-- Contenedor del carrusel de productos -->
+      <div class="products-carousel-container" aria-label="Carrusel de productos destacados">
+        <?php
+        if (!empty($productos_destacados)) {  // Cambio 1: Usa el nombre del controlador ($productos_destacados)
+          $productos = $productos_destacados;  // Cambio 2: Asigna a $productos para compatibilidad con el parcial _products_grid.php
+          // Ahora el include recibirá $productos con los datos reales
+          include __DIR__ . '/_products_grid.php';
+        } else {
+          echo '<p style="text-align:center;">No hay productos destacados disponibles.</p>';  // Fallback si no hay datos
+        }
+        ?>
+      </div>
+    </section>
     <!-- ... (código anterior) ... -->
     <!-- ================================================== -->
     <!--          INICIO DE LA SECCIÓN DE BANNERS SECUNDARIOS          -->
