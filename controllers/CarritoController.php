@@ -428,7 +428,13 @@ class CarritoController
         $error = $_SESSION['auth_error'] ?? null;
         if ($error) unset($_SESSION['auth_error']);
 
-        require __DIR__ . '/../views/carrito/ver-sin-sesion.php';
+        if (empty($carrito)) {
+            // Caso A: Invitado y carrito vacío → mostrar solo el bloque vacío de ver
+            require __DIR__ . '/../views/carrito/ver.php';
+        } else {
+            // Caso B: Invitado con productos → mostrar la vista completa
+            require __DIR__ . '/../views/carrito/ver-sin-sesion.php';
+        }
     }
 
     /**

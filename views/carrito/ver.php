@@ -13,6 +13,7 @@ if (isset($_SESSION['carrito'])) {
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <?php include_once __DIR__ . '/../admin/includes/head.php'; ?>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Carrito de Compras - Bytebox</title>
@@ -144,8 +145,9 @@ if (isset($_SESSION['carrito'])) {
         <?php else: ?>
             <div class="carrito-vacio">
                 <div class="carrito-vacio-icon">
-                    <svg width="60" height="60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                    <img src="<?= url('image/carrito.svg') ?>" alt="Carrito vacío" style="width: 60px; height: 60px; display: block; margin: 0 auto;">
                 </div>
+
                 <h3>Tu carrito está vacío</h3>
                 <p>¡Agrega algunos productos para comenzar!</p>
                 <a href="<?= url('/') ?>" class="boton-volver">Ir a la tienda</a>
