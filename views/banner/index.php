@@ -195,7 +195,7 @@
                 <!-- IZQUIERDA: LISTA -->
                 <div>
                     <h1>Banners Principales (Carrusel)</h1>
-                    <p style="margin:8px 0 16px; color:#666;">Arrastra para cambiar el orden. Las imágenes deben ser de 1920x640px.</p>
+                    <p style="margin:8px 0 16px; color:#666;">Arrastra para cambiar el orden. Las imágenes deben ser de 1024 x 425 píxeles.</p>
                     
                     <table class="admin-productos-table">
                         <thead>
@@ -256,7 +256,7 @@
                 <!-- IZQUIERDA: LISTA -->
                 <div>
                     <h1>Banner Secundario (Izquierda)</h1>
-                    <p style="margin:8px 0 16px; color:#666;">Solo se mostrará el primer banner activo. Dimensiones recomendadas: 800x400px.</p>
+                    <p style="margin:8px 0 16px; color:#666;">Solo se mostrará el primer banner activo. Dimensiones recomendadas: 1024 x 425 píxeles</p>
                     
                     <table class="admin-productos-table">
                         <thead>
@@ -317,7 +317,7 @@
                 <!-- IZQUIERDA: LISTA -->
                 <div>
                     <h1>Banner Secundario (Derecha)</h1>
-                    <p style="margin:8px 0 16px; color:#666;">Solo se mostrará el primer banner activo. Dimensiones recomendadas: 800x400px.</p>
+                    <p style="margin:8px 0 16px; color:#666;">Solo se mostrará el primer banner activo. Dimensiones recomendadas: 1024 x 425 píxeles</p>
                     
                     <table class="admin-productos-table">
                         <thead>

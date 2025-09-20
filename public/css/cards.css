@@ -337,7 +337,7 @@
     .product-card {
         min-width: 140px;
         max-width: 180px;
-        min-height: 320px;
+        min-height: 300px;
     }
     
     .product-image-container {
@@ -347,12 +347,12 @@
     
     .product-info, .add-to-cart-form {
         padding: 0 0.8rem 0.8rem 0.8rem;
-        min-height: 80px;
+        min-height: 40px;
     }
     
     .product-title {
         font-size: 0.8rem;
-        min-height: 2rem;
+        min-height: 4rem;
         line-height: 1.1;
     }
     
@@ -381,7 +381,7 @@
     
     .add-button {
         height: 32px;
-        font-size: 0.75rem;
+        font-size: 0.6rem;
         letter-spacing: 0.3px;
         padding: 0 0.6rem;
     }
@@ -401,6 +401,9 @@
         width: 25px;
         height: 25px;
         font-size: 0.8rem;
+    }
+    .product-price{
+        margin-bottom: 0;
     }
 }
 
