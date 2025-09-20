@@ -2,6 +2,7 @@
 // views/home/_products_grid.php
 // Variables esperadas: $productos
 ?>
+
 <div id="productsWrapper">
   <div class="products-grid">
     <?php if (!empty($productos)): ?>
