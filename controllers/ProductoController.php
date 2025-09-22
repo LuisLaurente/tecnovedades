@@ -649,7 +649,7 @@ class ProductoController extends BaseController
         $producto['categorias'] = Producto::obtenerCategoriasPorProducto($producto['id']);
         $producto['imagenes'] = \Models\ImagenProducto::obtenerPorProducto($producto['id']);
 
-        // --- Breadcrumb ---
+        // --- Breadcrumb MEJORADO ---
         try {
             $db = \Core\Database::getInstance()->getConnection();
             $stmt = $db->prepare("SELECT id_categoria FROM producto_categoria WHERE id_producto = ?");
@@ -664,17 +664,32 @@ class ProductoController extends BaseController
                 }
             }
 
-            $breadcrumb = !empty($bestChain)
-                ? array_column($bestChain, 'nombre')
-                : ['Inicio', 'Productos'];
+            // AHORA el breadcrumb incluye IDs
+            $breadcrumb = [['id' => '', 'nombre' => 'Inicio']]; // Inicio sin categoría
 
-            $breadcrumb[] = $producto['nombre'];
+            if (!empty($bestChain)) {
+                foreach ($bestChain as $categoria) {
+                    $breadcrumb[] = [
+                        'id' => $categoria['id'],
+                        'nombre' => $categoria['nombre']
+                    ];
+                }
+            } else {
+                $breadcrumb[] = ['id' => '', 'nombre' => 'Productos'];
+            }
+
+            // El producto actual (sin link)
+            $breadcrumb[] = ['id' => '', 'nombre' => $producto['nombre']];
         } catch (\Throwable $e) {
             error_log('ProductoController::ver - error construyendo breadcrumb: ' . $e->getMessage());
-            $breadcrumb = ['Inicio', 'Productos', $producto['nombre']];
+            $breadcrumb = [
+                ['id' => '', 'nombre' => 'Inicio'],
+                ['id' => '', 'nombre' => 'Productos'],
+                ['id' => '', 'nombre' => $producto['nombre']]
+            ];
         }
 
-        // 🔹 SEO dinámico
+        // ... el resto del método se mantiene igual
         $meta_title = $producto['nombre'] . ' | Tienda Tecnovedades';
         $meta_description = substr(strip_tags($producto['descripcion']), 0, 160);
         $meta_image = !empty($producto['imagenes'][0]['nombre_imagen'])
@@ -682,18 +697,14 @@ class ProductoController extends BaseController
             : url('images/default-share.png');
         $canonical = url('producto/ver/' . $producto['id']);
 
-        // ------------------- Relacionados -------------------
+        // ... código de productos relacionados y reseñas
         $relatedProducts = [];
         $ids = $producto['productos_relacionados'] ?? [];
 
         if (!empty($ids)) {
-            // evita incluirse a sí mismo por si acaso
             $ids = array_values(array_diff(array_map('intval', $ids), [(int)$producto['id']]));
-
             if (!empty($ids)) {
                 $relatedProducts = $productoModel->obtenerPorIds($ids);
-
-                // Carga primera imagen y expón clave 'imagen' que espera la vista
                 foreach ($relatedProducts as &$rp) {
                     $rp['imagenes'] = \Models\ImagenProducto::obtenerPorProducto((int)$rp['id']);
                     $rp['imagen'] = !empty($rp['imagenes'][0]['nombre_imagen'])
@@ -704,7 +715,6 @@ class ProductoController extends BaseController
             }
         }
 
-        // ------------------- Reseñas -------------------
         try {
             $stmt = $db->prepare("
             SELECT r.*, u.nombre AS usuario_nombre
@@ -721,7 +731,6 @@ class ProductoController extends BaseController
             $reviews = [];
         }
 
-        // ------------------- Vista -------------------
         require_once __DIR__ . '/../views/producto/descripcion.php';
     }
     public function busqueda()
