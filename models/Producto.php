@@ -71,7 +71,8 @@ class Producto
         $orden = '',
         $visibleOnly = true,
         $limit = null,
-        $offset = null
+        $offset = null,
+        $termino = ''
     ) {
         $db = \Core\Database::getInstance()->getConnection();
 
@@ -138,9 +139,9 @@ class Producto
         if ($orden === 'mas_vendidos' || $orden === 'ventas_desc') {
             $sql = "SELECT p.*, COALESCE(SUM(dp.cantidad), 0) as total_vendido 
                     FROM productos p 
-                    LEFT JOIN detalle_pedido dp ON p.id = dp.producto_id" 
-                    . $whereSql . 
-                    " GROUP BY p.id" . $orderSql;
+                    LEFT JOIN detalle_pedido dp ON p.id = dp.producto_id"
+                . $whereSql .
+                " GROUP BY p.id" . $orderSql;
         } else {
             $sql = "SELECT p.* FROM productos p" . $whereSql . $orderSql;
         }
@@ -576,76 +577,32 @@ class Producto
             $params[':maxPrice'] = $maxPrice;
         }
 
-        // --- Filtrar por categoría (detectamos columnas reales en producto_categoria) ---
         if (!empty($categoriaId)) {
-            $pcCols = $this->getTableColumns('producto_categoria');
-            // posibles nombres
-            $prodColCandidates = ['producto_id', 'id_producto', 'productoId', 'productoId']; // posibles variantes
-            $catColCandidates  = ['categoria_id', 'id_categoria', 'categoriaId'];
+            $subcategorias = $this->obtenerSubcategorias($categoriaId);
+            $categoriasParaFiltrar = array_merge([$categoriaId], $subcategorias);
 
-            $prodCol = null;
-            $catCol  = null;
-            foreach ($prodColCandidates as $c) if (in_array($c, $pcCols, true)) {
-                $prodCol = $c;
-                break;
-            }
-            foreach ($catColCandidates as $c) if (in_array($c, $pcCols, true)) {
-                $catCol = $c;
-                break;
+            $placeholders = [];
+            foreach ($categoriasParaFiltrar as $idx => $catId) {
+                $ph = ':cat' . $idx;
+                $placeholders[] = $ph;
+                $params[$ph] = (int)$catId;
             }
 
-            // Si no detectamos, probamos nombres por defecto que usa tu proyecto: id_producto/id_categoria
-            if ($prodCol === null) $prodCol = in_array('id_producto', $pcCols, true) ? 'id_producto' : (in_array('producto_id', $pcCols, true) ? 'producto_id' : null);
-            if ($catCol === null)  $catCol  = in_array('id_categoria', $pcCols, true) ? 'id_categoria' : (in_array('categoria_id', $pcCols, true) ? 'categoria_id' : null);
-
-            if ($prodCol !== null && $catCol !== null) {
-                // usamos columnas detectadas
-                $where[] = "EXISTS (SELECT 1 FROM producto_categoria pc WHERE pc.`{$prodCol}` = p.id AND pc.`{$catCol}` = :categoriaId)";
-                $params[':categoriaId'] = (int)$categoriaId;
-            } else {
-                // si no existe la tabla o no encontramos columnas, ignoramos el filtro para evitar fallo fatal
-                // (podrías añadir logging aquí)
-            }
-        }
-
-        // --- Filtrar por etiquetas (producto_etiqueta) ---
-        if (!empty($etiquetas) && is_array($etiquetas)) {
-            $peCols = $this->getTableColumns('producto_etiqueta');
-            $prodColPeCandidates = ['producto_id', 'id_producto'];
-            $etColPeCandidates   = ['etiqueta_id', 'id_etiqueta', 'etiquetaId'];
-
-            $prodColPe = null;
-            $etColPe = null;
-            foreach ($prodColPeCandidates as $c) if (in_array($c, $peCols, true)) {
-                $prodColPe = $c;
-                break;
-            }
-            foreach ($etColPeCandidates as $c)  if (in_array($c, $peCols, true)) {
-                $etColPe = $c;
-                break;
-            }
-
-            if ($prodColPe === null) $prodColPe = in_array('producto_id', $peCols, true) ? 'producto_id' : (in_array('id_producto', $peCols, true) ? 'id_producto' : null);
-            if ($etColPe === null)   $etColPe   = in_array('etiqueta_id', $peCols, true) ? 'etiqueta_id' : (in_array('id_etiqueta', $peCols, true) ? 'id_etiqueta' : null);
-
-            if ($prodColPe !== null && $etColPe !== null) {
-                $placeholders = [];
-                foreach ($etiquetas as $idx => $et) {
-                    $ph = ':et' . $idx;
-                    $placeholders[] = $ph;
-                    $params[$ph] = (int)$et;
-                }
-                if (!empty($placeholders)) {
-                    $where[] = "EXISTS (SELECT 1 FROM producto_etiqueta pe WHERE pe.`{$prodColPe}` = p.id AND pe.`{$etColPe}` IN (" . implode(',', $placeholders) . "))";
-                }
-            } else {
-                // si no detectamos, ignoramos filtro de etiquetas
-            }
+            $where[] = "EXISTS (SELECT 1 FROM producto_categoria pc WHERE pc.id_producto = p.id AND pc.id_categoria IN (" . implode(',', $placeholders) . "))";
         }
 
         $whereSql = count($where) ? " WHERE " . implode(" AND ", $where) : "";
-
         return [$whereSql, $params];
+    }
+
+    // Agregar este método al modelo Producto
+    private function obtenerSubcategorias($categoriaPadreId)
+    {
+        $db = \Core\Database::getInstance()->getConnection();
+        $stmt = $db->prepare("SELECT id FROM categorias WHERE id_padre = :id_padre");
+        $stmt->execute([':id_padre' => $categoriaPadreId]);
+        $resultados = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        return $resultados ?: [];
     }
     /**
      * ==================================================================
