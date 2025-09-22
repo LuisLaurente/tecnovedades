@@ -94,21 +94,33 @@ function producto_imagen_url($producto, $idx = 0)
         <div class="bread-links">
             <nav class="breadcrumbs" aria-label="Breadcrumb">
                 <ol class="breadcrumb-list">
-                    <li class="breadcrumb-item"><a href="<?= url('/') ?>">Inicio</a></li>
                     <?php if (is_array($breadcrumb) && !empty($breadcrumb)): ?>
-                        <?php foreach ($breadcrumb as $i => $c): ?>
-                            <?php $isLast = ($i === count($breadcrumb) - 1); ?>
+                        <?php foreach ($breadcrumb as $i => $crumb): ?>
+                            <?php
+                            $isLast = ($i === count($breadcrumb) - 1);
+                            $categoriaId = $crumb['id'] ?? '';
+                            $categoriaNombre = $crumb['nombre'] ?? '';
+                            ?>
                             <li class="breadcrumb-item <?= $isLast ? 'crumb-current' : '' ?>" <?= $isLast ? 'aria-current="page"' : '' ?>>
                                 <?php if ($isLast): ?>
-                                    <?= htmlspecialchars($c) ?>
+                                    <?= htmlspecialchars($categoriaNombre) ?>
                                 <?php else: ?>
-                                    <a href="<?= url('categoria/' . rawurlencode(strtolower(str_replace(' ', '-', $c)))) ?>">
-                                        <?= htmlspecialchars($c) ?>
-                                    </a>
+                                    <?php if (!empty($categoriaId)): ?>
+                                        <!-- Link a búsqueda por categoría -->
+                                        <a href="<?= url('home/busqueda?categoria=' . $categoriaId) ?>">
+                                            <?= htmlspecialchars($categoriaNombre) ?>
+                                        </a>
+                                    <?php else: ?>
+                                        <!-- Link genérico (Inicio, Productos) -->
+                                        <a href="<?= url($categoriaNombre === 'Inicio' ? '/' : 'home/busqueda') ?>">
+                                            <?= htmlspecialchars($categoriaNombre) ?>
+                                        </a>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                             </li>
                         <?php endforeach; ?>
                     <?php else: ?>
+                        <li class="breadcrumb-item"><a href="<?= url('/') ?>">Inicio</a></li>
                         <li class="breadcrumb-item crumb-current" aria-current="page">Productos</li>
                     <?php endif; ?>
                 </ol>
@@ -149,19 +161,19 @@ function producto_imagen_url($producto, $idx = 0)
 
 
                 <div class="info-boxes">
-  <div class="info-box">
-    <i class="fa-solid fa-truck"></i>
-    <span>Envíos rápidos a todo el Perú</span>
-  </div>
-  <div class="info-box">
-    <i class="fa-solid fa-certificate"></i>
-    <span>Garantía Bytebox en todos tus pedidos</span>
-  </div>
-  <div class="info-box">
-    <i class="fa-solid fa-circle-check"></i>
-    <span>Pagos seguros y protegidos siempre</span>
-  </div>
-</div>
+                    <div class="info-box">
+                        <i class="fa-solid fa-truck"></i>
+                        <span>Envíos rápidos a todo el Perú</span>
+                    </div>
+                    <div class="info-box">
+                        <i class="fa-solid fa-certificate"></i>
+                        <span>Garantía Bytebox en todos tus pedidos</span>
+                    </div>
+                    <div class="info-box">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Pagos seguros y protegidos siempre</span>
+                    </div>
+                </div>
 
 
             </div>
