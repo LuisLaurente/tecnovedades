@@ -77,10 +77,6 @@
             Aún no se han agregado productos visibles al catálogo. Vuelve pronto para ver nuestras novedades.
           <?php endif; ?>
         </p>
-        <div class="empty-actions">
-          <a href="<?= url('home/busqueda') ?>" class="clear-filters-btn">Limpiar Filtros</a>
-          <a href="<?= url('home') ?>" class="back-home-btn">Volver al Inicio</a>
-        </div>
       </div>
     <?php endif; ?>
   </div>

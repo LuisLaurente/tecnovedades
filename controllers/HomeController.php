@@ -82,7 +82,6 @@ class HomeController extends BaseController
             $offset,
             $termino // si tu método soporta término, si no, ignora este argumento
         );
-
         $totalFiltrados = $productoModel->contarFiltrados(
             $minPrice,
             $maxPrice,
