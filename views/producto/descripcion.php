@@ -149,19 +149,19 @@ function producto_imagen_url($producto, $idx = 0)
 
 
                 <div class="info-boxes">
-  <div class="info-box">
-    <i class="fa-solid fa-truck"></i>
-    <span>Envíos rápidos a todo el Perú</span>
-  </div>
-  <div class="info-box">
-    <i class="fa-solid fa-certificate"></i>
-    <span>Garantía Bytebox en todos tus pedidos</span>
-  </div>
-  <div class="info-box">
-    <i class="fa-solid fa-circle-check"></i>
-    <span>Pagos seguros y protegidos siempre</span>
-  </div>
-</div>
+                    <div class="info-box">
+                        <i class="fa-solid fa-truck"></i>
+                        <span>Envíos rápidos a todo el Perú</span>
+                    </div>
+                    <div class="info-box">
+                        <i class="fa-solid fa-certificate"></i>
+                        <span>Garantía Bytebox en todos tus pedidos</span>
+                    </div>
+                    <div class="info-box">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Pagos seguros y protegidos siempre</span>
+                    </div>
+                </div>
 
 
             </div>
