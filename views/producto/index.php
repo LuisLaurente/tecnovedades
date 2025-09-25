@@ -26,11 +26,9 @@ if (!empty($_SESSION['carrito']) && is_array($_SESSION['carrito'])) {
   <!-- Main -->
   <div class="flex-1 ml-64 flex flex-col min-h-screen">
     <!-- Header -->
-    <header class="sticky top-0 z-40 bg-white border-b">
-      <div class="max-w-7xl mx-auto p-4">
+    <div class="sticky top-0 z-40">
         <?php include_once __DIR__ . '/../admin/includes/header.php'; ?>
-      </div>
-    </header>
+    </div>
 
     <!-- Content -->
     <main class="flex-1 overflow-y-auto p-6">
@@ -56,17 +54,7 @@ if (!empty($_SESSION['carrito']) && is_array($_SESSION['carrito'])) {
          <div class="flex flex-wrap gap-3 mb-6"> 
             <a href="<?= url('cargaMasiva/descargarPlantilla') ?>" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 shadow"> 📥 Descargar Plantilla CSV </a> 
             <a href="<?= url('cargaMasiva/gestionImagenes') ?>" class="inline-flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-white hover:bg-purple-700 shadow"> 📸 Gestión Imágenes </a>
-
-          <a href="<?= url('carrito/ver') ?>" class="relative inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded shadow hover:bg-indigo-700">
-            🛒 Ver Carrito
-            <?php if ($cantidadEnCarrito > 0): ?>
-              <span class="absolute -top-2 -right-2 bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
-                <?= $cantidadEnCarrito ?>
-              </span>
-            <?php endif; ?>
-          </a>
-
-          <a href="<?= url('producto/crear') ?>" class="ml-2 inline-flex items-center px-4 py-2 bg-green-600 text-white rounded shadow hover:bg-green-700">➕ Nuevo Producto</a>
+            <a href="<?= url('producto/crear') ?>" class="ml-2 inline-flex items-center px-4 py-2 bg-green-600 text-white rounded shadow hover:bg-green-700">➕ Nuevo Producto</a>
         </div>
 
         <!-- CSV upload card -->
