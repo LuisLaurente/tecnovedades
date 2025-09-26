@@ -52,12 +52,13 @@ class ProductoController extends BaseController
         $busqueda
     );
 
-    // Asociar categorías e imágenes a cada producto
-    foreach ($productos as &$producto) {
-        $producto['categorias'] = Producto::obtenerCategoriasPorProducto($producto['id']);
-        $producto['imagenes'] = \Models\ImagenProducto::obtenerPorProducto($producto['id']);
-    }
-    unset($producto);
+// Asociar categorías e imágenes a cada producto
+foreach ($productos as &$producto) {
+    $producto['categorias'] = Producto::obtenerCategoriasPorProducto($producto['id']);
+    // $producto['imagenes'] = \Models\ImagenProducto::obtenerPorProducto($producto['id']); // ← ELIMINAR esta línea
+    $producto = $productoModel->prepararProductoParaVista($producto); // ← Este método ya maneja las imágenes
+}
+unset($producto);
 
     // Obtener todas las etiquetas
     $etiquetaModel = new Etiqueta();
