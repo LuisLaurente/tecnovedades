@@ -450,7 +450,7 @@ body {
   }
 
   .hero-and-categories {
-    height: 65vh; /* Aumentado proporcionalmente */
+    height: 35vh; /* Muy compacto para ver imagen completa en tablets */
   }
 
   .hero-content-static {
@@ -505,6 +505,13 @@ body {
   }
 }
 
+/* Móviles grandes */
+@media (max-width: 600px) {
+  .hero-and-categories {
+    height: 20vh; /* Muy compacto para ver imagen completa */
+  }
+}
+
 /* Tablets pequeñas */
 @media (max-width: 768px) {
   .container {
@@ -512,7 +519,7 @@ body {
   }
 
   .hero-and-categories {
-    height: 60vh; /* Aumentado proporcionalmente */
+    height: 25vh; /* Muy compacto para tablets pequeños */
   }
 
   .section-title {
@@ -672,6 +679,11 @@ body {
 @media (max-width: 480px) {
   .container {
     padding: 0 0.8rem;
+  }
+
+  /* Hero más pequeño en móvil para que se vea completo */
+  .hero-and-categories {
+    height: 18vh; /* Muy compacto para ver imagen completa en móviles */
   }
 
   .section-title h2 {
