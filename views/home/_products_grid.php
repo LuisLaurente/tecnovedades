@@ -19,8 +19,20 @@
           }
           
           $imgSrc = url('uploads/default-product.png');
-          if (!empty($producto['imagenes']) && !empty($producto['imagenes'][0]['nombre_imagen'])) {
-              $imgSrc = url('uploads/' . $producto['imagenes'][0]['nombre_imagen']);
+          if (!empty($producto['imagenes'])) {
+              // Verificar si es un array con índice nombre_imagen (caso normal)
+              if (isset($producto['imagenes'][0]['nombre_imagen'])) {
+                  $imgSrc = url('uploads/' . $producto['imagenes'][0]['nombre_imagen']);
+              }
+              // O si es directamente el string del nombre del archivo
+              elseif (is_string($producto['imagenes'][0])) {
+                  // Limpiar la ruta si ya contiene /uploads/
+                  $nombreArchivo = $producto['imagenes'][0];
+                  if (strpos($nombreArchivo, '/uploads/') === 0) {
+                      $nombreArchivo = substr($nombreArchivo, 9); // Remover '/uploads/'
+                  }
+                  $imgSrc = url('uploads/' . $nombreArchivo);
+              }
           } elseif (!empty($producto['imagen'])) {
               $imgSrc = url('uploads/' . $producto['imagen']);
           }
