@@ -28,7 +28,7 @@ class HomeController extends BaseController
 
             // Enriquecer productos con imágenes
             foreach ($productos_destacados as &$producto) {
-                $producto['imagenes'] = ImagenProducto::obtenerPorProducto($producto['id']);
+                $producto['imagenes'] = \Models\ImagenProducto::obtenerPorProducto($producto['id']);
                 $producto = $productoModel->prepararProductoParaVista($producto);
             }
             unset($producto);
@@ -93,12 +93,15 @@ class HomeController extends BaseController
 
         $totalPaginas = (int) max(1, ceil($totalFiltrados / $productosPorPagina));
 
-// --- Enriquecer productos ---
-foreach ($productos as &$producto) {
-    // $producto['imagenes'] = ImagenProducto::obtenerPorProducto($producto['id']); // ← ELIMINAR esta línea
-    $producto = $productoModel->prepararProductoParaVista($producto);
-}
-unset($producto);
+
+        // --- Enriquecer productos ---
+        foreach ($productos as &$producto) {
+            // Agregar imágenes con namespace completo (igual que ProductoController)
+            $producto['imagenes'] = \Models\ImagenProducto::obtenerPorProducto($producto['id']);
+            $producto = $productoModel->prepararProductoParaVista($producto);
+        }
+        unset($producto);
+
 
         // --- Categorías y etiquetas ---
         $categoriasDisponibles = Categoria::obtenerPadres();

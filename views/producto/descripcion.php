@@ -68,14 +68,7 @@ $breadcrumb = $breadcrumb ?? ($producto['breadcrumb'] ?? ['Inicio', 'Tecnología
 $relatedProducts = $relatedProducts ?? [];
 $reviews = $reviews ?? [];
 
-// helper para obtener imagen
-function producto_imagen_url($producto, $idx = 0)
-{
-    if (!empty($producto['imagenes']) && isset($producto['imagenes'][$idx]['nombre_imagen'])) {
-        return url('uploads/' . $producto['imagenes'][$idx]['nombre_imagen']);
-    }
-    return url('uploads/default-product.png');
-}
+// La función producto_imagen_url() ahora está disponible globalmente desde core/helpers/producto_helpers.php
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -132,9 +125,8 @@ function producto_imagen_url($producto, $idx = 0)
                 <img id="main-product-image" src="<?= producto_imagen_url($producto, 0) ?>" alt="<?= htmlspecialchars($producto['nombre']) ?>" class="main-product-image clickable-image" style="cursor: pointer;" title="Click para ampliar imagen">
                 <?php if (!empty($producto['imagenes']) && count($producto['imagenes']) > 1): ?>
                     <div class="thumbnail-images" role="list">
-                        <?php foreach ($producto['imagenes'] as $idx => $img):
-                            $imgUrl = url('uploads/' . $img['nombre_imagen']);
-                        ?>
+                        <?php foreach ($producto['imagenes'] as $idx => $img): ?>
+                            <?php $imgUrl = producto_imagen_url($producto, $idx); ?>
                             <img class="thumb <?= $idx === 0 ? 'activo' : '' ?>" src="<?= $imgUrl ?>" data-src="<?= $imgUrl ?>" alt="<?= htmlspecialchars($producto['nombre']) ?> miniatura <?= $idx + 1 ?>" role="listitem">
                         <?php endforeach; ?>
                     </div>

@@ -15,88 +15,87 @@ use Exception;
 class ProductoController extends BaseController
 {
     public function index()
-{
-    $productoModel = new Producto();
+    {
+        $productoModel = new Producto();
 
-    // Filtros comunes
-    $validacionFiltros = \Core\Helpers\Validator::validarFiltrosGET($_GET);
-    $minPrice = $validacionFiltros['filtros_validos']['min_price'] ?? null;
-    $maxPrice = $validacionFiltros['filtros_validos']['max_price'] ?? null;
-    $categoriaId = isset($_GET['categoria']) && is_numeric($_GET['categoria']) ? (int)$_GET['categoria'] : null;
+        // Filtros comunes
+        $validacionFiltros = \Core\Helpers\Validator::validarFiltrosGET($_GET);
+        $minPrice = $validacionFiltros['filtros_validos']['min_price'] ?? null;
+        $maxPrice = $validacionFiltros['filtros_validos']['max_price'] ?? null;
+        $categoriaId = isset($_GET['categoria']) && is_numeric($_GET['categoria']) ? (int)$_GET['categoria'] : null;
 
-    // Filtros adicionales por etiquetas, stock y orden
-    $etiquetasSeleccionadas = $_GET['etiquetas'] ?? [];
-    $soloDisponibles = isset($_GET['disponibles']) && $_GET['disponibles'] == '1';
-    $orden = $_GET['orden'] ?? '';
+        // Filtros adicionales por etiquetas, stock y orden
+        $etiquetasSeleccionadas = $_GET['etiquetas'] ?? [];
+        $soloDisponibles = isset($_GET['disponibles']) && $_GET['disponibles'] == '1';
+        $orden = $_GET['orden'] ?? '';
 
-    // 🔎 Nuevo filtro: búsqueda por nombre o descripción
-    $busqueda = isset($_GET['q']) && !empty(trim($_GET['q'])) ? trim($_GET['q']) : null;
+        // 🔎 Nuevo filtro: búsqueda por nombre o descripción
+        $busqueda = isset($_GET['q']) && !empty(trim($_GET['q'])) ? trim($_GET['q']) : null;
 
-    // Obtener datos para filtros y visualización
-    $estadisticasPrecios = $productoModel->obtenerEstadisticasPrecios();
-    $categoriasDisponibles = Producto::obtenerCategoriasConProductos();
-    $productos = $productoModel->obtenerFiltrados(
-        $minPrice,
-        $maxPrice,
-        $categoriaId,
-        $etiquetasSeleccionadas,
-        $soloDisponibles,
-        $orden,
-        $busqueda // 👈 pasamos la búsqueda al modelo
-    );
-    $totalFiltrados = $productoModel->contarFiltrados(
-        $minPrice,
-        $maxPrice,
-        $categoriaId,
-        $etiquetasSeleccionadas,
-        $busqueda
-    );
+        // Obtener datos para filtros y visualización
+        $estadisticasPrecios = $productoModel->obtenerEstadisticasPrecios();
+        $categoriasDisponibles = Producto::obtenerCategoriasConProductos();
+        $productos = $productoModel->obtenerFiltrados(
+            $minPrice,
+            $maxPrice,
+            $categoriaId,
+            $etiquetasSeleccionadas,
+            $soloDisponibles,
+            $orden,
+            $busqueda // 👈 pasamos la búsqueda al modelo
+        );
+        $totalFiltrados = $productoModel->contarFiltrados(
+            $minPrice,
+            $maxPrice,
+            $categoriaId,
+            $etiquetasSeleccionadas,
+            $busqueda
+        );
 
-// Asociar categorías e imágenes a cada producto
-foreach ($productos as &$producto) {
-    $producto['categorias'] = Producto::obtenerCategoriasPorProducto($producto['id']);
-    // $producto['imagenes'] = \Models\ImagenProducto::obtenerPorProducto($producto['id']); // ← ELIMINAR esta línea
-    $producto = $productoModel->prepararProductoParaVista($producto); // ← Este método ya maneja las imágenes
-}
-unset($producto);
+        // Asociar categorías e imágenes a cada producto
+        foreach ($productos as &$producto) {
+            $producto['categorias'] = Producto::obtenerCategoriasPorProducto($producto['id']);
+            $producto['imagenes'] = \Models\ImagenProducto::obtenerPorProducto($producto['id']);
+        }
+        unset($producto);
 
-    // Obtener todas las etiquetas
-    $etiquetaModel = new Etiqueta();
-    $todasEtiquetas = $etiquetaModel->obtenerTodas();
+        // Obtener todas las etiquetas
+        $etiquetaModel = new Etiqueta();
+        $todasEtiquetas = $etiquetaModel->obtenerTodas();
 
-    // Si es petición AJAX, devolver JSON
-    if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
-        header('Content-Type: application/json');
-        header('Access-Control-Allow-Origin: *');
-        header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-        header('Access-Control-Allow-Headers: X-Requested-With, Content-Type');
+        // Si es petición AJAX, devolver JSON
+        if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
+            header('Content-Type: application/json');
+            header('Access-Control-Allow-Origin: *');
+            header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+            header('Access-Control-Allow-Headers: X-Requested-With, Content-Type');
 
-        echo json_encode([
-            'success' => empty($validacionFiltros['errores']),
-            'productos' => $productos,
-            'total' => $totalFiltrados,
-            'filtros' => [
-                'min_price' => $minPrice,
-                'max_price' => $maxPrice,
-                'categoria' => $categoriaId,
-                'etiquetas' => $etiquetasSeleccionadas,
-                'disponibles' => $soloDisponibles,
-                'orden' => $orden,
-                'q' => $busqueda // 👈 incluimos búsqueda en la respuesta AJAX
-            ],
-            'errores' => $validacionFiltros['errores'] ?? []
-        ]);
-        exit;
+            echo json_encode([
+                'success' => empty($validacionFiltros['errores']),
+                'productos' => $productos,
+                'total' => $totalFiltrados,
+                'filtros' => [
+                    'min_price' => $minPrice,
+                    'max_price' => $maxPrice,
+                    'categoria' => $categoriaId,
+                    'etiquetas' => $etiquetasSeleccionadas,
+                    'disponibles' => $soloDisponibles,
+                    'orden' => $orden,
+                    'q' => $busqueda // 👈 incluimos búsqueda en la respuesta AJAX
+                ],
+                'errores' => $validacionFiltros['errores'] ?? []
+            ]);
+            exit;
+        }
+
+        // 🔹 Variables SEO
+        $metaTitle = 'Catálogo de productos | Tienda Tecnovedades';
+        $metaDescription = 'Explora nuestro catálogo con la mejor tecnología y novedades a precios increíbles.';
+        $metaImage = url('images/catalogo-share.png');
+        $canonical = url('producto');
+
+        require_once __DIR__ . '/../views/producto/index.php';
     }
-
-    // 🔹 Variables SEO
-    $metaTitle = 'Catálogo de productos | Tienda Tecnovedades';
-    $metaDescription = 'Explora nuestro catálogo con la mejor tecnología y novedades a precios increíbles.';
-    $metaImage = url('images/catalogo-share.png');
-    $canonical = url('producto');
-
-    require_once __DIR__ . '/../views/producto/index.php';
-}
 
 
     public function crear()
