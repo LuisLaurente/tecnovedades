@@ -93,6 +93,7 @@ class HomeController extends BaseController
 
         $totalPaginas = (int) max(1, ceil($totalFiltrados / $productosPorPagina));
 
+
         // --- Enriquecer productos ---
         foreach ($productos as &$producto) {
             // Agregar imágenes con namespace completo (igual que ProductoController)
@@ -100,6 +101,7 @@ class HomeController extends BaseController
             $producto = $productoModel->prepararProductoParaVista($producto);
         }
         unset($producto);
+
 
         // --- Categorías y etiquetas ---
         $categoriasDisponibles = Categoria::obtenerPadres();

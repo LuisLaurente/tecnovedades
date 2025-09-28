@@ -40,6 +40,7 @@
           // Asegurar que la descripción no esté vacía
           $descripcion = !empty($producto['descripcion']) ? $producto['descripcion'] : 'Producto de calidad disponible en nuestra tienda.';
         ?>
+        
         <div class="product-card <?= !empty($producto['destacado']) ? 'is-featured' : '' ?>">
           <?php if (!empty($producto['destacado'])): ?>
             <div class="badge-featured">★</div>

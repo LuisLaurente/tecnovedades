@@ -103,8 +103,8 @@ if (!isset($categorias)) {
     </div>
     <!-- ===================== FIN HERO + CATEGORÍAS ===================== -->
     <!-- ===================== PRODUCTOS DESTACADOS (CARRUSEL INFINITO) ===================== -->
- 
-        <section class="featured-products">
+
+    <section class="featured-products">
       <div class="container">
         <div class="section-title">
           <h2>Productos Destacados</h2>
@@ -198,34 +198,34 @@ if (!isset($categorias)) {
   <!-- SCRIPTS -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-    const targetId = "categorias-section";
-    const target = document.getElementById(targetId);
+      const targetId = "categorias-section";
+      const target = document.getElementById(targetId);
 
-    // 👉 1. Interceptar clics en el link dentro de la misma página
-    const link = document.querySelector(`a[href$="#${targetId}"]`);
-    if (link && target) {
-      link.addEventListener("click", function(e) {
-        e.preventDefault();
-        target.scrollIntoView({
-          behavior: "smooth",
-          block: "center"
+      // 👉 1. Interceptar clics en el link dentro de la misma página
+      const link = document.querySelector(`a[href$="#${targetId}"]`);
+      if (link && target) {
+        link.addEventListener("click", function(e) {
+          e.preventDefault();
+          target.scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+          });
+          // Actualizar hash en la URL sin que el navegador haga scroll automático
+          history.pushState(null, "", `#${targetId}`);
         });
-        // Actualizar hash en la URL sin que el navegador haga scroll automático
-        history.pushState(null, "", `#${targetId}`);
-      });
-    }
+      }
 
-    // 👉 2. Si vienes desde otra página con hash (#categorias-section)
-    if (window.location.hash === `#${targetId}` && target) {
-      // Esperar un momento a que cargue todo antes de centrar
-      setTimeout(() => {
-        target.scrollIntoView({
-          behavior: "smooth",
-          block: "center"
-        });
-      }, 300); // puedes ajustar el delay
-    }
-  });
+      // 👉 2. Si vienes desde otra página con hash (#categorias-section)
+      if (window.location.hash === `#${targetId}` && target) {
+        // Esperar un momento a que cargue todo antes de centrar
+        setTimeout(() => {
+          target.scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+          });
+        }, 300); // puedes ajustar el delay
+      }
+    });
     // --- Banner simple fade ---
     (function() {
       const slides = document.querySelectorAll('.hero-slide');
@@ -251,7 +251,10 @@ if (!isset($categorias)) {
       const originalItems = Array.from(track.children);
       if (originalItems.length === 0) return;
 
-      // PASO 1: Clonar items para loop infinito (2 veces -> 3 sets totales)
+      // **IMPORTANTE**: Asegúrate de que tu CSS no tenga la animación de keyframes:
+      // .products-grid.scrolling { animation: none !important; }
+
+      // PASO 1: Clonar items para loop infinito (3 sets totales)
       for (let i = 0; i < 2; i++) {
         originalItems.forEach(item => {
           const clone = item.cloneNode(true);
@@ -260,165 +263,174 @@ if (!isset($categorias)) {
         });
       }
 
-      // PASO 2: Calcular dimensiones
+      // PASO 2: Variables de Estado y Dimensiones
       let itemWidth = 0;
       let setWidth = 0; // Ancho de un set original
-      let totalSets = 3; // Original + 2 clones
+      const totalSets = 3;
       let isDragging = false;
-      let isAnimating = true;
       let startX = 0;
-      let currentX = 0;
       let initialX = 0;
+
+      // currentX es ahora el estado principal de la posición (negativo, va hacia la izquierda)
+      let currentX = 0;
+      let animationFrameId = null;
+      const scrollSpeed = 0.5; // Velocidad de scroll automático en píxeles por frame
+      const clickThreshold = 5;
+
+      // --- Funciones de Utilidad ---
 
       function calculateDimensions() {
         if (originalItems.length === 0) return;
         const firstItem = originalItems[0];
+
+        // Calcular el ancho del ítem (incluye margin o padding si está en box-sizing: border-box)
         const style = window.getComputedStyle(firstItem);
         const marginRight = parseFloat(style.marginRight) || 0;
-        const gap = parseFloat(getComputedStyle(track).gap) || 0;
-        itemWidth = firstItem.offsetWidth + marginRight;
 
-        // Calcula ancho del set original (items + gaps)
-        setWidth = itemWidth * originalItems.length + gap * (originalItems.length - 1);
-        track.style.width = `${setWidth * totalSets}px`; // Total 3 sets
+        // Esta es la unidad de movimiento (ancho del ítem + su margen derecho)
+        const effectiveItemWidth = firstItem.offsetWidth + marginRight;
+
+        // setWidth es el ancho total de UN set original (N items * ancho efectivo)
+        setWidth = effectiveItemWidth * originalItems.length;
+
+        track.style.width = `${setWidth * totalSets}px`;
+
+        // Establecer la posición inicial justo al inicio del SEGUNDO set (posición visual más estable)
+        // Ya que currentX se normaliza en el rango [-setWidth, 0], empezar en -setWidth es más robusto.
+        currentX = -setWidth;
       }
 
+      // La función principal de renderizado y loop infinito
+      function autoScroll() {
+        if (isDragging) {
+          // No hacer scroll si estamos arrastrando
+          animationFrameId = requestAnimationFrame(autoScroll);
+          return;
+        }
+
+        // 1. Mover: Desplaza currentX a la izquierda (negativo)
+        currentX -= scrollSpeed;
+
+        // 2. Normalizar/Loop: Si nos movemos más allá del set central (ancho del set - 1px)
+        // El rango de visualización principal es de [-setWidth * 2, -setWidth]
+        // Si currentX se mueve a -setWidth * 2 (el inicio del tercer set), 
+        // lo teletransportamos al inicio del segundo set (-setWidth)
+        if (currentX <= -(setWidth * 2)) {
+          // Esto es el salto invisible. El movimiento se reanuda sin cambios bruscos
+          currentX += setWidth; // O equivalentemente: currentX = -setWidth;
+        }
+
+        // 3. Renderizar
+        track.style.transform = `translateX(${currentX}px)`;
+
+        // 4. Continuar el loop
+        animationFrameId = requestAnimationFrame(autoScroll);
+      }
+
+      // --- Inicialización y Eventos ---
+
       calculateDimensions();
+      track.style.transform = `translateX(${currentX}px)`;
+
+      // Iniciar el scroll automático
+      animationFrameId = requestAnimationFrame(autoScroll);
+
       window.addEventListener('resize', () => {
         calculateDimensions();
+        // Si no está arrastrando, reubicar al inicio del set central
         if (!isDragging) {
-          currentX = 0;
-          track.style.transform = 'translateX(0)';
-          track.classList.add('scrolling');
-          isAnimating = true;
+          currentX = -setWidth;
         }
       });
 
-      // PASO 3: Configuración inicial
-      track.style.transform = 'translateX(0)';
-      setTimeout(() => {
-        if (!isDragging && !track.classList.contains('scrolling')) {
-          track.classList.add('scrolling');
-          isAnimating = true;
+
+      // --- Handlers de Arrastre (Drag) ---
+
+      const handleDragStart = (e) => {
+        if (isDragging) return;
+        isDragging = true;
+
+        // Pausar el scroll automático
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId);
+          animationFrameId = null;
         }
-      }, 500);
 
-      // PASO 4: Mouse events
-      container.addEventListener('mousedown', (e) => {
-        if (isDragging) return;
-        isDragging = true;
         container.classList.add('dragging');
-        track.classList.remove('scrolling');
-        isAnimating = false;
-        track.style.transition = 'none';
+        track.style.cursor = 'grabbing';
 
-        initialX = currentX;
-        startX = e.pageX - container.offsetLeft;
-        e.preventDefault();
-      });
+        initialX = currentX; // Guarda la posición actual de donde empezamos a arrastrar
 
-      document.addEventListener('mousemove', (e) => {
+        const pageX = e.touches ? e.touches[0].pageX : e.pageX;
+        startX = pageX - container.offsetLeft;
+      };
+
+      const handleDragMove = (e) => {
         if (!isDragging) return;
         e.preventDefault();
-        const x = e.pageX - container.offsetLeft;
-        const walk = (x - startX) * 1.2; // Sensibilidad
-        currentX = initialX + walk;
 
-        // Loop infinito: mantener currentX en rango [-setWidth, 0]
-        while (currentX > 0) currentX -= setWidth;
-        while (currentX < -setWidth) currentX += setWidth;
+        const pageX = e.touches ? e.touches[0].pageX : e.pageX;
+        const x = pageX - container.offsetLeft;
+        const walk = (x - startX) * 1.5; // Sensibilidad de arrastre (aumentada para mejor respuesta)
 
+        let nextX = initialX + walk;
+
+        // Loop infinito mientras arrastramos: Mantiene el track en el rango de los 3 sets
+        // Si nos pasamos de -2*setWidth (fin del 3er set), saltamos a -setWidth
+        if (nextX <= -(setWidth * 2)) {
+          nextX += setWidth;
+          initialX += setWidth; // Ajusta initialX para que el arrastre sea continuo
+        }
+        // Si nos pasamos de 0 (inicio del 1er set), saltamos a -setWidth
+        if (nextX >= 0) {
+          nextX -= setWidth;
+          initialX -= setWidth; // Ajusta initialX para que el arrastre sea continuo
+        }
+
+        currentX = nextX;
         track.style.transform = `translateX(${currentX}px)`;
-      });
+      };
 
-      document.addEventListener('mouseup', () => {
+      const handleDragEnd = () => {
         if (!isDragging) return;
         isDragging = false;
         container.classList.remove('dragging');
+        track.style.cursor = 'grab';
 
-        // Normalizar posición para reanudar animación
-        currentX = currentX % setWidth; // Ajusta al set más cercano
-        if (currentX < -setWidth / 2) currentX += setWidth; // Evita negativos grandes
-        track.style.transition = 'transform 0.3s ease-out';
-        track.style.transform = `translateX(${currentX}px)`;
+        // Reanudar el scroll automático (rAF toma la posición actual 'currentX' y continúa desde ahí)
+        if (!animationFrameId) {
+          animationFrameId = requestAnimationFrame(autoScroll);
+        }
+      };
 
-        // Reanudar animación CSS
-        setTimeout(() => {
-          if (!isDragging) {
-            // Ajustar posición para que coincida con el keyframe
-            let offsetPercentage = (currentX / setWidth) * 33.333; // Convertir a % del set
-            track.style.transform = `translateX(${offsetPercentage}%)`;
-            track.classList.add('scrolling');
-            isAnimating = true;
-          }
-        }, 300);
-      });
 
-      // PASO 5: Touch events
-      container.addEventListener('touchstart', (e) => {
-        if (isDragging) return;
-        isDragging = true;
-        container.classList.add('dragging');
-        track.classList.remove('scrolling');
-        isAnimating = false;
-        track.style.transition = 'none';
+      // --- Event Listeners ---
 
-        initialX = currentX;
-        startX = e.touches[0].pageX - container.offsetLeft;
-      }, {
+      // Mouse Events
+      container.addEventListener('mousedown', handleDragStart);
+      document.addEventListener('mousemove', handleDragMove);
+      document.addEventListener('mouseup', handleDragEnd);
+
+      // Touch Events
+      container.addEventListener('touchstart', handleDragStart, {
         passive: false
       });
-
-      container.addEventListener('touchmove', (e) => {
-        if (!isDragging) return;
-        e.preventDefault();
-        const x = e.touches[0].pageX - container.offsetLeft;
-        const walk = (x - startX) * 1.2;
-        currentX = initialX + walk;
-
-        // Loop infinito
-        while (currentX > 0) currentX -= setWidth;
-        while (currentX < -setWidth) currentX += setWidth;
-
-        track.style.transform = `translateX(${currentX}px)`;
-      }, {
+      container.addEventListener('touchmove', handleDragMove, {
         passive: false
       });
+      document.addEventListener('touchend', handleDragEnd);
 
-      container.addEventListener('touchend', () => {
-        if (!isDragging) return;
-        isDragging = false;
-        container.classList.remove('dragging');
-
-        // Normalizar posición
-        currentX = currentX % setWidth;
-        if (currentX < -setWidth / 2) currentX += setWidth;
-        track.style.transition = 'transform 0.3s ease-out';
-        track.style.transform = `translateX(${currentX}px)`;
-
-        // Reanudar animación CSS
-        setTimeout(() => {
-          if (!isDragging) {
-            let offsetPercentage = (currentX / setWidth) * 33.333;
-            track.style.transform = `translateX(${offsetPercentage}%)`;
-            track.classList.add('scrolling');
-            isAnimating = true;
-          }
-        }, 300);
-      });
-
-      // Prevenir defaults
-      container.addEventListener('dragstart', e => e.preventDefault());
-      container.addEventListener('selectstart', e => e.preventDefault());
-
-      // Prevenir clicks si drag
-      let clickThreshold = 5;
+      // Prevención de clicks si hubo arrastre significativo
       container.addEventListener('click', (e) => {
         if (Math.abs(currentX - initialX) > clickThreshold) {
           e.preventDefault();
           e.stopPropagation();
         }
       }, true);
+
+      // Prevención de defaults del navegador
+      container.addEventListener('dragstart', e => e.preventDefault());
+      container.addEventListener('selectstart', e => e.preventDefault());
     }
 
     // --- Inicializar (sin cambios) ---

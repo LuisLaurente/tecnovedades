@@ -550,7 +550,7 @@ class Producto
 
         // Si no hay imágenes, ponemos una por defecto
         if (empty($producto['imagenes'])) {
-            $producto['imagenes'][] = "/TECNOVEDADES/public/uploads/default-product.png";
+            $producto['imagenes'][] = url('uploads/default-product.png');
         }
 
         return $producto;
