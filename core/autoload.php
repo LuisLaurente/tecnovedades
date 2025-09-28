@@ -7,3 +7,6 @@ spl_autoload_register(function($class) {
         require_once $file;
     }
 });
+
+// Cargar helpers globales
+require_once __DIR__ . '/helpers/producto_helpers.php';

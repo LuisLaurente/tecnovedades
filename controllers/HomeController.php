@@ -28,7 +28,7 @@ class HomeController extends BaseController
 
             // Enriquecer productos con imágenes
             foreach ($productos_destacados as &$producto) {
-                $producto['imagenes'] = ImagenProducto::obtenerPorProducto($producto['id']);
+                $producto['imagenes'] = \Models\ImagenProducto::obtenerPorProducto($producto['id']);
                 $producto = $productoModel->prepararProductoParaVista($producto);
             }
             unset($producto);
@@ -95,7 +95,8 @@ class HomeController extends BaseController
 
         // --- Enriquecer productos ---
         foreach ($productos as &$producto) {
-            $producto['imagenes'] = ImagenProducto::obtenerPorProducto($producto['id']);
+            // Agregar imágenes con namespace completo (igual que ProductoController)
+            $producto['imagenes'] = \Models\ImagenProducto::obtenerPorProducto($producto['id']);
             $producto = $productoModel->prepararProductoParaVista($producto);
         }
         unset($producto);
