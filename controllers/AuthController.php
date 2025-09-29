@@ -524,9 +524,9 @@ class AuthController extends BaseController
         }
     }
 
-    /**
-     * Redirigir a Google (login social)
-     */
+   /* ================================
+     * LOGIN GOOGLE
+     * ================================ */
     public function loginGoogle()
     {
         $google = new \Controllers\GoogleAuthController();
@@ -541,4 +541,138 @@ class AuthController extends BaseController
         $google = new \Controllers\GoogleAuthController();
         $google->callback();
     }
+
+    /* ================================
+     * CAMBIO DE CONTRASEÑA
+     * ================================ */
+
+    /**
+     * Mostrar formulario de cambio de contraseña
+     */
+    public function changePassword()
+{
+    if (!SessionHelper::isAuthenticated()) {
+        header('Location: ' . url('/auth/login'));
+        exit;
+    }
+
+    $usuario = SessionHelper::getUser();
+    $usuarioDb = $this->usuarioModel->obtenerPorId($usuario['id']);
+
+    // Detección de cuenta social o password hash largo
+    $isSocial = false;
+    $checks = ['google_id','facebook_id','auth_provider','provider','oauth_provider','provider_name','social_provider'];
+    foreach ($checks as $k) {
+        if (isset($usuarioDb[$k]) && !empty($usuarioDb[$k]) && $usuarioDb[$k] !== 'local') {
+            $isSocial = true;
+            break;
+        }
+    }
+
+    // password vacío → social
+    if (!isset($usuarioDb['password']) || empty($usuarioDb['password'])) {
+        $isSocial = true;
+    }
+
+    // password muy largo (hash típico bcrypt/argon2 ≥ 50)
+    if (isset($usuarioDb['password']) && strlen($usuarioDb['password']) >= 50) {
+        $isSocial = true;
+    }
+
+    if ($isSocial) {
+        $error = urlencode('No puedes cambiar la contraseña en cuentas vinculadas con Google o Facebook.');
+        header('Location: ' . url('/auth/profile?error=' . $error));
+        exit;
+    }
+
+    require_once __DIR__ . '/../views/auth/changePassword.php';
+}
+public function updatePassword()
+{
+    if (!SessionHelper::isAuthenticated()) {
+        header('Location: ' . url('/auth/login'));
+        exit;
+    }
+
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        header('Location: ' . url('/auth/profile'));
+        exit;
+    }
+
+    try {
+        $usuario = SessionHelper::getUser();
+        $usuarioDb = $this->usuarioModel->obtenerPorId($usuario['id']);
+
+        // Bloquear si es social o si password es hash largo
+        $isSocial = false;
+        $checks = ['google_id','facebook_id','auth_provider','provider','oauth_provider','provider_name','social_provider'];
+        foreach ($checks as $k) {
+            if (isset($usuarioDb[$k]) && !empty($usuarioDb[$k]) && $usuarioDb[$k] !== 'local') {
+                $isSocial = true;
+                break;
+            }
+        }
+        if (!isset($usuarioDb['password']) || empty($usuarioDb['password'])) {
+            $isSocial = true;
+        }
+        if (isset($usuarioDb['password']) && strlen($usuarioDb['password']) >= 60) {
+            $isSocial = true;
+        }
+
+        if ($isSocial) {
+            $error = urlencode('No puedes cambiar la contraseña en cuentas vinculadas con Google o Facebook.');
+            header('Location: ' . url('/auth/profile?error=' . $error));
+            exit;
+        }
+
+        // aceptar distintos nombres de input en caso tu vista varíe
+        $passwordActual = $_POST['password_actual'] ?? $_POST['actual'] ?? '';
+        $passwordNueva = $_POST['password_nueva'] ?? $_POST['nueva'] ?? '';
+        $passwordConfirm = $_POST['password_confirm'] ?? $_POST['confirmar'] ?? '';
+
+        $errores = [];
+
+        // Validar contraseña actual
+        if (empty($passwordActual) || !password_verify($passwordActual, $usuarioDb['password'])) {
+            $errores[] = 'La contraseña actual es incorrecta';
+        }
+
+        // Validar nueva contraseña
+        if (empty($passwordNueva) || strlen($passwordNueva) < 6) {
+            $errores[] = 'La nueva contraseña debe tener al menos 6 caracteres';
+        }
+
+        if ($passwordNueva !== $passwordConfirm) {
+            $errores[] = 'Las contraseñas nuevas no coinciden';
+        }
+
+        if (!empty($errores)) {
+            $error = urlencode(implode(', ', $errores));
+            header('Location: ' . url("/auth/changePassword?error=$error"));
+            exit;
+        }
+
+        // Actualizar contraseña
+        $hashedPassword = password_hash($passwordNueva, PASSWORD_DEFAULT);
+        $this->usuarioModel->actualizar($usuario['id'], [
+            'password' => $hashedPassword
+        ]);
+
+        SecurityLogger::log(SecurityLogger::PASSWORD_CHANGE, 'Cambio de contraseña exitoso', [
+            'user_id' => $usuario['id'],
+            'email' => $usuario['email']
+        ]);
+
+        $success = urlencode('Contraseña cambiada correctamente');
+        header('Location: ' . url("/auth/profile?success=$success"));
+        exit;
+
+    } catch (\Exception $e) {
+        error_log("Error en AuthController::updatePassword: " . $e->getMessage());
+        $error = urlencode('Error interno al cambiar contraseña');
+        header('Location: ' . url("/auth/changePassword?error=$error"));
+        exit;
+    }
+}
+
 }

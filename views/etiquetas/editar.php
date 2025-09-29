@@ -12,3 +12,4 @@
     <button type="submit">Actualizar</button>
 </form>
 
+<!-- actualmente no esta en uso, se esta modales -->

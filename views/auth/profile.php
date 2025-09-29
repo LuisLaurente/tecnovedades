@@ -61,6 +61,43 @@
                             </div>
                         </form>
                     </div>
+                    <!-- Botón Cambiar Contraseña (seguridad + protección front) -->
+                    <?php
+                    // Detectar si es cuenta social por longitud del password
+                    $isSocial = false;
+                    if (isset($usuario['password']) && strlen($usuario['password']) >= 50) {
+                        $isSocial = true;
+                    }
+                    ?>
+
+                    <!-- Botón Cambiar Contraseña -->
+                    <div class="profile-card">
+                        <div class="password-card">
+                            <h3>Seguridad</h3>
+
+                            <?php if (!$isSocial): ?>
+                                <!-- Enlace activo -->
+                                <a href="<?= url('/auth/changePassword') ?>"
+                                class="button orders-button inline-block text-center">
+                                    Cambiar contraseña
+                                </a>
+                            <?php else: ?>
+                                <!-- Botón gris deshabilitado -->
+                                <div
+                                id="change-pass-disabled"
+                                role="button"
+                                aria-disabled="true"
+                                tabindex="-1"
+                                class="block w-full text-center rounded-md px-4 py-2 text-sm font-semibold bg-gray-300 text-gray-700 select-none mx-auto"
+                                style="pointer-events: none;">
+                                Cambiar contraseña (No disponible)
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+
+
 
                     <!-- Botón Mis Pedidos para clientes -->
                     <div class="orders-card">

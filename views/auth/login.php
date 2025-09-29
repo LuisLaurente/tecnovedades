@@ -105,6 +105,11 @@
                         </span>
                         Iniciar Sesión
                     </button>
+                    <div class="text-center text-sm text-gray-700"> ¿No tienes una cuenta?
+                        <a href="<?= url('auth/registro?redirect=' . urlencode('carrito/ver')) ?>" class="btn-secondary font-medium text-blue-600 hover:text-blue-500">
+                            Crea una
+                        </a>.
+                    </div>
                 </div>
             </form>
 

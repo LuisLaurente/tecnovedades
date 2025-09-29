@@ -20,62 +20,133 @@
                     <div class="max-w-5xl mx-auto bg-white rounded-lg shadow-md p-8">
                         <h1 class="text-3xl font-bold text-gray-800 mb-6">🎉 Configurar Pop-up Promocional</h1>
 
-                        <form action="<?= url('adminPopup/guardar') ?>" method="post" enctype="multipart/form-data" class="space-y-6">
+                <form action="<?= url('adminPopup/guardar') ?>" method="post" enctype="multipart/form-data" class="space-y-6">
 
-                            <!-- Texto -->
-                            <div>
-                                <label class="block font-semibold text-gray-700 mb-2">📝 Texto del Pop-up:</label>
-                                <textarea name="texto" rows="4" class="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"><?= htmlspecialchars($popup['texto'] ?? '') ?></textarea>
+                <!-- Texto -->
+                <div>
+                    <label for="texto" class="block font-semibold text-gray-700 mb-2">📝 Texto del Pop-up</label>
+                    <textarea id="texto" name="texto" rows="4"
+                    class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y"
+                    placeholder="Escribe el texto que quieres mostrar en el pop-up..."><?= htmlspecialchars($popup['texto'] ?? '') ?></textarea>
+                </div>
+
+                <!-- Subir nuevas imágenes -->
+                <div>
+                    <label class="block font-semibold text-gray-700 mb-2">📁 Subir nuevas imágenes</label>
+
+                    <div class="flex items-start gap-4">
+                    <!-- botón compacto -->
+                    <label for="nuevas_imagenes" class="inline-flex items-center justify-center w-40 px-4 py-2 bg-indigo-600 text-white rounded-lg cursor-pointer hover:bg-indigo-700 transition text-sm">
+                        📤 Seleccionar
+                    </label>
+
+                    <!-- input oculto (usar label para activar) -->
+                    <input id="nuevas_imagenes" name="nuevas_imagenes[]" type="file" accept="image/*" multiple class="sr-only">
+
+                    <!-- texto con nombre o estado -->
+                    <div class="flex-1">
+                        <p id="nuevasInfo" class="text-sm text-gray-600">Ningún archivo seleccionado</p>
+                        <p class="text-xs text-gray-500 mt-1">Puedes seleccionar varias imágenes. Se mostrarán como miniaturas abajo. Para finalizar presione GUARDAR CAMBIOS</p>
+
+                        <!-- Previsualización de nuevos archivos -->
+                        <div id="previewNuevas" class="mt-3 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3"></div>
+                    </div>
+                    </div>
+                </div>
+
+                <!-- Activar popup -->
+                <div class="flex items-center gap-3">
+                    <input id="activo" type="checkbox" name="activo" <?= ($popup['activo'] ?? 0) ? 'checked' : '' ?>
+                        class="w-5 h-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                    <label for="activo" class="text-gray-700 font-medium">Activar pop-up</label>
+                </div>
+
+                <!-- Imágenes disponibles -->
+                <?php if (!empty($imagenes)): ?>
+                    <div>
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">📸 Imágenes disponibles</h2>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+                        <?php foreach ($imagenes as $img): 
+                            $imgName = htmlspecialchars($img['nombre_imagen']);
+                            $imgId = (int)$img['id'];
+                            $isChecked = (isset($popup['imagen']) && $popup['imagen'] === $img['nombre_imagen']);
+                        ?>
+                        <div class="border rounded-lg p-3 text-center shadow-sm bg-white">
+                            <div class="mb-3">
+                            <img src="<?= url('images/popup/' . $imgName) ?>"
+                                alt="Imagen <?= $imgId ?>"
+                                class="w-full h-32 object-contain rounded">
                             </div>
 
-                            <!-- Subir nuevas imágenes -->
-                            <div>
-                                <label class="block font-semibold text-gray-700 mb-2">📁 Subir nuevas imágenes:</label>
-                                <input type="file" name="nuevas_imagenes[]" accept="image/*" multiple class="w-full">
+                            <div class="flex items-center justify-center mb-3">
+                            <input id="principal_<?= $imgId ?>" type="radio" name="imagen_principal" value="<?= $imgName ?>"
+                                    <?= $isChecked ? 'checked' : '' ?>
+                                    class="mr-2 w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                            <label for="principal_<?= $imgId ?>" class="text-sm text-gray-700">Principal</label>
                             </div>
 
-                            <!-- Activar popup -->
-                            <div class="flex items-center gap-2">
-                                <input type="checkbox" name="activo" <?= ($popup['activo'] ?? 0) ? 'checked' : '' ?> class="w-5 h-5">
-                                <label class="text-gray-700 font-medium">Activar pop-up</label>
-                            </div>
+                            <a href="<?= url('adminPopup/eliminarImagen/' . $imgId) ?>"
+                            onclick="return confirm('¿Eliminar esta imagen?')"
+                            class="inline-block px-3 py-1 bg-red-500 text-white rounded-lg text-sm hover:bg-red-600 transition">
+                            ❌ Eliminar
+                            </a>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                    </div>
+                <?php else: ?>
+                    <p class="text-gray-500 italic">No hay imágenes subidas.</p>
+                <?php endif; ?>
 
-                            <!-- Imágenes disponibles -->
-                            <?php if (!empty($imagenes)): ?>
-                                <div>
-                                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">📸 Imágenes disponibles</h2>
-                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-                                        <?php foreach ($imagenes as $img): ?>
-                                            <div class="border rounded-lg p-3 text-center shadow-sm">
-                                                <img src="<?= url('images/popup/' . htmlspecialchars($img['nombre_imagen'])) ?>" 
-                                                    class="w-full h-32 object-contain rounded mb-2" 
-                                                    alt="Imagen">
-                                                
-                                                <div class="flex items-center justify-center mb-2">
-                                                    <input type="radio" name="imagen_principal" value="<?= htmlspecialchars($img['nombre_imagen']) ?>"
-                                                        <?= ($popup['imagen'] == $img['nombre_imagen']) ? 'checked' : '' ?> class="mr-2">
-                                                    <label class="text-sm text-gray-700">Principal</label>
-                                                </div>
+                <!-- Botón guardar -->
+                <div class="text-right">
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold">
+                    💾 Guardar cambios
+                    </button>
+                </div>
+                </form>
 
-                                                <a href="<?= url('adminPopup/eliminarImagen/' . $img['id']) ?>"
-                                                onclick="return confirm('¿Eliminar esta imagen?')"
-                                                class="text-red-600 hover:underline text-sm">❌ Eliminar</a>
-                                            </div>
-                                        <?php endforeach; ?>
+                <!-- Script: previsualización ligera y actualización de texto -->
+                <script>
+                (function(){
+                    const input = document.getElementById('nuevas_imagenes');
+                    const info = document.getElementById('nuevasInfo');
+                    const preview = document.getElementById('previewNuevas');
 
-                                    </div>
-                                </div>
-                            <?php else: ?>
-                                <p class="text-gray-500 italic">No hay imágenes subidas.</p>
-                            <?php endif; ?>
+                    if (!input || !info || !preview) return;
 
-                            <!-- Botón guardar -->
-                            <div class="text-right">
-                                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold">
-                                    💾 Guardar cambios
-                                </button>
-                            </div>
-                        </form>
+                    input.addEventListener('change', () => {
+                    preview.innerHTML = '';
+                    const files = Array.from(input.files || []);
+                    if (files.length === 0) {
+                        info.textContent = 'Ningún archivo seleccionado';
+                        return;
+                    }
+
+                    info.textContent = files.length + (files.length === 1 ? ' archivo seleccionado' : ' archivos seleccionados');
+
+                    files.slice(0, 12).forEach(file => {
+                        if (!file.type.startsWith('image/')) return;
+
+                        const reader = new FileReader();
+                        const container = document.createElement('div');
+                        container.className = 'w-full h-24 bg-gray-50 rounded overflow-hidden flex items-center justify-center';
+
+                        reader.onload = (e) => {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.alt = file.name;
+                        img.className = 'max-h-24 object-contain';
+                        container.appendChild(img);
+                        };
+                        reader.readAsDataURL(file);
+
+                        preview.appendChild(container);
+                    });
+                    });
+                })();
+                </script>
+
                     </div>
                 </div>
 

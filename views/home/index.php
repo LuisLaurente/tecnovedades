@@ -194,7 +194,7 @@ if (!isset($categorias)) {
   </main>
 
   <?php include_once __DIR__ . '/../admin/includes/footer.php'; ?>
-
+  <?php include_once __DIR__ . '/../admin/componentes/popup.php'; ?>
   <!-- SCRIPTS -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
