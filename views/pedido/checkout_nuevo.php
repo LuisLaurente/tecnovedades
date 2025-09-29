@@ -192,17 +192,6 @@ $total_final = max(0, $totales['total'] - $descuento_cupon + $costo_envio_inicia
         <h2 class="page-title">Finalizar Compra</h2>
 
         <!-- Información del usuario -->
-        <div class="checkout-card">
-            <div class="user-info">
-                <div class="user-avatar">
-                    <?= strtoupper(substr($usuario['nombre'], 0, 1)) ?>
-                </div>
-                <div class="user-details">
-                    <h3>👋 Hola, <?= htmlspecialchars($usuario['nombre']) ?>!</h3>
-                    <p><?= htmlspecialchars($usuario['email']) ?></p>
-                </div>
-            </div>
-        </div>
 
         <?php if (!empty($errores)): ?>
             <div class="checkout-card">

@@ -668,6 +668,44 @@ class ProductoController extends BaseController
         $producto['categorias'] = Producto::obtenerCategoriasPorProducto($producto['id']);
         $producto['imagenes'] = \Models\ImagenProducto::obtenerPorProducto($producto['id']);
 
+        // --- CALCULAR ESTADÍSTICAS DE RESEÑAS ---
+        try {
+            $db = \Core\Database::getInstance()->getConnection();
+
+            // Obtener reseñas aprobadas
+            $stmt = $db->prepare("
+            SELECT r.*, u.nombre AS usuario_nombre
+            FROM product_reviews r
+            JOIN usuarios u ON r.user_id = u.id
+            WHERE r.producto_id = :id AND r.estado = 'aprobado'
+            ORDER BY r.created_at DESC
+        ");
+            $stmt->bindParam(':id', $producto['id'], \PDO::PARAM_INT);
+            $stmt->execute();
+            $reviews = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            // Calcular estadísticas
+            $totalReviews = count($reviews);
+            $averageRating = 0;
+
+            if ($totalReviews > 0) {
+                $totalScore = 0;
+                foreach ($reviews as $review) {
+                    $totalScore += (int)$review['puntuacion'];
+                }
+                $averageRating = round($totalScore / $totalReviews, 1);
+            }
+
+            // Agregar estadísticas al producto para la vista
+            $producto['rating_average'] = $averageRating;
+            $producto['rating_count'] = $totalReviews;
+        } catch (\Throwable $e) {
+            error_log('ProductoController::ver - error cargando reseñas: ' . $e->getMessage());
+            $reviews = [];
+            $producto['rating_average'] = 0;
+            $producto['rating_count'] = 0;
+        }
+
         // --- Breadcrumb MEJORADO ---
         try {
             $db = \Core\Database::getInstance()->getConnection();
@@ -708,15 +746,7 @@ class ProductoController extends BaseController
             ];
         }
 
-        // ... el resto del método se mantiene igual
-        $meta_title = $producto['nombre'] . ' | Tienda Tecnovedades';
-        $meta_description = substr(strip_tags($producto['descripcion']), 0, 160);
-        $meta_image = !empty($producto['imagenes'][0]['nombre_imagen'])
-            ? url('uploads/' . $producto['imagenes'][0]['nombre_imagen'])
-            : url('images/default-share.png');
-        $canonical = url('producto/ver/' . $producto['id']);
-
-        // ... código de productos relacionados y reseñas
+        // ... código de productos relacionados
         $relatedProducts = [];
         $ids = $producto['productos_relacionados'] ?? [];
 
@@ -734,21 +764,13 @@ class ProductoController extends BaseController
             }
         }
 
-        try {
-            $stmt = $db->prepare("
-            SELECT r.*, u.nombre AS usuario_nombre
-            FROM product_reviews r
-            JOIN usuarios u ON r.user_id = u.id
-            WHERE r.producto_id = :id AND r.estado = 'aprobado'
-            ORDER BY r.created_at DESC
-        ");
-            $stmt->bindParam(':id', $producto['id'], \PDO::PARAM_INT);
-            $stmt->execute();
-            $reviews = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        } catch (\Throwable $e) {
-            error_log('ProductoController::ver - error cargando reseñas: ' . $e->getMessage());
-            $reviews = [];
-        }
+        // Variables SEO
+        $meta_title = $producto['nombre'] . ' | Tienda Tecnovedades';
+        $meta_description = substr(strip_tags($producto['descripcion']), 0, 160);
+        $meta_image = !empty($producto['imagenes'][0]['nombre_imagen'])
+            ? url('uploads/' . $producto['imagenes'][0]['nombre_imagen'])
+            : url('images/default-share.png');
+        $canonical = url('producto/ver/' . $producto['id']);
 
         require_once __DIR__ . '/../views/producto/descripcion.php';
     }

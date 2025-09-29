@@ -1,7 +1,7 @@
 <?php
 namespace Controllers;
 use PDO;
-use Core\Database; // Asegúrate de que el namespace de Database sea correcto
+use Core\Database; 
 
 class ReviewController
 {

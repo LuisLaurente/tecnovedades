@@ -175,8 +175,23 @@ $reviews = $reviews ?? [];
 
                 <div class="rating">
                     <a href="#reviews-section" class="rating-link">
-                        <span class="stars">&#9733;&#9733;&#9733;&#9733;&#9734;</span>
-                        <span class="rating-count">(<?= isset($producto['rating_count']) ? (int)$producto['rating_count'] : '0' ?>)</span>
+                        <?php
+                        $averageRating = $producto['rating_average'] ?? 0;
+                        $ratingCount = $producto['rating_count'] ?? 0;
+                        ?>
+                        <span class="stars">
+                            <?php for ($i = 1; $i <= 5; $i++): ?>
+                                <?php if ($i <= $averageRating): ?>
+                                    ★<!-- Estrella llena -->
+                                <?php else: ?>
+                                    ☆<!-- Estrella vacía -->
+                                <?php endif; ?>
+                            <?php endfor; ?>
+                        </span>
+                        <span class="rating-count">(<?= $ratingCount ?>)</span>
+                        <?php if ($averageRating > 0): ?>
+                            <span class="rating-average"><?= number_format($averageRating, 1) ?></span>
+                        <?php endif; ?>
                     </a>
                 </div>
 
