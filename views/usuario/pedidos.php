@@ -1,6 +1,6 @@
 <?php if (!empty($_SESSION['flash'])): ?>
-    <div id="flashMessage" 
-         class="fixed top-6 left-1/2 transform -translate-x-1/2 
+    <div id="flashMessage"
+        class="fixed top-6 left-1/2 transform -translate-x-1/2 
                 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
         <?= $_SESSION['flash'] ?>
     </div>
@@ -21,187 +21,200 @@
         }
     });
 </script>
+
 <body>
-                <?php include_once __DIR__ . '/../admin/includes/header.php'; ?>
-
-    <div class="flex h-screen">
-        <!-- Incluir navegación lateral fija -->
-        <div class="fixed inset-y-0 left-0 z-50">
-            <?php include_once __DIR__ . '/../admin/includes/navbar.php'; ?>
+    <aside class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r shadow-sm">
+        <?php include_once __DIR__ . '/../admin/includes/navbar.php'; ?>
+    </aside>
+    <div class="flex-1 ml-64 flex flex-col min-h-screen">
+        <div class="sticky top-0 z-40">
+            <?php include_once __DIR__ . '/../admin/includes/header.php'; ?>
         </div>
-        <main class="flex-1 p-2 bg-gray-50 overflow-y-auto">
-            <!-- Incluir header superior fijo -->
-            <div class="sticky top-0 z-40">
-            </div>
 
-            <div class="flex-1 p-6 bg-gray-50 overflow-y-auto">
-                <div class="max-w-6xl mx-auto">
-                    
-                    <!-- Header -->
-                    <div class="mb-8">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h1 class="text-3xl font-bold text-gray-900">📦 Mis Pedidos</h1>
-                                <p class="text-gray-600 mt-1">Historial completo de tus compras</p>
-                            </div>
-                            <div class="flex gap-3">
-                                <a href="<?= url('/producto/index') ?>" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-                                    </svg>
-                                    Seguir Comprando
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+        <div class="flex h-screen">
+            <!-- Incluir navegación lateral fija -->
 
-                    <!-- Estadísticas -->
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                        <div class="bg-white rounded-xl p-6 shadow-sm border">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm font-medium text-gray-600">Total Pedidos</p>
-                                    <p class="text-2xl font-bold text-gray-900"><?= count($pedidos) ?></p>
-                                </div>
-                                <div class="p-3 bg-blue-100 rounded-lg">
-                                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-white rounded-xl p-6 shadow-sm border">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm font-medium text-gray-600">Total Gastado</p>
-                                    <p class="text-2xl font-bold text-gray-900">S/ <?= number_format(array_sum(array_map(function($p) { 
-                                        $subtotal = $p['subtotal'] ?? 0;
-                                        $descuento_cupon = $p['descuento_cupon'] ?? 0;
-                                        $descuento_promocion = $p['descuento_promocion'] ?? 0;
-                                        if ($subtotal > 0) {
-                                            return $subtotal - $descuento_cupon - $descuento_promocion;
-                                        }
-                                        return $p['monto_total'] ?? $p['total'] ?? 0;
-                                    }, $pedidos)), 2) ?></p>
-                                </div>
-                                <div class="p-3 bg-green-100 rounded-lg">
-                                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-white rounded-xl p-6 shadow-sm border">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm font-medium text-gray-600">Entregados</p>
-                                    <p class="text-2xl font-bold text-gray-900"><?= count(array_filter($pedidos, fn($p) => $p['estado'] === 'entregado')) ?></p>
-                                </div>
-                                <div class="p-3 bg-emerald-100 rounded-lg">
-                                    <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-white rounded-xl p-6 shadow-sm border">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm font-medium text-gray-600">En Proceso</p>
-                                    <p class="text-2xl font-bold text-gray-900"><?= count(array_filter($pedidos, fn($p) => in_array($p['estado'], ['pendiente', 'procesando', 'enviado']))) ?></p>
-                                </div>
-                                <div class="p-3 bg-yellow-100 rounded-lg">
-                                    <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <main class="flex-1 overflow-y-auto p-6">
 
-                    <!-- Lista de Pedidos -->
-                    <div class="bg-white rounded-xl shadow-sm border">
-                        <div class="p-6 border-b border-gray-200">
-                            <h2 class="text-xl font-semibold text-gray-900">Historial de Pedidos</h2>
-                        </div>
-                        
-                        <?php if (empty($pedidos)): ?>
-                            <div class="p-12 text-center">
-                                <div class="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                                    <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-                                    </svg>
+                <div class="max-w-7xl mx-auto space-y-6">
+
+
+                    <div class="flex-1 p-6 bg-gray-50 overflow-y-auto">
+                        <div class="max-w-6xl mx-auto">
+
+                            <!-- Header -->
+                            <div class="mb-8">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h1 class="text-3xl font-bold text-gray-900">📦 Mis Pedidos</h1>
+                                        <p class="text-gray-600 mt-1">Historial completo de tus compras</p>
+                                    </div>
+                                    <div class="flex gap-3">
+                                        <a href="<?= url('/producto/index') ?>" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                                            </svg>
+                                            Seguir Comprando
+                                        </a>
+                                    </div>
                                 </div>
-                                <h3 class="text-lg font-medium text-gray-900 mb-2">Sin pedidos aún</h3>
-                                <p class="text-gray-600 mb-6">¡Comienza a explorar nuestros productos y realiza tu primera compra!</p>
-                                <a href="<?= url('/producto/index') ?>" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors inline-flex items-center gap-2">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-                                    </svg>
-                                    Explorar Productos
-                                </a>
                             </div>
-                        <?php else: ?>
-                            <div class="divide-y divide-gray-200">
-                                <?php foreach ($pedidos as $pedidozz): ?>
-                                    <div class="p-6 hover:bg-gray-50 transition-colors">
-                                        <div class="flex items-center justify-between mb-4">
-                                            <div class="flex items-center space-x-4">
-                                                <div class="flex-shrink-0">
-                                                    <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                                                        <span class="text-white font-bold">#<?= $pedidozz['id'] ?></span>
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <h3 class="text-lg font-medium text-gray-900">Pedido #<?= $pedidozz['id'] ?></h3>
-                                                    <p class="text-sm text-gray-600"><?= date('d/m/Y H:i', strtotime($pedidozz['creado_en'])) ?></p>
-                                                </div>
-                                            </div>
-                                            <div class="flex items-center space-x-4">
-                                                <div class="text-right">
-                                                    <?php 
-                                                    // Mostrar información de descuentos si existen
-                                                    $subtotal = $pedidozz['subtotal'] ?? 0;
-                                                    $descuento_cupon = $pedidozz['descuento_cupon'] ?? 0;
-                                                    $descuento_promocion = $pedidozz['descuento_promocion'] ?? 0;
-                                                    $cupon_codigo = $pedidozz['cupon_codigo'] ?? null;
-                                                    
-                                                    // Calcular total del pedido
-                                                    if ($subtotal > 0) {
-                                                        // Si tenemos subtotal, calcular el total final con descuentos
-                                                        $totalPedido = $subtotal - $descuento_cupon - $descuento_promocion;
-                                                    } else {
-                                                        // Para pedidos antiguos sin subtotal, usar el total original
-                                                        $totalPedido = $pedidozz['total'] ?? $pedidozz['monto_total'] ?? 0;
-                                                        if ($totalPedido == 0 && isset($pedidozz['detalles']) && is_array($pedidozz['detalles'])) {
-                                                            foreach ($pedidozz['detalles'] as $detalle) {
-                                                                $precio = floatval($detalle['precio_unitario'] ?? 0);
-                                                                $cantidad = intval($detalle['cantidad'] ?? 0);
-                                                                $totalPedido += $precio * $cantidad;
-                                                            }
-                                                        }
-                                                    }
-                                                    
-                                                    // Mostrar subtotal si hay descuentos
-                                                    if ($subtotal > 0 && ($descuento_cupon > 0 || $descuento_promocion > 0)): ?>
-                                                        <div class="text-sm text-gray-600">
-                                                            <div>Subtotal: S/ <?= number_format($subtotal, 2) ?></div>
-                                                            <?php if ($descuento_promocion > 0): ?>
-                                                                <div class="text-green-600">Desc. Promoción: -S/ <?= number_format($descuento_promocion, 2) ?></div>
-                                                            <?php endif; ?>
-                                                            <?php if ($descuento_cupon > 0 && $cupon_codigo): ?>
-                                                                <div class="text-blue-600">Cupón <?= htmlspecialchars($cupon_codigo) ?>: -S/ <?= number_format($descuento_cupon, 2) ?></div>
-                                                            <?php endif; ?>
+
+                            <!-- Estadísticas -->
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                                <div class="bg-white rounded-xl p-6 shadow-sm border">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-600">Total Pedidos</p>
+                                            <p class="text-2xl font-bold text-gray-900"><?= count($pedidos) ?></p>
+                                        </div>
+                                        <div class="p-3 bg-blue-100 rounded-lg">
+                                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="bg-white rounded-xl p-6 shadow-sm border">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-600">Total Gastado</p>
+                                            <p class="text-2xl font-bold text-gray-900">S/ <?= number_format(array_sum(array_map(function ($p) {
+                                                                                                $subtotal = $p['subtotal'] ?? 0;
+                                                                                                $descuento_cupon = $p['descuento_cupon'] ?? 0;
+                                                                                                $descuento_promocion = $p['descuento_promocion'] ?? 0;
+                                                                                                $costo_envio = $p['costo_envio'] ?? 0;
+                                                                                                if ($subtotal > 0) {
+                                                                                                    return $subtotal - $descuento_cupon - $descuento_promocion + $costo_envio;
+                                                                                                }
+                                                                                                return ($p['monto_total'] ?? $p['total'] ?? 0) + $costo_envio;
+                                                                                            }, $pedidos)), 2) ?></p>
+                                        </div>
+                                        <div class="p-3 bg-green-100 rounded-lg">
+                                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="bg-white rounded-xl p-6 shadow-sm border">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-600">Entregados</p>
+                                            <p class="text-2xl font-bold text-gray-900"><?= count(array_filter($pedidos, fn($p) => $p['estado'] === 'entregado')) ?></p>
+                                        </div>
+                                        <div class="p-3 bg-emerald-100 rounded-lg">
+                                            <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="bg-white rounded-xl p-6 shadow-sm border">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-600">En Proceso</p>
+                                            <p class="text-2xl font-bold text-gray-900"><?= count(array_filter($pedidos, fn($p) => in_array($p['estado'], ['pendiente', 'procesando', 'enviado']))) ?></p>
+                                        </div>
+                                        <div class="p-3 bg-yellow-100 rounded-lg">
+                                            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Lista de Pedidos -->
+                            <div class="bg-white rounded-xl shadow-sm border">
+                                <div class="p-6 border-b border-gray-200">
+                                    <h2 class="text-xl font-semibold text-gray-900">Historial de Pedidos</h2>
+                                </div>
+
+                                <?php if (empty($pedidos)): ?>
+                                    <div class="p-12 text-center">
+                                        <div class="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                                            <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                                            </svg>
+                                        </div>
+                                        <h3 class="text-lg font-medium text-gray-900 mb-2">Sin pedidos aún</h3>
+                                        <p class="text-gray-600 mb-6">¡Comienza a explorar nuestros productos y realiza tu primera compra!</p>
+                                        <a href="<?= url('/producto/index') ?>" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors inline-flex items-center gap-2">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                                            </svg>
+                                            Explorar Productos
+                                        </a>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="divide-y divide-gray-200">
+                                        <?php foreach ($pedidos as $pedidozz): ?>
+                                            <div class="p-6 hover:bg-gray-50 transition-colors">
+                                                <div class="flex items-center justify-between mb-4">
+                                                    <div class="flex items-center space-x-4">
+                                                        <div class="flex-shrink-0">
+                                                            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                                                                <span class="text-white font-bold">#<?= $pedidozz['id'] ?></span>
+                                                            </div>
                                                         </div>
-                                                    <?php endif; ?>
-                                                    
-                                                    <p class="text-lg font-bold text-gray-900">S/ <?= number_format($totalPedido, 2) ?></p>
-                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                                        <?php 
-                                                        switch($pedido['estado']) {
+                                                        <div>
+                                                            <h3 class="text-lg font-medium text-gray-900">Pedido #<?= $pedidozz['id'] ?></h3>
+                                                            <p class="text-sm text-gray-600"><?= date('d/m/Y H:i', strtotime($pedidozz['creado_en'])) ?></p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex items-center space-x-4">
+                                                        <div class="text-right">
+                                                            <?php
+                                                            // Mostrar información de descuentos si existen
+                                                            $subtotal = $pedidozz['subtotal'] ?? 0;
+                                                            $descuento_cupon = $pedidozz['descuento_cupon'] ?? 0;
+                                                            $descuento_promocion = $pedidozz['descuento_promocion'] ?? 0;
+                                                            $costo_envio = $pedidozz['costo_envio'] ?? 0;
+                                                            $cupon_codigo = $pedidozz['cupon_codigo'] ?? null;
+
+                                                            // Calcular total del pedido
+                                                            if ($subtotal > 0) {
+                                                                // Si tenemos subtotal, calcular el total final con descuentos y sumando envío
+                                                                $totalPedido = $subtotal - $descuento_cupon - $descuento_promocion + $costo_envio;
+                                                            } else {
+                                                                // Para pedidos antiguos sin subtotal, usar el total original
+                                                                $totalPedido = $pedidozz['total'] ?? $pedidozz['monto_total'] ?? 0;
+                                                                if ($totalPedido == 0 && isset($pedidozz['detalles']) && is_array($pedidozz['detalles'])) {
+                                                                    foreach ($pedidozz['detalles'] as $detalle) {
+                                                                        $precio = floatval($detalle['precio_unitario'] ?? 0);
+                                                                        $cantidad = intval($detalle['cantidad'] ?? 0);
+                                                                        $totalPedido += $precio * $cantidad;
+                                                                    }
+                                                                    $totalPedido += $costo_envio; // Agregar costo de envío también aquí
+                                                                } else {
+                                                                    $totalPedido += $costo_envio; // Agregar costo de envío si hay total previo
+                                                                }
+                                                            }
+
+                                                            // Mostrar subtotal si hay descuentos o costo de envío
+                                                            if ($subtotal > 0 && ($descuento_cupon > 0 || $descuento_promocion > 0 || $costo_envio > 0)): ?>
+                                                                <div class="text-sm text-gray-600">
+                                                                    <div>Subtotal: S/ <?= number_format($subtotal, 2) ?></div>
+                                                                    <?php if ($costo_envio > 0): ?>
+                                                                        <div class="text-blue-600">Envío: S/ <?= number_format($costo_envio, 2) ?></div>
+                                                                    <?php endif; ?>
+                                                                    <?php if ($descuento_promocion > 0): ?>
+                                                                        <div class="text-green-600">Desc. Promoción: -S/ <?= number_format($descuento_promocion, 2) ?></div>
+                                                                    <?php endif; ?>
+                                                                    <?php if ($descuento_cupon > 0 && $cupon_codigo): ?>
+                                                                        <div class="text-blue-600">Cupón <?= htmlspecialchars($cupon_codigo) ?>: -S/ <?= number_format($descuento_cupon, 2) ?></div>
+                                                                    <?php endif; ?>
+                                                                </div>
+                                                            <?php endif; ?>
+
+                                                            <p class="text-lg font-bold text-gray-900">S/ <?= number_format($totalPedido, 2) ?></p>
+                                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                                        <?php
+                                                        switch ($pedido['estado']) {
                                                             case 'entregado':
                                                                 echo 'bg-green-100 text-green-800';
                                                                 break;
@@ -218,44 +231,45 @@
                                                                 echo 'bg-gray-100 text-gray-800';
                                                         }
                                                         ?>">
-                                                        <?= ucfirst($pedido['estado']) ?>
-                                                    </span>
+                                                                <?= ucfirst($pedido['estado']) ?>
+                                                            </span>
+                                                        </div>
+                                                        <button onclick="mostrarDetallePedido(<?= $pedidozz['id'] ?>)" class="text-blue-600 hover:text-blue-800 font-medium cursor-pointer">
+                                                            Ver detalles →
+                                                        </button>
+
+                                                    </div>
                                                 </div>
-                                                <button onclick="mostrarDetallePedido(<?= $pedidozz['id'] ?>)" class="text-blue-600 hover:text-blue-800 font-medium cursor-pointer">
-                                                    Ver detalles →
-                                                </button>
-                                                
+
+                                                <!-- Información adicional -->
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+                                                    <div>
+                                                        <strong>Dirección de envío:</strong><br>
+                                                        <?= htmlspecialchars($pedidozz['direccion_envio'] ?? 'No disponible') ?>
+                                                    </div>
+                                                    <div>
+                                                        <strong>Productos:</strong><br>
+                                                        <?php
+                                                        $totalItems = count($pedidozz['detalles'] ?? []);
+                                                        if ($totalItems > 0):
+                                                        ?>
+                                                            <?= $totalItems ?> producto<?= $totalItems > 1 ? 's' : '' ?>
+                                                        <?php else: ?>
+                                                            Sin detalles disponibles
+                                                        <?php endif; ?>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
-                                        
-                                        <!-- Información adicional -->
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
-                                            <div>
-                                                <strong>Dirección de envío:</strong><br>
-                                                <?= htmlspecialchars($pedidozz['direccion_envio'] ?? 'No disponible') ?>
-                                            </div>
-                                            <div>
-                                                <strong>Productos:</strong><br>
-                                                <?php 
-                                                $totalItems = count($pedidozz['detalles'] ?? []);
-                                                if ($totalItems > 0): 
-                                                ?>
-                                                    <?= $totalItems ?> producto<?= $totalItems > 1 ? 's' : '' ?>
-                                                <?php else: ?>
-                                                    Sin detalles disponibles
-                                                <?php endif; ?>
-                                            </div>
-                                        </div>
+                                        <?php endforeach; ?>
                                     </div>
-                                <?php endforeach; ?>
+                                <?php endif; ?>
                             </div>
-                        <?php endif; ?>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </main>
+            </main>
+        </div>
     </div>
-
     <!-- Modal para mostrar detalles del pedido -->
     <div id="modalDetallePedido" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4 modal-backdrop">
 
@@ -329,37 +343,37 @@
 
             // Hacer petición AJAX
             fetch('<?= url("/usuario/detallePedido/") ?>' + pedidoId, {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const contenido = generarContenidoDetalle(data.pedido);
-                    document.getElementById('modalContenido').innerHTML = contenido;
-                } else {
-                    document.getElementById('modalContenido').innerHTML = `
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const contenido = generarContenidoDetalle(data.pedido);
+                        document.getElementById('modalContenido').innerHTML = contenido;
+                    } else {
+                        document.getElementById('modalContenido').innerHTML = `
                         <div class="text-center py-8">
                             <div class="text-red-500 text-6xl mb-4">⚠️</div>
                             <p class="text-red-600 font-semibold">Error al cargar detalles</p>
                             <p class="text-gray-500">${data.error || 'Error desconocido'}</p>
                         </div>
                     `;
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                document.getElementById('modalContenido').innerHTML = `
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('modalContenido').innerHTML = `
                     <div class="text-center py-8">
                         <div class="text-red-500 text-6xl mb-4">❌</div>
                         <p class="text-red-600 font-semibold">Error de conexión</p>
                         <p class="text-gray-500">No se pudo cargar la información</p>
                     </div>
                 `;
-            });
+                });
         }
 
         function cerrarModal() {
@@ -376,55 +390,57 @@
                 minute: '2-digit'
             });
 
-            // Información de descuentos
+            // Información de descuentos y costos
             const subtotal = parseFloat(pedido.subtotal || 0);
             const descuentoCupon = parseFloat(pedido.descuento_cupon || 0);
             const descuentoPromocion = parseFloat(pedido.descuento_promocion || 0);
+            const costoEnvio = parseFloat(pedido.costo_envio || 0);
 
             // Calcular total final correctamente
             let totalCalculado;
             if (subtotal > 0) {
-                // Si tenemos subtotal, calculamos el total restando descuentos
-                totalCalculado = subtotal - descuentoCupon - descuentoPromocion;
+                // Si tenemos subtotal, calculamos el total restando descuentos y sumando envío
+                totalCalculado = subtotal - descuentoCupon - descuentoPromocion + costoEnvio;
             } else {
                 // Si no hay subtotal, verificar si hay descuentos disponibles
                 if (descuentoCupon > 0 || descuentoPromocion > 0) {
                     // Si hay descuentos pero no subtotal, calcular desde detalles
-                    const totalDetalle = pedido.detalles && pedido.detalles.length > 0 
-                        ? pedido.detalles.reduce((sum, detalle) => {
+                    const totalDetalle = pedido.detalles && pedido.detalles.length > 0 ?
+                        pedido.detalles.reduce((sum, detalle) => {
                             const precio = parseFloat(detalle.precio_unitario || 0);
                             const cantidad = parseInt(detalle.cantidad || 0);
                             return sum + (precio * cantidad);
-                          }, 0)
-                        : parseFloat(pedido.total || pedido.monto_total || 0);
-                    totalCalculado = totalDetalle - descuentoCupon - descuentoPromocion;
+                        }, 0) :
+                        parseFloat(pedido.total || pedido.monto_total || 0);
+                    totalCalculado = totalDetalle - descuentoCupon - descuentoPromocion + costoEnvio;
                 } else {
                     // Para pedidos sin descuentos, usar el total original o calcular desde detalles
                     totalCalculado = parseFloat(pedido.total || pedido.monto_total || 0);
                     if (totalCalculado === 0 && pedido.detalles && pedido.detalles.length > 0) {
-                        totalCalculado = pedido.detalles.reduce((sum, detalle) => {
+                        const totalDetalleCalculado = pedido.detalles.reduce((sum, detalle) => {
                             const precio = parseFloat(detalle.precio_unitario || 0);
                             const cantidad = parseInt(detalle.cantidad || 0);
                             return sum + (precio * cantidad);
                         }, 0);
+                        totalCalculado = totalDetalleCalculado + costoEnvio;
                     }
                 }
             }
             const cuponCodigo = pedido.cupon_codigo || null;
 
-            // HTML para mostrar desglose si hay descuentos
+            // HTML para mostrar desglose si hay descuentos o costo de envío
             let desgloseHtml = '';
-            if (descuentoCupon > 0 || descuentoPromocion > 0) {
+            if (descuentoCupon > 0 || descuentoPromocion > 0 || costoEnvio > 0) {
                 // Calcular el subtotal para mostrar (usar subtotal de BD o calcular desde detalles)
-                const subtotalParaMostrar = subtotal > 0 ? subtotal : 
-                    (pedido.detalles && pedido.detalles.length > 0 
-                        ? pedido.detalles.reduce((sum, detalle) => {
+                const subtotalParaMostrar = subtotal > 0 ? subtotal :
+                    (pedido.detalles && pedido.detalles.length > 0 ?
+                        pedido.detalles.reduce((sum, detalle) => {
                             const precio = parseFloat(detalle.precio_unitario || 0);
                             const cantidad = parseInt(detalle.cantidad || 0);
                             return sum + (precio * cantidad);
-                          }, 0)
-                        : parseFloat(pedido.total || pedido.monto_total || 0));
-                
+                        }, 0) :
+                        parseFloat(pedido.total || pedido.monto_total || 0));
+
                 desgloseHtml = `
                     <div class="bg-green-50 p-4 rounded-lg mt-4">
                         <h4 class="font-semibold text-green-900 mb-2">💰 Desglose de Precios</h4>
@@ -433,6 +449,12 @@
                                 <span class="text-gray-600">Subtotal:</span>
                                 <span>S/ ${subtotalParaMostrar.toFixed(2)}</span>
                             </div>
+                            ${costoEnvio > 0 ? `
+                                <div class="flex justify-between text-blue-600">
+                                    <span>Costo de Envío:</span>
+                                    <span>S/ ${costoEnvio.toFixed(2)}</span>
+                                </div>
+                            ` : ''}
                             ${descuentoPromocion > 0 ? `
                                 <div class="flex justify-between text-green-600">
                                     <span>Descuento Promoción:</span>
@@ -463,12 +485,12 @@
                     const cantidad = parseInt(detalle.cantidad || 0);
                     return sum + (precio * cantidad);
                 }, 0);
-                
+
                 productosHtml = pedido.detalles.map(detalle => {
                     const precioUnitario = parseFloat(detalle.precio_unitario || 0);
                     const cantidad = parseInt(detalle.cantidad || 0);
                     const subtotalProducto = precioUnitario * cantidad;
-                    
+
                     // Calcular descuento proporcional para este producto si hay descuentos
                     let precioFinalProducto = subtotalProducto;
                     if ((descuentoCupon > 0 || descuentoPromocion > 0) && subtotalTotalProductos > 0) {
@@ -477,7 +499,7 @@
                         const descuentoProducto = descuentoTotalAplicable * porcentajeProducto;
                         precioFinalProducto = subtotalProducto - descuentoProducto;
                     }
-                    
+
                     return `
                         <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                             <div class="flex-1">
@@ -525,6 +547,12 @@
                                         ${pedido.estado.charAt(0).toUpperCase() + pedido.estado.slice(1)}
                                     </span>
                                 </div>
+                                ${costoEnvio > 0 ? `
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Costo de Envío:</span>
+                                        <span class="font-medium text-blue-600">S/ ${costoEnvio.toFixed(2)}</span>
+                                    </div>
+                                ` : ''}
                                 <div class="flex justify-between">
                                     <span class="text-gray-600">Total:</span>
                                     <span class="font-bold text-lg text-green-600">S/ ${totalCalculado.toFixed(2)}</span>
@@ -633,7 +661,7 @@
         }
 
         function getEstadoClass(estado) {
-            switch(estado.toLowerCase()) {
+            switch (estado.toLowerCase()) {
                 case 'pendiente':
                     return 'bg-yellow-100 text-yellow-800';
                 case 'confirmado':
@@ -669,8 +697,8 @@
 
         //nuevo modal scrip
         // Abrir modal
-                // --- Control de estrellas ---
-                /* ---------- Control de estrellas (delegación) ---------- */
+        // --- Control de estrellas ---
+        /* ---------- Control de estrellas (delegación) ---------- */
         // Resetea las estrellas (usa cuando abras el modal)
         function resetStars() {
             const stars = document.querySelectorAll('#starRating .star');
@@ -705,7 +733,7 @@
             });
         });
 
-        
+
 
         // Si quieres, resetea estrellas cada vez que abres el modal
         // Añade esto en abrirModalComentario al principio:
@@ -718,47 +746,44 @@
 
         // Abrir modal de comentario
         function abrirModalComentario(ordenId, productos) {
-    document.getElementById("inputOrdenId").value = ordenId;
-    resetStars();
+            document.getElementById("inputOrdenId").value = ordenId;
+            resetStars();
 
-    if (productos.length === 1) {
-        // Solo un producto
-        document.getElementById("productoSelectWrapper").classList.add("hidden");
-        document.getElementById("inputProductoIdHidden").value = productos[0].producto_id;
-    } else {
-        // Varios productos
-        document.getElementById("productoSelectWrapper").classList.remove("hidden");
+            if (productos.length === 1) {
+                // Solo un producto
+                document.getElementById("productoSelectWrapper").classList.add("hidden");
+                document.getElementById("inputProductoIdHidden").value = productos[0].producto_id;
+            } else {
+                // Varios productos
+                document.getElementById("productoSelectWrapper").classList.remove("hidden");
 
-        let select = document.getElementById("selectProducto");
-        select.innerHTML = "";
+                let select = document.getElementById("selectProducto");
+                select.innerHTML = "";
 
-        productos.forEach(p => {
-            let opt = document.createElement("option");
-            opt.value = p.producto_id;
-            opt.textContent = p.producto_nombre || "Producto " + p.producto_id;
-            select.appendChild(opt);
-        });
+                productos.forEach(p => {
+                    let opt = document.createElement("option");
+                    opt.value = p.producto_id;
+                    opt.textContent = p.producto_nombre || "Producto " + p.producto_id;
+                    select.appendChild(opt);
+                });
 
-        // Poner el primero como seleccionado por defecto
-        document.getElementById("inputProductoIdHidden").value = productos[0].producto_id;
+                // Poner el primero como seleccionado por defecto
+                document.getElementById("inputProductoIdHidden").value = productos[0].producto_id;
 
-        // Sincronizar al cambiar
-        select.addEventListener("change", function() {
-            document.getElementById("inputProductoIdHidden").value = this.value;
-        });
-    }
+                // Sincronizar al cambiar
+                select.addEventListener("change", function() {
+                    document.getElementById("inputProductoIdHidden").value = this.value;
+                });
+            }
 
-    document.getElementById("modalComentario").classList.remove("hidden");
-}
+            document.getElementById("modalComentario").classList.remove("hidden");
+        }
 
 
         function cerrarModalComentario() {
             document.getElementById("modalComentario").classList.add("hidden");
         }
-
-        
-
-         
     </script>
 </body>
+
 </html>
