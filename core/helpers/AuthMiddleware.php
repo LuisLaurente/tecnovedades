@@ -38,6 +38,7 @@ class AuthMiddleware
         'pedido/quitarCupon',
         // Permitir ver productos sin login
         'producto/ver',
+        'producto/guardarComentario',
     ];
 
     /**
