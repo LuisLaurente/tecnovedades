@@ -36,6 +36,8 @@ body {
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
+        width: 100%; /* Añadir esto */
+    box-sizing: border-box; /* Añadir esto */
 }
 
 .page-title {
@@ -61,6 +63,7 @@ body {
     border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow-md);
     overflow: hidden;
+    width: 100%;
 }
 
 .productos-list-header {
@@ -79,6 +82,8 @@ body {
     padding: 20px 24px;
     border-bottom: 1px solid var(--gray-light);
     transition: var(--transition);
+        width: 100%; /* Añadir esto */
+    box-sizing: border-box; /* Añadir esto */
 }
 .producto-item:last-child {
     border-bottom: none;
@@ -92,6 +97,7 @@ body {
     gap: 20px;
     align-items: center;
     flex-grow: 1;
+        width: 100%; /* Añadir esto */
 }
 
 .producto-imagen {
@@ -126,6 +132,7 @@ body {
     justify-content: space-between;
     align-items: center;
     width: 100%;
+        flex-wrap: wrap; /* Añadir esto para permitir que los elementos se ajusten */
 }
 
 /* Controles de cantidad */
@@ -195,6 +202,8 @@ body {
     box-shadow: var(--shadow-md);
     position: sticky;
     top: 20px;
+        width: 100%; /* Añadir esto */
+    box-sizing: border-box; /* Añadir esto */
 }
 .resumen-header {
     padding: 16px 24px;
@@ -355,6 +364,7 @@ body {
 @media (max-width: 992px) {
     .main-grid {
         grid-template-columns: 1fr;
+        gap: 20px;
     }
     .resumen-container {
         position: static;
@@ -363,45 +373,104 @@ body {
 }
 
 @media (max-width: 768px) {
-    .page-title { font-size: 1.75rem; margin-bottom: 30px; }
+    .container-principal {
+        padding: 15px 10px; /* Reducir padding lateral */
+    }
+    
+    .page-title { 
+        font-size: 1.75rem; 
+        margin-bottom: 30px;
+        padding: 0 10px; /* Añadir padding */
+    }
+    
     .producto-item {
-        /* En pantallas medianas, mantenemos la estructura de acciones a la derecha */
-        flex-direction: row;
-        align-items: center;
+        padding: 15px; /* Reducir padding */
     }
-    .producto-actions-wrapper {
-        flex-direction: row;
-        align-items: center;
-        gap: 16px;
+    
+    .producto-info-wrapper {
+        gap: 15px; /* Reducir gap */
     }
-    .acciones-carrito {
-        flex-direction: column;
-        gap: 15px;
-    }
-    .boton-volver, .boton-checkout {
-        width: 100%;
-        justify-content: center;
+    
+    .producto-imagen {
+        width: 60px; /* Reducir tamaño de imagen */
+        height: 60px;
     }
 }
 
 @media (max-width: 576px) {
-    .container-principal { padding: 10px; }
-    .page-title { font-size: 1.5rem; }
+    .container-principal { 
+        padding: 10px 8px; /* Más reducido aún */
+    }
+    
+    .page-title { 
+        font-size: 1.5rem;
+        padding: 0 8px;
+    }
+    
     .producto-item {
-        /* En pantallas pequeñas, todo se apila verticalmente */
-        flex-direction: column;
-        align-items: stretch;
+        padding: 12px 8px; /* Padding más reducido */
     }
+    
     .producto-info-wrapper {
-        width: 100%;
+        gap: 12px;
     }
+    
+    .producto-nombre {
+        font-size: 1rem; /* Reducir tamaño de fuente */
+    }
+    
+    .producto-precio {
+        font-size: 0.9rem;
+    }
+    
     .producto-actions-wrapper {
-        width: 100%;
-        padding-top: 16px;
-        border-top: 1px solid var(--gray-light);
+        gap: 12px; /* Espacio entre elementos */
     }
+    
+    .cantidad-container {
+        gap: 6px; /* Reducir gap */
+        padding: 3px;
+    }
+    
+    .btn-cantidad {
+        width: 28px; /* Botones más pequeños */
+        height: 28px;
+    }
+    
+    .cantidad-numero {
+        min-width: 30px; /* Menor ancho */
+        font-size: 1rem;
+    }
+    
     .producto-subtotal {
-        text-align: right; /* El subtotal se alinea a la derecha */
-        flex-grow: 1;
+        font-size: 1rem; /* Fuente más pequeña */
+        min-width: 80px; /* Menor ancho mínimo */
     }
+    
+    .btn-eliminar {
+        width: 36px; /* Botón más pequeño */
+        height: 36px;
+    }
+    
+    /* Asegurar que el formulario de cupón no cause overflow */
+    .cupon-input-container {
+        flex-direction: column; /* Apilar verticalmente en móvil */
+        gap: 10px;
+    }
+    
+    #codigo-cupon {
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .btn-cupon {
+        width: 100%;
+    }
+    
+    .resumen-body {
+        padding: 20px 15px; /* Reducir padding */
+    }
+}
+.producto-item > * {
+    max-width: 100%;
 }
