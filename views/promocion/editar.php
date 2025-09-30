@@ -4,131 +4,108 @@
 <link rel="stylesheet" href="<?= url('css/promocion.css') ?>">
 
 <body>
-    <div class="flex h-screen">
-        <div class="fixed inset-y-0 left-0 z-50">
+    <div class="admin-layout">
+        <div class="sidebar-container">
             <?php include_once __DIR__ . '/../admin/includes/navbar.php'; ?>
         </div>
-        <div class="flex-1 ml-64 flex flex-col min-h-screen">
-            <main class="flex-1 p-2 bg-gray-50 overflow-y-auto">
-                <div class="sticky top-0 z-40">
-                    <?php include_once __DIR__ . '/../admin/includes/header.php'; ?>
-                </div>
 
-                <div class="promociones-page flex-1 p-6 bg-gray-50 overflow-y-auto">
-                    <div class="admin-container">
-                        <div class="dashboard-header">
-                            <h1 class="dashboard-title">Editar Promoción: <?= htmlspecialchars($promocion['nombre']) ?></h1>
-                            <p class="dashboard-subtitle">Modifica la configuración de la promoción.</p>
+        <div class="main-content">
+            <div class="header-container">
+                <?php include_once __DIR__ . '/../admin/includes/header.php'; ?>
+            </div>
+
+            <div class="content-wrapper">
+                <div class="promociones-container">
+                    <div class="dashboard-header">
+                        <h1 class="dashboard-title">Editar Promoción: <?= htmlspecialchars($promocion['nombre']) ?></h1>
+                        <p class="dashboard-subtitle">Modifica la configuración de la promoción.</p>
+                    </div>
+
+                    <?php if (isset($_SESSION['error'])): ?>
+                        <div class="alert alert-error">
+                            <?= htmlspecialchars($_SESSION['error']) ?>
+                            <?php unset($_SESSION['error']); ?>
                         </div>
+                    <?php endif; ?>
 
-                        <?php if (isset($_SESSION['error'])): ?>
-                            <div class="alert alert-error">
-                                <?= htmlspecialchars($_SESSION['error']) ?>
-                                <?php unset($_SESSION['error']); ?>
-                            </div>
-                        <?php endif; ?>
-
-                        <div class="form-container">
-                            <form method="POST" action="<?= url('promocion/actualizar/' . $promocion['id']) ?>" id="promocionForm">
-                                <!-- SECCIÓN 1: INFORMACIÓN GENERAL -->
-                                <div class="form-section">
-                                    <h3 class="section-title">1. Información General</h3>
-                                    <div class="form-grid">
-                                        <div class="form-group">
-                                            <label for="nombre" class="form-label">Nombre de la Promoción *</label>
-                                            <input type="text" id="nombre" name="nombre" class="form-input" value="<?= htmlspecialchars($promocion['nombre']) ?>" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="prioridad" class="form-label">Prioridad</label>
-                                            <select id="prioridad" name="prioridad" class="form-select">
-                                                <option value="1" <?= $promocion['prioridad'] == 1 ? 'selected' : '' ?>>1 - Muy Alta</option>
-                                                <option value="2" <?= $promocion['prioridad'] == 2 ? 'selected' : '' ?>>2 - Alta</option>
-                                                <option value="3" <?= $promocion['prioridad'] == 3 ? 'selected' : '' ?>>3 - Media</option>
-                                                <option value="4" <?= $promocion['prioridad'] == 4 ? 'selected' : '' ?>>4 - Baja</option>
-                                                <option value="5" <?= $promocion['prioridad'] == 5 ? 'selected' : '' ?>>5 - Muy Baja</option>
-                                            </select>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="fecha_inicio" class="form-label">Fecha de Inicio *</label>
-                                            <input type="date" id="fecha_inicio" name="fecha_inicio" class="form-input" value="<?= $promocion['fecha_inicio'] ?>" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="fecha_fin" class="form-label">Fecha de Fin *</label>
-                                            <input type="date" id="fecha_fin" name="fecha_fin" class="form-input" value="<?= $promocion['fecha_fin'] ?>" required>
-                                        </div>
-                                    </div>
-                                    <div class="form-grid-small">
-                                        <div class="form-checkbox">
-                                            <input type="checkbox" id="activo" name="activo" <?= $promocion['activo'] ? 'checked' : '' ?>>
-                                            <label for="activo">Promoción activa</label>
-                                        </div>
-                                        <div class="form-checkbox">
-                                            <input type="checkbox" id="acumulable" name="acumulable" <?= $promocion['acumulable'] ? 'checked' : '' ?>>
-                                            <label for="acumulable">Acumulable con otras promociones</label>
-                                        </div>
-                                        <div class="form-checkbox">
-                                            <input type="checkbox" id="exclusivo" name="exclusivo" <?= $promocion['exclusivo'] ? 'checked' : '' ?>>
-                                            <label for="exclusivo">Promoción exclusiva (no se combina)</label>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- SECCIÓN 2: TIPO DE REGLA Y CONFIGURACIÓN -->
-                                <div class="form-section">
-                                    <h3 class="section-title">2. Regla de Promoción</h3>
+                    <div class="form-container">
+                        <form method="POST" action="<?= url('promocion/actualizar/' . $promocion['id']) ?>" id="promocionForm">
+                            <!-- SECCIÓN 1: INFORMACIÓN GENERAL -->
+                            <div class="form-section">
+                                <h3 class="section-title">1. Información General</h3>
+                                <div class="form-grid">
                                     <div class="form-group">
-                                        <label for="tipo_regla" class="form-label">Tipo de Regla *</label>
-                                        <select id="tipo_regla" name="tipo_regla" class="form-select" required>
-                                            <option value="">-- Selecciona una regla --</option>
-                                            <option value="descuento_subtotal">
-                                                Descuento porcentual por monto mínimo en la compra (Ej: 10% off si gastas más de S/200)
-                                            </option>
-                                            <option value="descuento_fijo_subtotal">
-                                                Descuento fijo por monto mínimo en la compra (Ej: S/30 menos si gastas más de S/200)
-                                            </option>
-                                            <option value="envio_gratis_primera_compra">
-                                                Envío gratis en la primera compra del usuario
-                                            </option>
-                                            <option value="nxm_producto">
-                                                Lleva N unidades de un producto y paga solo M (Ej: 3x2 en un mismo producto)
-                                            </option>
-                                            <option value="descuento_enesima_unidad">
-                                                Descuento en la N-ésima unidad de un producto (Ej: 50% off en la 3ª unidad)
-                                            </option>
-                                            <option value="descuento_menor_valor_categoria">
-                                                Descuento al producto más barato al comprar N productos de una categoría
-                                            </option>
-                                            <option value="nxm_general">
-                                                Lleva N productos mixtos y paga solo M (Ej: 3x2 en cualquier combinación)
-                                            </option>
-                                            <option value="descuento_enesimo_producto">
-                                                Descuento en el N-ésimo producto más barato al comprar N productos mixtos
-                                            </option>
-                                            <option value="envio_gratis_general">
-                                                Envío gratis en todos los pedidos, sin condiciones
-                                            </option>
-                                            <option value="envio_gratis_monto_minimo">
-                                                Envío gratis para compras mayores a un monto mínimo (Ej: más de S/150)
-                                            </option>
-                                        </select>
-
-
+                                        <label for="nombre" class="form-label">Nombre de la Promoción *</label>
+                                        <input type="text" id="nombre" name="nombre" class="form-input" value="<?= htmlspecialchars($promocion['nombre']) ?>" required>
                                     </div>
-                                    <div id="campos_dinamicos" class="dynamic-fields"></div>
+                                    <div class="form-group">
+                                        <label for="prioridad" class="form-label">Prioridad</label>
+                                        <select id="prioridad" name="prioridad" class="form-select">
+                                            <option value="1" <?= $promocion['prioridad'] == 1 ? 'selected' : '' ?>>1 - Muy Alta</option>
+                                            <option value="2" <?= $promocion['prioridad'] == 2 ? 'selected' : '' ?>>2 - Alta</option>
+                                            <option value="3" <?= $promocion['prioridad'] == 3 ? 'selected' : '' ?>>3 - Media</option>
+                                            <option value="4" <?= $promocion['prioridad'] == 4 ? 'selected' : '' ?>>4 - Baja</option>
+                                            <option value="5" <?= $promocion['prioridad'] == 5 ? 'selected' : '' ?>>5 - Muy Baja</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="fecha_inicio" class="form-label">Fecha de Inicio *</label>
+                                        <input type="date" id="fecha_inicio" name="fecha_inicio" class="form-input" value="<?= $promocion['fecha_inicio'] ?>" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="fecha_fin" class="form-label">Fecha de Fin *</label>
+                                        <input type="date" id="fecha_fin" name="fecha_fin" class="form-input" value="<?= $promocion['fecha_fin'] ?>" required>
+                                    </div>
                                 </div>
+                                <div class="form-checkbox-group">
+                                    <div class="form-checkbox">
+                                        <input type="checkbox" id="activo" name="activo" <?= $promocion['activo'] ? 'checked' : '' ?>>
+                                        <label for="activo">Promoción activa</label>
+                                    </div>
+                                    <div class="form-checkbox">
+                                        <input type="checkbox" id="acumulable" name="acumulable" <?= $promocion['acumulable'] ? 'checked' : '' ?>>
+                                        <label for="acumulable">Acumulable con otras promociones</label>
+                                    </div>
+                                    <div class="form-checkbox">
+                                        <input type="checkbox" id="exclusivo" name="exclusivo" <?= $promocion['exclusivo'] ? 'checked' : '' ?>>
+                                        <label for="exclusivo">Promoción exclusiva (no se combina)</label>
+                                    </div>
+                                </div>
+                            </div>
 
-                                <div class="form-buttons">
-                                    <button type="submit" class="btn-submit">💾 Actualizar Promoción</button>
-                                    <a href="<?= url('promocion/index') ?>" class="btn-cancel">Cancelar</a>
+                            <!-- SECCIÓN 2: TIPO DE REGLA Y CONFIGURACIÓN -->
+                            <div class="form-section">
+                                <h3 class="section-title">2. Regla de Promoción</h3>
+                                <div class="form-group">
+                                    <label for="tipo_regla" class="form-label">Tipo de Regla *</label>
+                                    <select id="tipo_regla" name="tipo_regla" class="form-select" required>
+                                        <option value="">-- Selecciona una regla --</option>
+                                        <option value="descuento_subtotal">Descuento % por monto mínimo</option>
+                                        <option value="descuento_fijo_subtotal">Descuento fijo por monto mínimo</option>
+                                        <option value="envio_gratis_primera_compra">Envío gratis primera compra</option>
+                                        <option value="nxm_producto">Lleva N paga M (mismo producto)</option>
+                                        <option value="descuento_enesima_unidad">Descuento en N-ésima unidad</option>
+                                        <option value="descuento_menor_valor_categoria">Descuento producto más barato por categoría</option>
+                                        <option value="nxm_general">Lleva N paga M (productos mixtos)</option>
+                                        <option value="descuento_enesimo_producto">Descuento en N-ésimo producto más barato</option>
+                                        <option value="envio_gratis_general">Envío gratis general</option>
+                                        <option value="envio_gratis_monto_minimo">Envío gratis por monto mínimo</option>
+                                    </select>
                                 </div>
-                            </form>
-                        </div>
+                                <div id="campos_dinamicos" class="dynamic-fields"></div>
+                            </div>
+
+                            <div class="form-buttons">
+                                <button type="submit" class="btn-submit">💾 Actualizar Promoción</button>
+                                <a href="<?= url('promocion/index') ?>" class="btn-cancel">Cancelar</a>
+                            </div>
+                        </form>
                     </div>
                 </div>
-                <?php include_once __DIR__ . '/../admin/includes/footer.php'; ?>
-            </main>
+            </div>
         </div>
     </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // --- DATOS DE LA PROMOCIÓN ---
@@ -188,6 +165,7 @@
                 if (tipoCondicion === 'cantidad_total_productos' && tipoAccion === 'descuento_producto_mas_barato') return 'descuento_enesimo_producto';
                 if (tipoCondicion === 'todos' && tipoAccion === 'envio_gratis') return 'envio_gratis_general';
                 if (tipoCondicion === 'subtotal_minimo' && tipoAccion === 'envio_gratis') return 'envio_gratis_monto_minimo';
+                if (tipoCondicion === 'subtotal_minimo' && tipoAccion === 'descuento_fijo') return 'descuento_fijo_subtotal';
 
                 return '';
             }
@@ -346,6 +324,7 @@
                             <input type="number" name="cond_subtotal_minimo" class="form-input" value="${cond.valor || ''}" required min="0" step="0.01">
                         </div>`;
                         break;
+
                     case 'descuento_fijo_subtotal':
                         tipoCondicionInput.value = 'subtotal_minimo';
                         tipoAccionInput.value = 'descuento_fijo';
@@ -353,11 +332,11 @@
                         <div class="form-grid">
                             <div class="form-group">
                                 <label class="form-label">Monto mínimo del carrito (S/)</label>
-                                <input type="number" name="cond_subtotal_minimo" class="form-input" min="0" step="0.01" required>
+                                <input type="number" name="cond_subtotal_minimo" class="form-input" value="${cond.valor || ''}" min="0" step="0.01" required>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Monto de descuento fijo (S/)</label>
-                                <input type="number" name="accion_valor_descuento_fijo" class="form-input" min="0" step="0.01" required>
+                                <input type="number" name="accion_valor_descuento_fijo" class="form-input" value="${acc.valor || ''}" min="0" step="0.01" required>
                             </div>
                         </div>`;
                         break;
@@ -393,7 +372,6 @@
             }
         });
     </script>
-
 </body>
 
 </html>

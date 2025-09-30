@@ -193,11 +193,6 @@
         </div>
         <?php endif; ?>
                 </div>
-
-                <!-- Footer -->
-                <div class="mt-4">
-                    <?php include_once __DIR__ . '/../admin/includes/footer.php'; ?>
-                </div>
             </main>
         </div>
     </div>
