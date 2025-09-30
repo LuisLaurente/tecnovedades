@@ -17,6 +17,7 @@ class AuthMiddleware
         'auth/login',
         'auth/authenticate',
         'auth/registro',
+        'auth/procesarRegistro',
         'auth/registrar',
         'error/notFound',
         'error/forbidden',

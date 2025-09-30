@@ -1,564 +1,823 @@
-/* ========================================
-   GESTIÓN DE PROMOCIONES - ADMIN PANEL
-   ======================================== */
 
-/* Reset y base - Solo para el contenedor de promociones */
-.promociones-page * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-.promociones-page {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: #f5f6fa;
-  min-height: 100vh;
-}
-
-.promociones-page .admin-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-/* Header del dashboard - Solo dentro del contenedor de promociones */
-.promociones-page .dashboard-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 30px;
-  border-radius: 15px;
-  margin-bottom: 30px;
-  text-align: center;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-}
-
-.promociones-page .dashboard-title {
-  font-size: 2.5rem;
-  font-weight: 300;
-  margin-bottom: 10px;
-}
-
-.promociones-page .dashboard-subtitle {
-  font-size: 1.1rem;
-  opacity: 0.9;
-}
-
-/* Panel de estadísticas - Solo dentro del contenedor de promociones */
-.promociones-page .stats-panel {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
-}
-
-.promociones-page .stat-card {
-  background: white;
-  padding: 25px;
-  border-radius: 15px;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-  transition: transform 0.3s ease;
-}
-
-.promociones-page .stat-card:hover {
-  transform: translateY(-5px);
-}
-
-.promociones-page .stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-}
-
-.promociones-page .stat-card.total::before { background: linear-gradient(90deg, #3498db, #2980b9); }
-.promociones-page .stat-card.activas::before { background: linear-gradient(90deg, #27ae60, #229954); }
-.promociones-page .stat-card.vigentes::before { background: linear-gradient(90deg, #f39c12, #d68910); }
-.promociones-page .stat-card.vencidas::before { background: linear-gradient(90deg, #e74c3c, #c0392b); }
-
-.promociones-page .stat-icon {
-  font-size: 3rem;
-  margin-bottom: 15px;
-}
-
-.promociones-page .stat-card.total .stat-icon::before { content: "📊"; }
-.promociones-page .stat-card.activas .stat-icon::before { content: "✅"; }
-.promociones-page .stat-card.vigentes .stat-icon::before { content: "🎯"; }
-.promociones-page .stat-card.vencidas .stat-icon::before { content: "⏰"; }
-
-.promociones-page .stat-number {
-  font-size: 2.5rem;
-  font-weight: bold;
-  color: #2c3e50;
-  margin-bottom: 5px;
-}
-
-.promociones-page .stat-label {
-  color: #7f8c8d;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-/* Botones de acción principales - Solo dentro del contenedor de promociones */
-.promociones-page .action-buttons {
-  display: flex;
-  gap: 15px;
-  margin-bottom: 30px;
-  flex-wrap: wrap;
-}
-
-.promociones-page .btn-primary {
-  background: linear-gradient(135deg, #3498db, #2980b9);
-  color: white;
-  padding: 12px 25px;
-  border: none;
-  border-radius: 8px;
-  text-decoration: none;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  display: inline-flex;
-  align-items: center;
-}
-
-.promociones-page .btn-primary:hover {
-  background: linear-gradient(135deg, #2980b9, #1f5fb8);
-  transform: translateY(-2px);
-  text-decoration: none;
-  color: white;
-}
-
-.promociones-page .btn-primary::before {
-  content: "➕";
-  margin-right: 8px;
-}
-
-/* Panel de promociones - Solo dentro del contenedor de promociones */
-.promociones-page .promotions-panel {
-  background: white;
-  border-radius: 15px;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-  overflow: hidden;
-}
-
-.promociones-page .table-header {
-  background: linear-gradient(135deg, #34495e, #2c3e50);
-  color: white;
-  padding: 20px 25px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.promociones-page .table-title {
-  font-size: 1.3rem;
-  font-weight: 500;
-}
-
-.promociones-page .promotions-count {
-  background: rgba(255,255,255,0.2);
-  padding: 5px 15px;
-  border-radius: 20px;
-  font-size: 0.9rem;
-}
-
-.promociones-page .table-container {
-  overflow-x: auto;
-}
-
-.promociones-page .promotions-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.promociones-page .promotions-table th {
-  background: #f8f9fa;
-  padding: 15px 20px;
-  text-align: left;
-  font-weight: 600;
-  color: #2c3e50;
-  border-bottom: 2px solid #ecf0f1;
-  position: sticky;
-  top: 0;
-}
-
-.promociones-page .promotions-table td {
-  padding: 15px 20px;
-  border-bottom: 1px solid #ecf0f1;
-  vertical-align: middle;
-}
-
-.promociones-page .promotions-table tr:hover {
-  background: #f8f9fa;
-}
-
-/* Estados de promociones - Solo dentro del contenedor de promociones */
-.promociones-page .status-badge {
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.promociones-page .status-activo {
-  background: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
-}
-
-.promociones-page .status-inactivo {
-  background: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
-}
-
-.promociones-page .status-vigente {
-  background: #fff3cd;
-  color: #856404;
-  border: 1px solid #ffeaa7;
-}
-
-.promociones-page .status-vencido {
-  background: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
-}
-
-/* Tipos de promoción - Solo dentro del contenedor de promociones */
-.promociones-page .promo-type {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  font-weight: 500;
-}
-
-.promociones-page .promo-type.descuento {
-  background: #e3f2fd;
-  color: #1565c0;
-}
-
-.promociones-page .promo-type.envio {
-  background: #f3e5f5;
-  color: #7b1fa2;
-}
-
-.promociones-page .promo-type.producto {
-  background: #e8f5e8;
-  color: #2e7d32;
-}
-
-/* Botones de acción en tabla - Solo dentro del contenedor de promociones */
-.promociones-page .btn-action {
-  padding: 6px 12px;
-  border: none;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  transition: all 0.3s ease;
-  margin-right: 5px;
-}
-
-.promociones-page .btn-edit {
-  background: #3498db;
-  color: white;
-}
-
-.promociones-page .btn-edit:hover {
-  background: #2980b9;
-  text-decoration: none;
-  color: white;
-}
-
-.promociones-page .btn-toggle {
-  background: #f39c12;
-  color: white;
-}
-
-.promociones-page .btn-toggle:hover {
-  background: #e67e22;
-  text-decoration: none;
-  color: white;
-}
-
-.promociones-page .btn-delete {
-  background: #e74c3c;
-  color: white;
-}
-
-.promociones-page .btn-delete:hover {
-  background: #c0392b;
-  text-decoration: none;
-  color: white;
-}
-
-.promociones-page .btn-action::before {
-  margin-right: 4px;
-  font-size: 0.9rem;
-}
-
-.promociones-page .btn-edit::before { content: "✏️"; }
-.promociones-page .btn-toggle::before { content: "🔄"; }
-.promociones-page .btn-delete::before { content: "🗑️"; }
-
-/* Formularios - Solo dentro del contenedor de promociones */
-.promociones-page .form-container {
-  background: white;
-  border-radius: 15px;
-  padding: 30px;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-  margin-bottom: 30px;
-}
-
-.promociones-page .form-title {
-  color: #2c3e50;
-  font-size: 1.8rem;
-  margin-bottom: 30px;
-  display: flex;
-  align-items: center;
-}
-
-.promociones-page .form-title::before {
-  content: "📝";
-  margin-right: 15px;
-  font-size: 2rem;
-}
-
-.promociones-page .form-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 25px;
-}
-
-.promociones-page .form-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.promociones-page .form-label {
-  font-weight: 600;
-  color: #34495e;
-  margin-bottom: 8px;
-  font-size: 0.95rem;
-}
-
-.promociones-page .form-input, .promociones-page .form-select, .promociones-page .form-textarea {
-  padding: 12px 15px;
-  border: 2px solid #ecf0f1;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  font-family: inherit;
-}
-
-.promociones-page .form-input:focus, .promociones-page .form-select:focus, .promociones-page .form-textarea:focus {
-  outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-}
-
-.promociones-page .form-textarea {
-  resize: vertical;
-  min-height: 100px;
-}
-
-.promociones-page .form-checkbox {
-  display: flex;
-  align-items: center;
-  margin: 10px 0;
-}
-
-.promociones-page .form-checkbox input[type="checkbox"] {
-  margin-right: 10px;
-  transform: scale(1.2);
-}
-
-/* Secciones del formulario - Solo dentro del contenedor de promociones */
-.promociones-page .form-section {
-  grid-column: 1 / -1;
-  background: #f8f9fa;
-  padding: 20px;
-  border-radius: 8px;
-  margin: 20px 0;
-}
-
-.promociones-page .section-title {
-  color: #2c3e50;
-  font-size: 1.2rem;
-  margin-bottom: 15px;
-  font-weight: 600;
-}
-
-/* Botones del formulario - Solo dentro del contenedor de promociones */
-.promociones-page .form-buttons {
-  grid-column: 1 / -1;
-  display: flex;
-  gap: 15px;
-  justify-content: flex-end;
-  margin-top: 30px;
-}
-
-.promociones-page .btn-submit {
-  background: linear-gradient(135deg, #27ae60, #229954);
-  color: white;
-  padding: 12px 30px;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.promociones-page .btn-submit:hover {
-  background: linear-gradient(135deg, #229954, #1e8449);
-  transform: translateY(-2px);
-}
-
-.promociones-page .btn-cancel {
-  background: #95a5a6;
-  color: white;
-  padding: 12px 30px;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 500;
-  text-decoration: none;
-  transition: all 0.3s ease;
-}
-
-.promociones-page .btn-cancel:hover {
-  background: #7f8c8d;
-  transform: translateY(-2px);
-  text-decoration: none;
-  color: white;
-}
-
-/* Estado vacío - Solo dentro del contenedor de promociones */
-.promociones-page .empty-state {
-  text-align: center;
-  padding: 60px 20px;
-  color: #7f8c8d;
-}
-
-.promociones-page .empty-state::before {
-  content: "🎯";
-  font-size: 4rem;
-  display: block;
-  margin-bottom: 20px;
-}
-
-.promociones-page .empty-state h3 {
-  font-size: 1.5rem;
-  margin-bottom: 10px;
-  color: #34495e;
-}
-
-/* Alertas - Solo dentro del contenedor de promociones */
-.promociones-page .alert {
-  padding: 15px 20px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-}
-
-.promociones-page .alert-success {
-  background: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
-}
-
-.promociones-page .alert-error {
-  background: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
-}
-
-.promociones-page .alert::before {
-  margin-right: 10px;
-  font-size: 1.2rem;
-}
-
-.promociones-page .alert-success::before { content: "✅"; }
-.promociones-page .alert-error::before { content: "❌"; }
-
-/* Responsive Design - Solo dentro del contenedor de promociones */
-@media (max-width: 768px) {
-  .promociones-page .admin-container {
-    padding: 15px;
-  }
-  
-  .promociones-page .dashboard-header {
+/* Variables de colores */
+:root {
+    --primary-color: #2AC1DB;
+    --dark-color: #1B1B1B;
+    --white-color: #FFFFFF;
+    --success-color: #10B981;
+    --error-color: #EF4444;
+    --warning-color: #F59E0B;
+    --gray-light: #F8FAFC;
+    --gray-border: #E2E8F0;
+    --gray-text: #64748B;
+}
+
+/* Reset y estilos base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--white-color);
+    color: var(--dark-color);
+    line-height: 1.6;
+}
+
+/* Layout principal */
+.admin-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar-container {
+    width: 250px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 1000;
+}
+
+.main-content {
+    flex: 1;
+    margin-left: 250px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.header-container {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--white-color);
+    border-bottom: 1px solid var(--gray-border);
+}
+
+.content-wrapper {
+    flex: 1;
     padding: 20px;
-  }
-  
-  .promociones-page .dashboard-title {
-    font-size: 2rem;
-  }
-  
-  .promociones-page .stats-panel {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  }
-  
-  .promociones-page .action-buttons {
-    flex-direction: column;
-  }
-  
-  .promociones-page .table-header {
-    flex-direction: column;
-    gap: 15px;
+}
+
+.footer-container {
+    margin-top: auto;
+}
+
+/* Contenedor principal */
+.promociones-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Header del dashboard */
+.dashboard-header {
+    margin-bottom: 30px;
     text-align: center;
-  }
-  
-  .promociones-page .promotions-table {
+}
+
+.dashboard-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--dark-color);
+    margin-bottom: 10px;
+}
+
+.dashboard-subtitle {
+    font-size: 1.1rem;
+    color: var(--gray-text);
+}
+
+/* Alertas */
+.alert {
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+.alert-success {
+    background-color: #D1FAE5;
+    color: #065F46;
+    border: 1px solid #A7F3D0;
+}
+
+.alert-error {
+    background-color: #FEE2E2;
+    color: #991B1B;
+    border: 1px solid #FECACA;
+}
+
+/* Panel de estadísticas */
+.stats-panel {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: var(--white-color);
+    border: 1px solid var(--gray-border);
+    border-radius: 12px;
+    padding: 25px 20px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.stat-card.total {
+    border-top: 4px solid var(--primary-color);
+}
+
+.stat-card.activas {
+    border-top: 4px solid var(--success-color);
+}
+
+.stat-card.vigentes {
+    border-top: 4px solid var(--warning-color);
+}
+
+.stat-card.vencidas {
+    border-top: 4px solid var(--error-color);
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.stat-card.total .stat-number { color: var(--primary-color); }
+.stat-card.activas .stat-number { color: var(--success-color); }
+.stat-card.vigentes .stat-number { color: var(--warning-color); }
+.stat-card.vencidas .stat-number { color: var(--error-color); }
+
+.stat-label {
     font-size: 0.9rem;
-  }
-  
-  .promociones-page .promotions-table th,
-  .promociones-page .promotions-table td {
-    padding: 10px 8px;
-  }
-  
-  .promociones-page .form-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .promociones-page .form-buttons {
-    flex-direction: column;
-  }
+    color: var(--gray-text);
+    font-weight: 500;
+}
+
+/* Botones de acción */
+.action-buttons {
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--primary-color);
+    color: var(--white-color);
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+}
+
+.btn-primary:hover {
+    background: #1EA8C1;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(42, 193, 219, 0.3);
+}
+
+/* Panel de promociones */
+.promotions-panel {
+    background: var(--white-color);
+    border: 1px solid var(--gray-border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    background: var(--gray-light);
+    border-bottom: 1px solid var(--gray-border);
+}
+
+.table-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--dark-color);
+}
+
+.promotions-count {
+    color: var(--gray-text);
+    font-size: 0.9rem;
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+/* Tabla de promociones */
+.promotions-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+}
+
+.promotions-table th {
+    background: var(--gray-light);
+    padding: 16px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--dark-color);
+    border-bottom: 1px solid var(--gray-border);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.promotions-table td {
+    padding: 16px 12px;
+    border-bottom: 1px solid var(--gray-border);
+    vertical-align: top;
+}
+
+.promotions-table tr:last-child td {
+    border-bottom: none;
+}
+
+.promotions-table tr:hover {
+    background: var(--gray-light);
+}
+
+/* Celdas específicas */
+.promotion-name {
+    font-weight: 600;
+    color: var(--dark-color);
+    min-width: 200px;
+}
+
+.exclusive-tag {
+    display: inline-block;
+    background: var(--warning-color);
+    color: var(--white-color);
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-left: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.promotion-rule {
+    min-width: 250px;
+    line-height: 1.5;
+}
+
+.promotion-rule strong {
+    color: var(--primary-color);
+}
+
+.status-cell {
+    min-width: 120px;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin: 2px 0;
+}
+
+.status-activo {
+    background: #D1FAE5;
+    color: #065F46;
+}
+
+.status-inactivo {
+    background: #FEE2E2;
+    color: #991B1B;
+}
+
+.status-vigente {
+    background: #FEF3C7;
+    color: #92400E;
+}
+
+.status-vencido {
+    background: #F3F4F6;
+    color: #6B7280;
+}
+
+.date-cell {
+    min-width: 150px;
+}
+
+.date-range {
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.date-range strong {
+    color: var(--dark-color);
+}
+
+.priority-cell {
+    text-align: center;
+    min-width: 80px;
+}
+
+.priority-badge {
+    display: inline-block;
+    background: var(--primary-color);
+    color: var(--white-color);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    line-height: 32px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.actions-cell {
+    min-width: 200px;
+    white-space: nowrap;
+}
+
+.actions-cell form {
+    display: inline;
+}
+
+.btn-action {
+    display: inline-block;
+    padding: 6px 12px;
+    margin: 2px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.btn-edit {
+    background: var(--primary-color);
+    color: var(--white-color);
+    border-color: var(--primary-color);
+}
+
+.btn-edit:hover {
+    background: #1EA8C1;
+    border-color: #1EA8C1;
+}
+
+.btn-toggle {
+    background: transparent;
+    color: var(--gray-text);
+    border-color: var(--gray-border);
+}
+
+.btn-toggle:hover {
+    background: var(--gray-light);
+    border-color: var(--gray-text);
+}
+
+.btn-delete {
+    background: var(--error-color);
+    color: var(--white-color);
+    border-color: var(--error-color);
+}
+
+.btn-delete:hover {
+    background: #DC2626;
+    border-color: #DC2626;
+}
+
+/* Estado vacío */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--gray-text);
+}
+
+.empty-state h3 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    color: var(--dark-color);
+}
+
+.empty-state p {
+    margin-bottom: 20px;
+    font-size: 1rem;
+}
+
+.empty-action {
+    margin-top: 20px;
+}
+
+.error-text {
+    color: var(--error-color);
+    font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .sidebar-container {
+        width: 200px;
+    }
+    
+    .main-content {
+        margin-left: 200px;
+    }
+    
+    .stats-panel {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-layout {
+        flex-direction: column;
+    }
+    
+    .sidebar-container {
+        position: relative;
+        width: 100%;
+        height: auto;
+    }
+    
+    .main-content {
+        margin-left: 0;
+    }
+    
+    .content-wrapper {
+        padding: 15px;
+    }
+    
+    .dashboard-title {
+        font-size: 2rem;
+    }
+    
+    .stats-panel {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .stat-card {
+        padding: 20px 15px;
+    }
+    
+    .table-header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+        padding: 15px 20px;
+    }
+    
+    .promotions-table {
+        font-size: 0.9rem;
+    }
+    
+    .promotions-table th,
+    .promotions-table td {
+        padding: 12px 8px;
+    }
+    
+    .actions-cell {
+        min-width: 150px;
+    }
+    
+    .btn-action {
+        display: block;
+        margin: 4px 0;
+        text-align: center;
+    }
 }
 
 @media (max-width: 480px) {
-  .promociones-page .stats-panel {
-    grid-template-columns: 1fr;
-  }
-  
-  .promociones-page .stat-card {
-    padding: 20px;
-  }
-  
-  .promociones-page .table-container {
-    margin: 0 -15px;
-  }
-  
-  .promociones-page .promotions-table th,
-  .promociones-page .promotions-table td {
-    padding: 8px 5px;
-    font-size: 0.8rem;
-  }
-  
-  .promociones-page .form-container {
-    padding: 20px;
-  }
+    .dashboard-title {
+        font-size: 1.8rem;
+    }
+    
+    .dashboard-subtitle {
+        font-size: 1rem;
+    }
+    
+    .content-wrapper {
+        padding: 10px;
+    }
+    
+    .table-header {
+        padding: 12px 15px;
+    }
+    
+    .promotions-table {
+        font-size: 0.85rem;
+    }
+    
+    .promotion-name,
+    .promotion-rule {
+        min-width: 150px;
+    }
+    
+    .status-cell,
+    .date-cell,
+    .priority-cell {
+        min-width: 100px;
+    }
+}
+
+/* Estados de hover y focus mejorados */
+.btn-action:focus,
+.btn-primary:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* Animaciones suaves */
+.promotions-table tr {
+    transition: background-color 0.2s ease;
+}
+
+.stat-card,
+.promotions-panel {
+    transition: all 0.3s ease;
+}
+/* ===== ESTILOS PARA FORMULARIOS (editar.php y crear.php) ===== */
+
+.form-container {
+    background: var(--white-color);
+    border: 1px solid var(--gray-border);
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.form-section {
+    margin-bottom: 40px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid var(--gray-border);
+}
+
+.form-section:last-of-type {
+    border-bottom: none;
+    margin-bottom: 30px;
+}
+
+.section-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--dark-color);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--dark-color);
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+}
+
+.form-input,
+.form-select {
+    padding: 12px 16px;
+    border: 1px solid var(--gray-border);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background: var(--white-color);
+}
+
+.form-input:focus,
+.form-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(42, 193, 219, 0.1);
+}
+
+.form-input:hover,
+.form-select:hover {
+    border-color: #CBD5E1;
+}
+
+.form-checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.form-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.form-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary-color);
+}
+
+.form-checkbox label {
+    font-weight: 500;
+    color: var(--dark-color);
+    cursor: pointer;
+}
+
+.dynamic-fields {
+    margin-top: 20px;
+}
+
+.info-text {
+    background: #F0F9FF;
+    border: 1px solid #BAE6FD;
+    color: #0369A1;
+    padding: 15px 20px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.form-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--gray-border);
+}
+
+.btn-submit {
+    background: var(--primary-color);
+    color: var(--white-color);
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-submit:hover {
+    background: #1EA8C1;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(42, 193, 219, 0.3);
+}
+
+.btn-cancel {
+    background: transparent;
+    color: var(--gray-text);
+    padding: 12px 24px;
+    border: 1px solid var(--gray-border);
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-cancel:hover {
+    background: var(--gray-light);
+    border-color: var(--gray-text);
+}
+
+/* Responsive para formularios */
+@media (max-width: 768px) {
+    .form-container {
+        padding: 20px;
+        margin: 0 10px;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .form-buttons {
+        flex-direction: column;
+    }
+    
+    .btn-submit,
+    .btn-cancel {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .form-container {
+        padding: 15px;
+    }
+    
+    .section-title {
+        font-size: 1.1rem;
+    }
+    
+    .form-input,
+    .form-select {
+        padding: 10px 12px;
+    }
+}
+/* ===== SOLUCIÓN PARA SELECT RESPONSIVE ===== */
+
+.form-select {
+    max-width: 100%;
+    white-space: normal;
+    word-wrap: break-word;
+    height: auto;
+    min-height: 48px;
+    line-height: 1.4;
+}
+
+/* Estilos para las opciones del select */
+.form-select option {
+    white-space: normal;
+    word-wrap: break-word;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--gray-border);
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.form-select option:last-child {
+    border-bottom: none;
+}
+
+/* Mejorar la apariencia del select en móvil */
+@media (max-width: 768px) {
+    .form-select {
+        font-size: 16px; /* Evita zoom en iOS */
+        padding: 14px 12px;
+        min-height: 52px;
+    }
+    
+    .form-select option {
+        font-size: 14px;
+        padding: 10px 12px;
+        line-height: 1.3;
+    }
+}
+
+@media (max-width: 480px) {
+    .form-select {
+        font-size: 14px;
+        padding: 12px 10px;
+    }
+    
+    /* Forzar que el select ocupe el ancho completo */
+    .form-group {
+        width: 100%;
+    }
+    
+    .form-select {
+        width: 100%;
+        max-width: 100vw;
+        box-sizing: border-box;
+    }
+}
+
+/* Estilo para cuando el select está abierto en móvil */
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(42, 193, 219, 0.1);
+    position: relative;
+    z-index: 1000;
 }

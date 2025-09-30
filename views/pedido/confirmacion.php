@@ -16,7 +16,7 @@
         <h1 class="confirmation-title">¡Compra Exitosa!</h1>
         
         <p class="confirmation-message">
-            Tu pedido ha sido registrado correctamente y pronto recibirás la confirmación por correo electrónico.
+            Tu pedido ha sido registrado correctamente.
             <br><br>
             Nuestro equipo procesará tu pedido en las próximas horas y te mantendremos informado sobre el estado de tu envío.
         </p>
@@ -24,14 +24,6 @@
         <div class="order-info">
             <h3>Información del Pedido</h3>
             <div class="order-details">
-                <div class="order-detail">
-                    <span class="detail-label">Número de Pedido:</span>
-                    <span class="detail-value">#<?= $pedido['id'] ?? 'N/A' ?></span>
-                </div>
-                <div class="order-detail">
-                    <span class="detail-label">Estado:</span>
-                    <span class="detail-value"><?= ucfirst($pedido['estado'] ?? 'Pendiente') ?></span>
-                </div>
                 <div class="order-detail">
                     <span class="detail-label">Total:</span>
                     <span class="detail-value">S/ <?= number_format($pedido['monto_total'] ?? 0, 2) ?></span>

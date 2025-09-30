@@ -1,409 +1,336 @@
-<?php require_once __DIR__ . '/../../Core/Helpers/urlHelper.php'; ?>
-<link rel="stylesheet" href="<?= url('/css/editar-producto.css') ?>">
+<?php
+// Asegura que la sesión esté activa
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-<div class="form-container">
-    <h2>✏️ Editar Producto</h2>
+// Inicializa contador del carrito
+$cantidadEnCarrito = 0;
+if (!empty($_SESSION['carrito']) && is_array($_SESSION['carrito'])) {
+    foreach ($_SESSION['carrito'] as $item) {
+        $cantidadEnCarrito += (int)($item['cantidad'] ?? 0);
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Producto - Sistema de Gestión</title>
+    <link rel="stylesheet" href="<?= url('/css/editar-producto.css') ?>">
+    <?php include_once __DIR__ . '/../admin/includes/head.php'; ?>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <?php include_once __DIR__ . '/../admin/includes/navbar.php'; ?>
+        </aside>
 
-    <form action="<?= url('producto/actualizar') ?>" method="POST" enctype="multipart/form-data"> <input type="hidden" name="id" value="<?= $producto['id'] ?>">
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <?php include_once __DIR__ . '/../admin/includes/header.php'; ?>
+            </header>
 
-        <!-- Nombre -->
-        <div class="form-group">
-            <label for="nombre">Nombre del Producto</label>
-            <input type="text" name="nombre" id="nombre" value="<?= htmlspecialchars($producto['nombre']) ?>" required>
-        </div>
+            <!-- Main Content Area -->
+            <main class="content">
+                <div class="container">
+                    <!-- Page Header -->
+                    <div class="page-header">
+                        <h1 class="page-title">✏️ Editar Producto</h1>
+                        <p class="page-description">Modifica la información del producto existente</p>
+                    </div>
 
-        <!-- Descripción -->
-        <div class="form-group">
-            <label for="descripcion">Descripción</label>
-            <textarea name="descripcion" id="descripcion" required><?= htmlspecialchars($producto['descripcion']) ?></textarea>
-        </div>
-
-        <!-- Especificaciones (texto libre, cada línea -> lista) -->
-        <div class="form-row">
-            <label for="especificaciones">Especificaciones (una por línea)</label>
-            <textarea name="especificaciones" id="especificaciones" rows="5"><?= htmlspecialchars($producto['especificaciones'] ?? '') ?></textarea>
-        </div>
-
-        <!-- Productos relacionados (checkboxes con buscador) -->
-        <div class="form-row">
-            <label for="buscador-productos">🔍 Buscar Productos Relacionados</label>
-            <input
-                type="text"
-                id="buscador-productos"
-                placeholder="Escribe para buscar productos..."
-                class="buscador">
-
-            <!-- Área de productos seleccionados -->
-            <div class="productos-seleccionados-container" id="productos-seleccionados-container"
-                style="margin: 10px 0; padding: 10px; background: #e8f5e8; border-radius: 4px; border: 1px solid #c3e6c3; <?= empty($producto['productos_relacionados']) ? 'display: none;' : '' ?>">
-                <h4 style="margin: 0 0 10px 0; font-size: 14px; color: #2d5016;">✅ Productos Seleccionados:</h4>
-                <div id="lista-productos-seleccionados" class="lista-productos-seleccionados">
-                    <?php if (!empty($producto['productos_relacionados'])): ?>
-                        <?php foreach ($allProducts as $p): ?>
-                            <?php if (in_array((int)$p['id'], $producto['productos_relacionados'] ?? [])): ?>
-                                <div class="producto-seleccionado" data-product-id="<?= (int)$p['id'] ?>">
-                                    <span><?= htmlspecialchars($p['nombre']) ?></span>
-                                    <button type="button" class="btn-eliminar-seleccion" onclick="deseleccionarProducto(<?= (int)$p['id'] ?>)">×</button>
-                                </div>
-                            <?php endif; ?>
-                        <?php endforeach; ?>
+                    <!-- Session Alert -->
+                    <?php if (isset($_SESSION['mensaje_carrito'])): ?>
+                        <div id="mensaje-alerta" class="alert alert-success">
+                            <span class="alert-message"><?= htmlspecialchars($_SESSION['mensaje_carrito']) ?></span>
+                            <button id="cerrarAlerta" class="alert-close">✖</button>
+                        </div>
+                        <?php unset($_SESSION['mensaje_carrito']); ?>
                     <?php endif; ?>
-                </div>
-            </div>
 
-            <!-- Contenedor de checkboxes -->
-            <div class="checkboxes-container" id="productos-relacionados-container"
-                style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-top: 10px; background: #f9f9f9;">
+                    <!-- Form Container -->
+                    <div class="form-card">
+                        <form action="<?= url('producto/actualizar') ?>" method="POST" enctype="multipart/form-data" class="product-form">
+                            <input type="hidden" name="id" value="<?= $producto['id'] ?>">
 
-                <!-- Checkboxes iniciales (todos los productos visibles) -->
-                <?php foreach ($allProducts as $p): ?>
-                    <?php if (isset($producto['id']) && $p['id'] == $producto['id']) continue; ?>
-                    <div class="checkbox-item" data-product-id="<?= (int)$p['id'] ?>" data-product-name="<?= htmlspecialchars(strtolower($p['nombre'])) ?>">
-                        <label>
-                            <input
-                                type="checkbox"
-                                name="productos_relacionados[]"
-                                value="<?= (int)$p['id'] ?>"
-                                <?= in_array((int)$p['id'], $producto['productos_relacionados'] ?? []) ? 'checked' : '' ?>
-                                onchange="actualizarProductosSeleccionados(this)">
-                            <?= htmlspecialchars($p['nombre']) ?>
-                        </label>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-            <small>Selecciona los productos relacionados con checkboxes.</small>
-        </div>
+                            <!-- Basic Information Section -->
+                            <section class="form-section">
+                                <h2 class="section-title">Información Básica</h2>
+                                
+                                <div class="form-grid">
+                                    <!-- Nombre -->
+                                    <div class="form-group full-width">
+                                        <label for="nombre" class="form-label">Nombre del Producto *</label>
+                                        <input type="text" name="nombre" id="nombre" value="<?= htmlspecialchars($producto['nombre']) ?>" required class="form-input">
+                                    </div>
 
-        <!-- Precio Original (tachado) -->
-        <div class="form-group">
-            <label for="precio_tachado">Precio Original (tachado) (S/.)</label>
-            <input
-                type="number"
-                step="0.01"
-                min="0"
-                name="precio_tachado"
-                id="precio_tachado"
-                placeholder="Opcional — ej. 120.00"
-                value="<?= isset($producto['precio_tachado']) ? htmlspecialchars($producto['precio_tachado']) : '' ?>">
-        </div>
+                                    <!-- Descripción -->
+                                    <div class="form-group full-width">
+                                        <label for="descripcion" class="form-label">Descripción *</label>
+                                        <textarea name="descripcion" id="descripcion" required class="form-textarea"><?= htmlspecialchars($producto['descripcion']) ?></textarea>
+                                    </div>
 
-        <!-- Checkbox visibilidad para precio tachado -->
-        <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox"
-                name="precio_tachado_visible" id="precio_tachado_visible"
-                <?= isset($producto['precio_tachado_visible']) && $producto['precio_tachado_visible'] ? 'checked' : (empty($producto) ? 'checked' : '') ?>>
-            <label class="form-check-label" for="precio_tachado_visible">
-                Mostrar precio tachado en la tarjeta
-            </label>
-        </div>
-
-        <!-- Precio Final -->
-        <div class="form-group">
-            <label for="precio">Precio Final (S/.)</label>
-            <input
-                type="number"
-                step="0.01"
-                min="0"
-                name="precio"
-                id="precio"
-                required
-                value="<?= isset($producto['precio']) ? htmlspecialchars($producto['precio']) : '' ?>">
-        </div>
-
-        <!-- Porcentaje (solo lectura para el admin) -->
-        <div class="form-group">
-            <label for="porcentaje_descuento_readonly">Porcentaje de Descuento</label>
-            <input type="text" id="porcentaje_descuento_readonly" readonly
-                value="<?= isset($producto['precio_tachado']) && $producto['precio_tachado'] > $producto['precio'] ?
-                            number_format((($producto['precio_tachado'] - $producto['precio']) / $producto['precio_tachado']) * 100, 2) . '%' : '0.00%' ?>"
-                style="background:#f5f5f5; border:1px solid #ddd; padding:6px;">
-
-            <!-- Hidden para enviar el porcentaje al backend -->
-            <input type="hidden" name="porcentaje_descuento" id="porcentaje_descuento"
-                value="<?= isset($producto['precio_tachado']) && $producto['precio_tachado'] > $producto['precio'] ?
-                            number_format((($producto['precio_tachado'] - $producto['precio']) / $producto['precio_tachado']) * 100, 2) : '0' ?>">
-        </div>
-
-        <!-- Checkbox visibilidad para porcentaje -->
-        <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox"
-                name="porcentaje_visible" id="porcentaje_visible"
-                <?= isset($producto['porcentaje_visible']) && $producto['porcentaje_visible'] ? 'checked' : (empty($producto) ? 'checked' : '') ?>>
-            <label class="form-check-label" for="porcentaje_visible">
-                Mostrar porcentaje de descuento en la tarjeta
-            </label>
-        </div>
-
-
-        <!-- Stock -->
-        <div class="form-group">
-            <label for="stock">Stock</label>
-            <input type="number" name="stock" id="stock" value="<?= htmlspecialchars($producto['stock']) ?>" required>
-        </div>
-
-        <!-- Visible -->
-        <div class="form-group">
-            <div class="visible-checkbox">
-                <input type="checkbox" name="visible" id="visible" value="1" <?= $producto['visible'] ? 'checked' : '' ?>>
-                <label for="visible">Producto visible en la tienda</label>
-            </div>
-        </div>
-
-        <!-- Imágenes -->
-        <div class="form-group">
-            <label>📷 Imágenes del Producto</label>
-
-            <!-- Mostrar imágenes actuales -->
-            <?php if (!empty($imagenes)): ?>
-                <div class="imagenes-actuales">
-                    <h4 style="margin: 0 0 10px 0; font-size: 14px; color: #333;">🖼️ Imágenes Actuales:</h4>
-                    <div class="preview-grid">
-                        <?php foreach ($imagenes as $img): ?>
-                            <div class="preview-item existing-image">
-                                <img src="<?= url('uploads/' . $img['nombre_imagen']) ?>" alt="Imagen" class="preview-image">
-                                <div class="preview-info">
-                                    <?= htmlspecialchars($img['nombre_imagen']) ?>
-                                    <br>Imagen actual
+                                    <!-- Especificaciones -->
+                                    <div class="form-group full-width">
+                                        <label for="especificaciones" class="form-label">Especificaciones (una por línea)</label>
+                                        <textarea name="especificaciones" id="especificaciones" rows="5" class="form-textarea"><?= htmlspecialchars($producto['especificaciones'] ?? '') ?></textarea>
+                                    </div>
                                 </div>
-                                <a href="<?= url('imagen/eliminar/' . $img['id']) ?>"
-                                    class="preview-remove"
-                                    onclick="return confirm('¿Eliminar esta imagen permanentemente?')">×</a>
+                            </section>
+
+                            <!-- Pricing Section -->
+                            <section class="form-section">
+                                <h2 class="section-title">Precios y Descuentos</h2>
+                                
+                                <div class="form-grid">
+                                    <!-- Precio Original -->
+                                    <div class="form-group">
+                                        <label for="precio_tachado" class="form-label">Precio Original (S/.)</label>
+                                        <input type="number" step="0.01" min="0" name="precio_tachado" id="precio_tachado" 
+                                               placeholder="120.00" value="<?= isset($producto['precio_tachado']) ? htmlspecialchars($producto['precio_tachado']) : '' ?>" class="form-input">
+                                        <div class="form-checkbox-group">
+                                            <input type="checkbox" name="precio_tachado_visible" id="precio_tachado_visible" 
+                                                   <?= isset($producto['precio_tachado_visible']) && $producto['precio_tachado_visible'] ? 'checked' : (empty($producto) ? 'checked' : '') ?>>
+                                            <label for="precio_tachado_visible" class="checkbox-label">Mostrar precio tachado</label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Precio Final -->
+                                    <div class="form-group">
+                                        <label for="precio" class="form-label">Precio Final (S/.) *</label>
+                                        <input type="number" step="0.01" min="0" name="precio" id="precio" required 
+                                               value="<?= isset($producto['precio']) ? htmlspecialchars($producto['precio']) : '' ?>" class="form-input">
+                                    </div>
+
+                                    <!-- Porcentaje Descuento -->
+                                    <div class="form-group">
+                                        <label for="porcentaje_descuento_readonly" class="form-label">% Descuento</label>
+                                        <input type="text" id="porcentaje_descuento_readonly" readonly 
+                                               value="<?= isset($producto['precio_tachado']) && $producto['precio_tachado'] > $producto['precio'] ?
+                                                           number_format((($producto['precio_tachado'] - $producto['precio']) / $producto['precio_tachado']) * 100, 2) . '%' : '0.00%' ?>" 
+                                               class="form-input readonly">
+                                        <input type="hidden" name="porcentaje_descuento" id="porcentaje_descuento"
+                                               value="<?= isset($producto['precio_tachado']) && $producto['precio_tachado'] > $producto['precio'] ?
+                                                           number_format((($producto['precio_tachado'] - $producto['precio']) / $producto['precio_tachado']) * 100, 2) : '0' ?>">
+                                        <div class="form-checkbox-group">
+                                            <input type="checkbox" name="porcentaje_visible" id="porcentaje_visible"
+                                                   <?= isset($producto['porcentaje_visible']) && $producto['porcentaje_visible'] ? 'checked' : (empty($producto) ? 'checked' : '') ?>>
+                                            <label for="porcentaje_visible" class="checkbox-label">Mostrar porcentaje</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- Inventory Section -->
+                            <section class="form-section">
+                                <h2 class="section-title">Inventario y Visibilidad</h2>
+                                
+                                <div class="form-grid">
+                                    <!-- Stock -->
+                                    <div class="form-group">
+                                        <label for="stock" class="form-label">Stock *</label>
+                                        <input type="number" name="stock" id="stock" value="<?= htmlspecialchars($producto['stock']) ?>" required class="form-input">
+                                    </div>
+
+                                    <!-- Visible -->
+                                    <div class="form-group">
+                                        <div class="form-checkbox-group standalone">
+                                            <input type="checkbox" name="visible" id="visible" value="1" <?= $producto['visible'] ? 'checked' : '' ?>>
+                                            <label for="visible" class="checkbox-label">Producto visible en tienda</label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Destacado -->
+                                    <div class="form-group">
+                                        <div class="form-checkbox-group standalone">
+                                            <input type="checkbox" name="destacado" value="1" <?= $producto['destacado'] ? 'checked' : '' ?>>
+                                            <label class="checkbox-label">Producto destacado</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- Related Products Section -->
+                            <section class="form-section">
+                                <h2 class="section-title">Productos Relacionados</h2>
+                                
+                                <div class="form-group">
+                                    <label for="buscador-productos" class="form-label">🔍 Buscar Productos Relacionados</label>
+                                    <input type="text" id="buscador-productos" placeholder="Escribe para buscar productos..." class="form-input search-input">
+
+                                    <!-- Selected Products -->
+                                    <div class="selected-products-container" id="productos-seleccionados-container" 
+                                         style="<?= empty($producto['productos_relacionados']) ? 'display: none;' : '' ?>">
+                                        <h4 class="selected-products-title">✅ Productos Seleccionados:</h4>
+                                        <div id="lista-productos-seleccionados" class="selected-products-list">
+                                            <?php if (!empty($producto['productos_relacionados'])): ?>
+                                                <?php foreach ($allProducts as $p): ?>
+                                                    <?php if (in_array((int)$p['id'], $producto['productos_relacionados'] ?? [])): ?>
+                                                        <div class="selected-product-item" data-product-id="<?= (int)$p['id'] ?>">
+                                                            <span><?= htmlspecialchars($p['nombre']) ?></span>
+                                                            <button type="button" class="remove-selection-btn" onclick="deseleccionarProducto(<?= (int)$p['id'] ?>)">×</button>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                <?php endforeach; ?>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+
+                                    <!-- Checkboxes Container -->
+                                    <div class="checkboxes-container" id="productos-relacionados-container">
+                                        <?php foreach ($allProducts as $p): ?>
+                                            <?php if (isset($producto['id']) && $p['id'] == $producto['id']) continue; ?>
+                                            <div class="checkbox-item" data-product-id="<?= (int)$p['id'] ?>" data-product-name="<?= htmlspecialchars(strtolower($p['nombre'])) ?>">
+                                                <label class="checkbox-label">
+                                                    <input type="checkbox" name="productos_relacionados[]" value="<?= (int)$p['id'] ?>"
+                                                           <?= in_array((int)$p['id'], $producto['productos_relacionados'] ?? []) ? 'checked' : '' ?>
+                                                           onchange="actualizarProductosSeleccionados(this)">
+                                                    <?= htmlspecialchars($p['nombre']) ?>
+                                                </label>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                    <small class="form-help">Selecciona los productos relacionados con checkboxes.</small>
+                                </div>
+                            </section>
+
+                            <!-- Images Section -->
+                            <section class="form-section">
+                                <h2 class="section-title">📷 Imágenes del Producto</h2>
+                                
+                                <!-- Current Images -->
+                                <?php if (!empty($imagenes)): ?>
+                                    <div class="current-images">
+                                        <h4 class="images-subtitle">🖼️ Imágenes Actuales:</h4>
+                                        <div class="images-grid">
+                                            <?php foreach ($imagenes as $img): ?>
+                                                <div class="image-item existing-image">
+                                                    <img src="<?= url('uploads/' . $img['nombre_imagen']) ?>" alt="Imagen" class="image-preview">
+                                                    <div class="image-info">
+                                                        <?= htmlspecialchars($img['nombre_imagen']) ?>
+                                                        <br>Imagen actual
+                                                    </div>
+                                                    <a href="<?= url('imagen/eliminar/' . $img['id']) ?>" class="image-remove-btn"
+                                                       onclick="return confirm('¿Eliminar esta imagen permanentemente?')">×</a>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+
+                                <!-- New Images Upload -->
+                                <div class="upload-section">
+                                    <div class="dropzone-container" id="dropzone-container">
+                                        <div class="dropzone-area" id="dropzone-area">
+                                            <div class="dropzone-content">
+                                                <i class="upload-icon">📁</i>
+                                                <p>Arrastra y suelta NUEVAS imágenes aquí o haz clic para seleccionar</p>
+                                                <small>Formatos: JPG, PNG, WEBP (Máx. 5MB por imagen)</small>
+                                            </div>
+                                            <input type="file" name="imagenes[]" id="imagenes" multiple accept="image/*" class="file-input">
+                                        </div>
+                                    </div>
+
+                                    <!-- New Images Preview -->
+                                    <div class="preview-container" id="preview-container">
+                                        <h4 class="images-subtitle">📷 Nuevas Imágenes:</h4>
+                                        <div class="images-grid" id="preview-grid">
+                                            <!-- Las miniaturas de nuevas imágenes aparecerán aquí -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- Categories & Tags Section -->
+                            <section class="form-section">
+                                <h2 class="section-title">Categorías y Etiquetas</h2>
+                                
+                                <div class="form-grid">
+                                    <!-- Etiquetas -->
+                                    <div class="form-group">
+                                        <label for="etiquetas" class="form-label">🏷️ Etiquetas</label>
+                                        <select name="etiquetas[]" id="etiquetas" multiple class="form-select multiple">
+                                            <?php foreach ($etiquetas as $et): ?>
+                                                <option value="<?= $et['id'] ?>" <?= in_array($et['id'], $etiquetasAsignadas ?? []) ? 'selected' : '' ?>>
+                                                    <?= htmlspecialchars($et['nombre']) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+
+                                    <!-- Categorías -->
+                                    <div class="form-group full-width">
+                                        <label class="form-label">📋 Categorías</label>
+                                        <div class="categories-container">
+                                            <?php
+                                            function renderCheckboxCategoriasEdit($categorias, $seleccionadas, $padre = null, $nivel = 0)
+                                            {
+                                                foreach ($categorias as $cat) {
+                                                    if ($cat['id_padre'] == $padre) {
+                                                        $checked = in_array($cat['id'], $seleccionadas) ? 'checked' : '';
+                                                        $margin = $nivel * 20;
+                                                        echo "<div class='category-item' style='margin-left: {$margin}px'>";
+                                                        echo "<label class='checkbox-label'><input type='checkbox' name='categorias[]' value='{$cat['id']}' $checked> " . htmlspecialchars($cat['nombre']) . "</label>";
+                                                        echo "</div>";
+                                                        renderCheckboxCategoriasEdit($categorias, $seleccionadas, $cat['id'], $nivel + 1);
+                                                    }
+                                                }
+                                            }
+                                            renderCheckboxCategoriasEdit($categorias, $categoriasAsignadas);
+                                            ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- Variants Section -->
+                            <section class="form-section">
+                                <h2 class="section-title">🎨 Variantes del Producto</h2>
+                                
+                                <div id="variantes-container" class="variants-container">
+                                    <?php if (!empty($variantes)): ?>
+                                        <?php foreach ($variantes as $var): ?>
+                                            <div class="variant-item">
+                                                <input type="hidden" name="variantes[id][]" value="<?= $var['id'] ?>">
+                                                <div class="variant-field">
+                                                    <label>Talla</label>
+                                                    <input type="text" name="variantes[talla][]" value="<?= htmlspecialchars($var['talla']) ?>" class="form-input">
+                                                </div>
+                                                <div class="variant-field">
+                                                    <label>Color</label>
+                                                    <input type="text" name="variantes[color][]" value="<?= htmlspecialchars($var['color']) ?>" class="form-input">
+                                                </div>
+                                                <div class="variant-field">
+                                                    <label>Stock</label>
+                                                    <input type="number" name="variantes[stock][]" value="<?= htmlspecialchars($var['stock']) ?>" class="form-input">
+                                                </div>
+                                                <a href="<?= url('variante/eliminar/' . $var['id'] . '?producto_id=' . $producto['id']) ?>" 
+                                                   class="delete-variant-btn" onclick="return confirm('¿Eliminar esta variante?')">❌ Eliminar</a>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <p class="no-variants">No hay variantes registradas.</p>
+                                    <?php endif; ?>
+                                </div>
+                                <button type="button" class="btn btn-secondary" onclick="agregarVariante()">+ Agregar Variante</button>
+                            </section>
+
+                            <!-- Form Actions -->
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">💾 Guardar Cambios</button>
+                                <a href="<?= url('producto') ?>" class="btn btn-secondary">← Atrás</a>
                             </div>
-                        <?php endforeach; ?>
+                        </form>
                     </div>
                 </div>
-            <?php endif; ?>
-
-            <!-- Área para agregar nuevas imágenes -->
-            <div class="dropzone-container" id="dropzone-container" style="margin-top: 20px;">
-                <div class="dropzone-area" id="dropzone-area">
-                    <div class="dropzone-content">
-                        <i class="upload-icon">📁</i>
-                        <p>Arrastra y suelta NUEVAS imágenes aquí o haz clic para seleccionar</p>
-                        <small>Formatos: JPG, PNG, WEBP (Máx. 5MB por imagen)</small>
-                    </div>
-                    <input type="file" name="imagenes[]" id="imagenes" multiple accept="image/*" style="display: none;">
-                </div>
-            </div>
-
-            <!-- Contenedor de previsualización de NUEVAS imágenes -->
-            <div class="preview-container" id="preview-container" style="display: none;">
-                <h4 style="margin: 15px 0 10px 0; font-size: 14px; color: #333;">📷 Nuevas Imágenes:</h4>
-                <div class="preview-grid" id="preview-grid">
-                    <!-- Las miniaturas de nuevas imágenes aparecerán aquí -->
-                </div>
-            </div>
+            </main>
         </div>
-        <style>
-            /* Estilos para el sistema de imágenes */
-.dropzone-container {
-    margin-bottom: 15px;
-}
-
-.dropzone-area {
-    border: 2px dashed #ccc;
-    border-radius: 8px;
-    padding: 30px;
-    text-align: center;
-    background: #fafafa;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-}
-
-.dropzone-area:hover {
-    border-color: #007bff;
-    background: #f0f8ff;
-}
-
-.dropzone-area.dragover {
-    border-color: #28a745;
-    background: #e8f5e8;
-}
-
-.dropzone-content {
-    color: #666;
-}
-
-.upload-icon {
-    font-size: 2rem;
-    margin-bottom: 10px;
-    display: block;
-}
-
-.dropzone-area p {
-    margin: 0 0 5px 0;
-    font-weight: 500;
-}
-
-.dropzone-area small {
-    color: #888;
-}
-
-/* Contenedor de previsualización */
-.preview-container {
-    margin-top: 20px;
-}
-
-.preview-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 15px;
-    margin-top: 10px;
-}
-
-.preview-item {
-    position: relative;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    transition: transform 0.2s ease;
-}
-
-.preview-item:hover {
-    transform: translateY(-2px);
-}
-
-.preview-image {
-    width: 100%;
-    height: 120px;
-    object-fit: cover;
-    display: block;
-}
-
-.preview-info {
-    padding: 8px;
-    background: white;
-    font-size: 12px;
-    color: #666;
-    text-align: center;
-    border-top: 1px solid #eee;
-}
-
-.preview-remove {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    background: #dc3545;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    font-size: 14px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0.9;
-    transition: opacity 0.2s ease;
-    text-decoration: none;
-}
-
-.preview-remove:hover {
-    opacity: 1;
-    background: #c82333;
-}
-
-/* Estilo especial para imágenes existentes */
-.existing-image {
-    border: 2px solid #28a745;
-}
-
-.existing-image .preview-info {
-    background: #e8f5e8;
-    color: #155724;
-}
-
-/* Indicador de cantidad */
-.file-count {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    background: #007bff;
-    color: white;
-    border-radius: 12px;
-    padding: 2px 8px;
-    font-size: 12px;
-    font-weight: bold;
-}
-        </style>
-
-        <!-- Etiquetas -->
-        <div class="form-group">
-            <label for="etiquetas">🏷️ Etiquetas</label>
-            <select name="etiquetas[]" id="etiquetas" multiple>
-                <?php foreach ($etiquetas as $et): ?>
-                    <option value="<?= $et['id'] ?>" <?= in_array($et['id'], $etiquetasAsignadas ?? []) ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($et['nombre']) ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-
-        <!-- Categorías -->
-        <h3>📋 Categorías</h3>
-        <div class="checkbox-container">
-            <?php
-            function renderCheckboxCategoriasEdit($categorias, $seleccionadas, $padre = null, $nivel = 0)
-            {
-                foreach ($categorias as $cat) {
-                    if ($cat['id_padre'] == $padre) {
-                        $checked = in_array($cat['id'], $seleccionadas) ? 'checked' : '';
-                        $margen = $nivel * 20;
-                        echo "<div style='margin-left: {$margen}px'>";
-                        echo "<label><input type='checkbox' name='categorias[]' value='{$cat['id']}' $checked> " . htmlspecialchars($cat['nombre']) . "</label>";
-                        echo "</div>";
-                        renderCheckboxCategoriasEdit($categorias, $seleccionadas, $cat['id'], $nivel + 1);
-                    }
-                }
-            }
-            renderCheckboxCategoriasEdit($categorias, $categoriasAsignadas);
-            ?>
-        </div>
-
-        <!-- Variantes -->
-        <h3>🎨 Variantes del Producto</h3>
-        <div id="variantes-container">
-            <?php if (!empty($variantes)): ?>
-                <?php foreach ($variantes as $var): ?>
-                    <div class="variante">
-                        <input type="hidden" name="variantes[id][]" value="<?= $var['id'] ?>">
-                        <div>
-                            <label>Talla</label>
-                            <input type="text" name="variantes[talla][]" value="<?= htmlspecialchars($var['talla']) ?>">
-                        </div>
-                        <div>
-                            <label>Color</label>
-                            <input type="text" name="variantes[color][]" value="<?= htmlspecialchars($var['color']) ?>">
-                        </div>
-                        <div>
-                            <label>Stock</label>
-                            <input type="number" name="variantes[stock][]" value="<?= htmlspecialchars($var['stock']) ?>">
-                        </div>
-                        <a href="<?= url('variante/eliminar/' . $var['id'] . '?producto_id=' . $producto['id']) ?>" onclick="return confirm('¿Eliminar esta variante?')">❌ Eliminar</a>
-                    </div>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <p>No hay variantes registradas.</p>
-            <?php endif; ?>
-        </div>
-        <button type="button" class="btn btn-add" onclick="agregarVariante()">+ Agregar Variante</button>
-
-
-        <div class="form-group">
-            <label>
-                <input type="checkbox" name="destacado" value="1" <?= $producto['destacado'] ? 'checked' : '' ?>>
-                Producto destacado
-            </label>
-        </div>
-        <!-- Botones de acción -->
-        <div class="form-actions">
-            <button type="submit" class="btn btn-success">💾 Guardar Cambios</button>
-            <a href="<?= url('producto') ?>" class="btn btn-secondary">← Atrás</a>
-        </div>
-    </form>
-</div>
+    </div>
 
 <script>
     function agregarVariante() {
@@ -639,81 +566,81 @@
 </script>
 <script>
     // Sistema de previsualización de imágenes PARA EDITAR
-document.addEventListener('DOMContentLoaded', function() {
-    const dropzoneArea = document.getElementById('dropzone-area');
-    const fileInput = document.getElementById('imagenes');
-    const previewContainer = document.getElementById('preview-container');
-    const previewGrid = document.getElementById('preview-grid');
-    const fileCount = document.createElement('div');
-    
-    fileCount.className = 'file-count';
-    fileCount.style.display = 'none';
-    dropzoneArea.appendChild(fileCount);
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropzoneArea = document.getElementById('dropzone-area');
+        const fileInput = document.getElementById('imagenes');
+        const previewContainer = document.getElementById('preview-container');
+        const previewGrid = document.getElementById('preview-grid');
+        const fileCount = document.createElement('div');
 
-    // Click en el dropzone
-    dropzoneArea.addEventListener('click', function() {
-        fileInput.click();
-    });
+        fileCount.className = 'file-count';
+        fileCount.style.display = 'none';
+        dropzoneArea.appendChild(fileCount);
 
-    // Cambio en el input de archivo
-    fileInput.addEventListener('change', function() {
-        handleFiles(this.files);
-    });
-
-    // Drag and drop
-    dropzoneArea.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        this.classList.add('dragover');
-    });
-
-    dropzoneArea.addEventListener('dragleave', function() {
-        this.classList.remove('dragover');
-    });
-
-    dropzoneArea.addEventListener('drop', function(e) {
-        e.preventDefault();
-        this.classList.remove('dragover');
-        
-        if (e.dataTransfer.files.length) {
-            fileInput.files = e.dataTransfer.files;
-            handleFiles(e.dataTransfer.files);
-        }
-    });
-
-    // Función para manejar archivos
-    function handleFiles(files) {
-        if (files.length === 0) return;
-
-        // Actualizar contador
-        fileCount.textContent = files.length;
-        fileCount.style.display = 'block';
-
-        // Mostrar contenedor de previsualización
-        previewContainer.style.display = 'block';
-
-        // Procesar cada archivo
-        Array.from(files).forEach((file, index) => {
-            if (!file.type.startsWith('image/')) return;
-
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                createPreviewItem(e.target.result, file.name, file.size, index);
-            };
-            
-            reader.readAsDataURL(file);
+        // Click en el dropzone
+        dropzoneArea.addEventListener('click', function() {
+            fileInput.click();
         });
-    }
 
-    // Función para crear item de previsualización
-    function createPreviewItem(src, name, size, index) {
-        const previewItem = document.createElement('div');
-        previewItem.className = 'preview-item';
-        previewItem.setAttribute('data-index', index);
+        // Cambio en el input de archivo
+        fileInput.addEventListener('change', function() {
+            handleFiles(this.files);
+        });
 
-        const sizeMB = (size / (1024 * 1024)).toFixed(2);
-        
-        previewItem.innerHTML = `
+        // Drag and drop
+        dropzoneArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('dragover');
+        });
+
+        dropzoneArea.addEventListener('dragleave', function() {
+            this.classList.remove('dragover');
+        });
+
+        dropzoneArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                handleFiles(e.dataTransfer.files);
+            }
+        });
+
+        // Función para manejar archivos
+        function handleFiles(files) {
+            if (files.length === 0) return;
+
+            // Actualizar contador
+            fileCount.textContent = files.length;
+            fileCount.style.display = 'block';
+
+            // Mostrar contenedor de previsualización
+            previewContainer.style.display = 'block';
+
+            // Procesar cada archivo
+            Array.from(files).forEach((file, index) => {
+                if (!file.type.startsWith('image/')) return;
+
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    createPreviewItem(e.target.result, file.name, file.size, index);
+                };
+
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Función para crear item de previsualización
+        function createPreviewItem(src, name, size, index) {
+            const previewItem = document.createElement('div');
+            previewItem.className = 'preview-item';
+            previewItem.setAttribute('data-index', index);
+
+            const sizeMB = (size / (1024 * 1024)).toFixed(2);
+
+            previewItem.innerHTML = `
             <img src="${src}" alt="${name}" class="preview-image">
             <div class="preview-info">
                 ${name.length > 15 ? name.substring(0, 15) + '...' : name}
@@ -722,58 +649,58 @@ document.addEventListener('DOMContentLoaded', function() {
             <button type="button" class="preview-remove" onclick="removePreviewImage(${index})">×</button>
         `;
 
-        previewGrid.appendChild(previewItem);
+            previewGrid.appendChild(previewItem);
+        }
+    });
+
+    // Función para eliminar imagen de la previsualización (NUEVAS imágenes)
+    function removePreviewImage(index) {
+        const fileInput = document.getElementById('imagenes');
+        const files = Array.from(fileInput.files);
+        files.splice(index, 1);
+
+        // Crear nuevo FileList
+        const newFileList = new DataTransfer();
+        files.forEach(file => newFileList.items.add(file));
+        fileInput.files = newFileList.files;
+
+        // Actualizar UI
+        updatePreviewUI();
     }
-});
 
-// Función para eliminar imagen de la previsualización (NUEVAS imágenes)
-function removePreviewImage(index) {
-    const fileInput = document.getElementById('imagenes');
-    const files = Array.from(fileInput.files);
-    files.splice(index, 1);
-    
-    // Crear nuevo FileList
-    const newFileList = new DataTransfer();
-    files.forEach(file => newFileList.items.add(file));
-    fileInput.files = newFileList.files;
-    
-    // Actualizar UI
-    updatePreviewUI();
-}
+    // Función para actualizar la UI después de eliminar
+    function updatePreviewUI() {
+        const fileInput = document.getElementById('imagenes');
+        const previewGrid = document.getElementById('preview-grid');
+        const previewContainer = document.getElementById('preview-container');
+        const fileCount = document.querySelector('.file-count');
 
-// Función para actualizar la UI después de eliminar
-function updatePreviewUI() {
-    const fileInput = document.getElementById('imagenes');
-    const previewGrid = document.getElementById('preview-grid');
-    const previewContainer = document.getElementById('preview-container');
-    const fileCount = document.querySelector('.file-count');
-    
-    // Limpiar previsualización
-    previewGrid.innerHTML = '';
-    
-    if (fileInput.files.length === 0) {
-        previewContainer.style.display = 'none';
-        fileCount.style.display = 'none';
-        return;
-    }
-    
-    // Actualizar contador
-    fileCount.textContent = fileInput.files.length;
-    
-    // Recrear previsualizaciones
-    Array.from(fileInput.files).forEach((file, index) => {
-        if (!file.type.startsWith('image/')) return;
+        // Limpiar previsualización
+        previewGrid.innerHTML = '';
 
-        const reader = new FileReader();
-        
-        reader.onload = function(e) {
-            const previewItem = document.createElement('div');
-            previewItem.className = 'preview-item';
-            previewItem.setAttribute('data-index', index);
+        if (fileInput.files.length === 0) {
+            previewContainer.style.display = 'none';
+            fileCount.style.display = 'none';
+            return;
+        }
 
-            const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
-            
-            previewItem.innerHTML = `
+        // Actualizar contador
+        fileCount.textContent = fileInput.files.length;
+
+        // Recrear previsualizaciones
+        Array.from(fileInput.files).forEach((file, index) => {
+            if (!file.type.startsWith('image/')) return;
+
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const previewItem = document.createElement('div');
+                previewItem.className = 'preview-item';
+                previewItem.setAttribute('data-index', index);
+
+                const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+
+                previewItem.innerHTML = `
                 <img src="${e.target.result}" alt="${file.name}" class="preview-image">
                 <div class="preview-info">
                     ${file.name.length > 15 ? file.name.substring(0, 15) + '...' : file.name}
@@ -782,10 +709,10 @@ function updatePreviewUI() {
                 <button type="button" class="preview-remove" onclick="removePreviewImage(${index})">×</button>
             `;
 
-            previewGrid.appendChild(previewItem);
-        };
-        
-        reader.readAsDataURL(file);
-    });
-}
+                previewGrid.appendChild(previewItem);
+            };
+
+            reader.readAsDataURL(file);
+        });
+    }
 </script>

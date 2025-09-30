@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crear Cuenta - Bytebox</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="<?= url('css/registro.css') ?>">
+    <link rel="stylesheet" href="<?= url('/css/registro.css') ?>">
 </head>
 
 <body class="bg-gradient">
@@ -16,7 +16,7 @@
             <div class="text-center">
                 <h2 class="brand">BYTEBOX</h2>
                 <p class="subtitle">Crea tu cuenta gratuita</p>
-                <?php if (!empty($redirect)): ?>
+                <?php if (isset($redirect) && !empty($redirect)): ?>
                     <p class="highlight">Después podrás finalizar tu compra</p>
                 <?php endif; ?>
             </div>
@@ -85,18 +85,18 @@
 
                 <p class="login-link">
                     ¿Ya tienes cuenta?
-                    <a href="<?= url('auth/login' . (!empty($redirect) ? '?redirect=' . urlencode($redirect) : '')) ?>">Inicia sesión aquí</a>
+                    <a href="<?= url('auth/login' . (isset($redirect) && !empty($redirect) ? '?redirect=' . urlencode($redirect) : '')) ?>">Inicia sesión aquí</a>
                 </p>
             </form>
         </div>
 
-        <?php if (!empty($redirect) && $redirect === 'pedido/checkout'): ?>
+        <?php if (isset($redirect) && !empty($redirect) && $redirect === 'pedido/checkout'): ?>
             <div class="back-link">
                 <a href="<?= url('carrito/ver') ?>">← Volver al carrito</a>
             </div>
         <?php endif; ?>
     </div>
-    <script src="registro.js"></script>
+    <script src="<?= url('public/js/registro.js') ?>"></script>
 </body>
 
 </html>

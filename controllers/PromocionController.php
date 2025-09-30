@@ -193,12 +193,14 @@ class PromocionController
             case 'primera_compra':
                 break;
             case 'cantidad_producto_identico':
-                if (!isset($post['cond_producto_id']) || !isset($post['cond_cantidad_min'])) {
-                    error_log("Error: cond_producto_id o cond_cantidad_min no proporcionados");
-                    throw new \Exception("El ID del producto y la cantidad mínima son obligatorios.");
+                // ✅ CORREGIDO: Usar los nombres reales de las vistas
+                if (!isset($post['cond_producto_id']) || !isset($post['accion_cantidad_lleva'])) {
+                    error_log("Error: cond_producto_id o accion_cantidad_lleva no proporcionados");
+                    throw new \Exception("El ID del producto y la cantidad a llevar son obligatorios.");
                 }
                 $condicion['producto_id'] = (int)($post['cond_producto_id']);
-                $condicion['cantidad_min'] = (int)($post['cond_cantidad_min']);
+                // ✅ Para NxM, la condición es llevar al menos la cantidad que se especifica
+                $condicion['cantidad_min'] = (int)($post['accion_cantidad_lleva']);
                 if ($condicion['producto_id'] <= 0 || $condicion['cantidad_min'] <= 0) {
                     throw new \Exception("El ID del producto y la cantidad mínima deben ser mayores a 0.");
                 }

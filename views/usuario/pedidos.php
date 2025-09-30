@@ -33,7 +33,6 @@
 
         <div class="flex h-screen">
             <!-- Incluir navegación lateral fija -->
-
             <main class="flex-1 overflow-y-auto p-6">
 
                 <div class="max-w-7xl mx-auto space-y-6">
@@ -46,7 +45,7 @@
                             <div class="mb-8">
                                 <div class="flex items-center justify-between">
                                     <div>
-                                        <h1 class="text-3xl font-bold text-gray-900">📦 Mis Pedidos</h1>
+                                        <h1 class="text-3xl font-bold text-gray-900">Mis Pedidos</h1>
                                         <p class="text-gray-600 mt-1">Historial completo de tus compras</p>
                                     </div>
                                     <div class="flex gap-3">
@@ -59,9 +58,8 @@
                                     </div>
                                 </div>
                             </div>
-
                             <!-- Estadísticas -->
-                            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                        <!--    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                                 <div class="bg-white rounded-xl p-6 shadow-sm border">
                                     <div class="flex items-center justify-between">
                                         <div>
@@ -126,7 +124,7 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </div>-->
 
                             <!-- Lista de Pedidos -->
                             <div class="bg-white rounded-xl shadow-sm border">
@@ -156,13 +154,8 @@
                                             <div class="p-6 hover:bg-gray-50 transition-colors">
                                                 <div class="flex items-center justify-between mb-4">
                                                     <div class="flex items-center space-x-4">
-                                                        <div class="flex-shrink-0">
-                                                            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                                                                <span class="text-white font-bold">#<?= $pedidozz['id'] ?></span>
-                                                            </div>
-                                                        </div>
                                                         <div>
-                                                            <h3 class="text-lg font-medium text-gray-900">Pedido #<?= $pedidozz['id'] ?></h3>
+                                                            <h3 class="text-lg font-medium text-gray-900">Pedido</h3>
                                                             <p class="text-sm text-gray-600"><?= date('d/m/Y H:i', strtotime($pedidozz['creado_en'])) ?></p>
                                                         </div>
                                                     </div>
@@ -214,7 +207,7 @@
                                                             <p class="text-lg font-bold text-gray-900">S/ <?= number_format($totalPedido, 2) ?></p>
                                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
                                                         <?php
-                                                        switch ($pedido['estado']) {
+                                                        switch ($pedidozz['estado']) {
                                                             case 'entregado':
                                                                 echo 'bg-green-100 text-green-800';
                                                                 break;
@@ -231,7 +224,7 @@
                                                                 echo 'bg-gray-100 text-gray-800';
                                                         }
                                                         ?>">
-                                                                <?= ucfirst($pedido['estado']) ?>
+                                                                <?= ucfirst($pedidozz['estado']) ?>
                                                             </span>
                                                         </div>
                                                         <button onclick="mostrarDetallePedido(<?= $pedidozz['id'] ?>)" class="text-blue-600 hover:text-blue-800 font-medium cursor-pointer">
@@ -259,6 +252,27 @@
                                                         <?php endif; ?>
                                                     </div>
                                                 </div>
+
+                                                <!-- Botón Califica tu compra (solo para pedidos entregados) -->
+                                                <?php if ($pedidozz['estado'] === 'entregado'): ?>
+                                                    <div class="pt-4 border-t border-gray-200 mt-4">
+                                                        <button
+                                                            onclick="abrirModalComentario(<?= $pedidozz['id'] ?>)"
+                                                            class="w-full flex flex-col items-center justify-center gap-1 p-3 bg-yellow-50 border border-yellow-200 rounded-lg hover:bg-yellow-100 transition-colors cursor-pointer group">
+                                                            <div class="flex gap-1 text-2xl text-yellow-400">
+                                                                <span>★</span>
+                                                                <span>★</span>
+                                                                <span>★</span>
+                                                                <span>★</span>
+                                                                <span>★</span>
+                                                            </div>
+                                                            <span class="text-yellow-700 font-medium text-sm group-hover:text-yellow-800">
+                                                                Califica tu compra
+                                                            </span>
+                                                        </button>
+                                                    </div>
+                                                <?php endif; ?>
+
                                             </div>
                                         <?php endforeach; ?>
                                     </div>
@@ -279,7 +293,7 @@
                 <div class="flex items-center justify-between mb-6">
                     <h2 class="text-2xl font-bold text-gray-900">
                         <span class="mr-2">📦</span>
-                        Detalles del Pedido #<span id="modalPedidoId"></span>
+                        Detalles del Pedido
                     </h2>
                     <button onclick="cerrarModal()" class="text-gray-400 hover:text-gray-600 text-2xl cursor-pointer">
                         ×
@@ -306,6 +320,7 @@
     </div>
 
     <script>
+        
         // Datos de pedidos disponibles (pasados desde PHP)
         const pedidosData = <?= json_encode($pedidos) ?>;
 
@@ -323,7 +338,7 @@
         function mostrarModalConDatos(pedido) {
             // Mostrar el modal
             document.getElementById('modalDetallePedido').classList.remove('hidden');
-            document.getElementById('modalPedidoId').textContent = pedido.id;
+            //document.getElementById('modalPedidoId').textContent = pedido.id;
 
             // Generar el contenido del modal
             const contenido = generarContenidoDetalle(pedido);
@@ -333,7 +348,7 @@
         function cargarDetallePedidoAjax(pedidoId) {
             // Mostrar modal con loading
             document.getElementById('modalDetallePedido').classList.remove('hidden');
-            document.getElementById('modalPedidoId').textContent = pedidoId;
+            //document.getElementById('modalPedidoId').textContent = pedidoId;
             document.getElementById('modalContenido').innerHTML = `
                 <div class="text-center py-8">
                     <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
@@ -582,13 +597,6 @@
                         <div class="mt-4 space-y-4">
                             <!-- Botón de acción -->
                             <div class="flex justify-end mr-[20px]">
-                                <button 
-                                    onclick='abrirModalComentario(${pedido.id}, ${JSON.stringify(pedido.detalles)})' 
-                                    class="text-blue-600 hover:text-blue-800 font-medium cursor-pointer">
-                                    ✍️ Califica tu compra
-                                </button>
-
-
                                 <!-- Modal Comentario -->
                                 <div id="modalComentario" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 modal-backdrop">
                                     <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative">
@@ -735,28 +743,34 @@
 
 
 
-        // Si quieres, resetea estrellas cada vez que abres el modal
-        // Añade esto en abrirModalComentario al principio:
-        function abrirModalComentario(ordenId, productos) {
-            // ... tu código actual ...
-            resetStars(); // <--- resetea visualmente y borra inputPuntuacion
-            document.getElementById("modalComentario").classList.remove("hidden");
+        // Debug function
+        function debugAbrirModal(ordenId, productos) {
+            console.log('abrirModalComentario llamado con:', ordenId, productos);
+            abrirModalComentario(ordenId, productos);
         }
 
+        // Abrir modal de comentario (versión simplificada)
+        function abrirModalComentario(ordenId) {
+            console.log('Abriendo modal para orden:', ordenId);
 
-        // Abrir modal de comentario
-        function abrirModalComentario(ordenId, productos) {
+            // Buscar el pedido en los datos locales
+            const pedido = pedidosData.find(p => p.id == ordenId);
+            if (!pedido) {
+                console.error('Pedido no encontrado:', ordenId);
+                return;
+            }
+
+            const productos = pedido.detalles || [];
+            console.log('Productos encontrados:', productos);
+
             document.getElementById("inputOrdenId").value = ordenId;
             resetStars();
 
             if (productos.length === 1) {
-                // Solo un producto
                 document.getElementById("productoSelectWrapper").classList.add("hidden");
                 document.getElementById("inputProductoIdHidden").value = productos[0].producto_id;
             } else {
-                // Varios productos
                 document.getElementById("productoSelectWrapper").classList.remove("hidden");
-
                 let select = document.getElementById("selectProducto");
                 select.innerHTML = "";
 
@@ -767,10 +781,7 @@
                     select.appendChild(opt);
                 });
 
-                // Poner el primero como seleccionado por defecto
-                document.getElementById("inputProductoIdHidden").value = productos[0].producto_id;
-
-                // Sincronizar al cambiar
+                document.getElementById("inputProductoIdHidden").value = productos[0]?.producto_id || '';
                 select.addEventListener("change", function() {
                     document.getElementById("inputProductoIdHidden").value = this.value;
                 });
@@ -779,11 +790,59 @@
             document.getElementById("modalComentario").classList.remove("hidden");
         }
 
-
         function cerrarModalComentario() {
             document.getElementById("modalComentario").classList.add("hidden");
         }
     </script>
+    <!-- Modal Comentario -->
+    <div id="modalComentario" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 modal-backdrop">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative">
+
+            <!-- Botón cerrar -->
+            <button onclick="cerrarModalComentario()" class="absolute top-2 right-4 text-gray-400 hover:text-gray-600 text-2xl cursor-pointer">×</button>
+            <h2 class="text-xl font-semibold mb-4 text-center">Dejar un comentario</h2>
+
+            <form id="formComentario" action="<?= url('producto/guardarComentario') ?>" method="post">
+                <!-- Orden -->
+                <input type="hidden" name="orden_id" id="inputOrdenId">
+
+                <!-- Producto (selector si hay varios) -->
+                <div id="productoSelectWrapper" class="mb-4 hidden">
+                    <label class="block mb-2 font-medium">Producto:</label>
+                    <select id="selectProducto" class="w-full border rounded-lg p-2"></select>
+                </div>
+
+                <!-- Producto (hidden siempre será el que se envía al backend) -->
+                <input type="hidden" name="producto_id" id="inputProductoIdHidden">
+
+                <!-- Usuario -->
+                <input type="hidden" name="user_id" value="<?= $_SESSION['user_id'] ?>">
+
+                <!-- Puntuación con estrellas -->
+                <label class="block mb-2 font-medium">Puntuación:</label>
+                <div class="flex gap-1 text-2xl mb-4 cursor-pointer" id="starRating">
+                    <span data-value="1" class="star text-gray-400">★</span>
+                    <span data-value="2" class="star text-gray-400">★</span>
+                    <span data-value="3" class="star text-gray-400">★</span>
+                    <span data-value="4" class="star text-gray-400">★</span>
+                    <span data-value="5" class="star text-gray-400">★</span>
+                </div>
+                <input type="hidden" name="puntuacion" id="inputPuntuacion">
+
+                <!-- Título -->
+                <label class="block mb-2 font-medium">Descripción:</label>
+                <input type="text" name="titulo" class="w-full border rounded-lg p-2 mb-4" required>
+
+                <!-- Comentario -->
+                <label class="block mb-2 font-medium">Comentario:</label>
+                <textarea name="texto" class="w-full border rounded-lg p-2 mb-4" rows="4" required></textarea>
+
+                <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+                    Enviar
+                </button>
+            </form>
+        </div>
+    </div>
 </body>
 
 </html>
