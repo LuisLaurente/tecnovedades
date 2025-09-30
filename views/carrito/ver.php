@@ -265,6 +265,6 @@ if (isset($_SESSION['carrito'])) {
         }
     });
     </script>
-
+    <?php include_once __DIR__ . '/../admin/includes/footer.php'; ?>
 </body>
 </html>

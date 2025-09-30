@@ -16,9 +16,9 @@ if (isset($_SESSION['carrito'])) {
 <html lang="es">
 
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <?php include_once __DIR__ . '/../admin/includes/head.php'; ?>
     <title>Carrito de Compras - Bytebox</title>
 
     <!-- Favicon -->
@@ -31,6 +31,8 @@ if (isset($_SESSION['carrito'])) {
 
     <!-- Estilos -->
     <link rel="stylesheet" href="<?= url('css/carrito-sin-sesion.css') ?>">
+    
+    
 </head>
 
 <body class="carrito-sin-sesion">
