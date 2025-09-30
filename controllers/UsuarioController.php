@@ -27,11 +27,11 @@ class UsuarioController extends BaseController
         try {
             $usuarios = $this->usuarioModel->obtenerTodos();
             $estadisticas = $this->usuarioModel->obtenerEstadisticas();
-            
+
             // Procesar mensajes de estado
             $success = $_GET['success'] ?? '';
             $error = $_GET['error'] ?? '';
-            
+
             require_once __DIR__ . '/../views/usuario/index.php';
         } catch (\Exception $e) {
             error_log("Error en UsuarioController::index: " . $e->getMessage());
@@ -78,7 +78,7 @@ class UsuarioController extends BaseController
 
             // Validar datos
             $errores = $this->validarDatos($datos);
-            
+
             if (!empty($errores)) {
                 $error = urlencode(implode(', ', $errores));
                 header('Location: ' . url("/usuario/crear?error=$error"));
@@ -94,7 +94,7 @@ class UsuarioController extends BaseController
 
             // Crear usuario
             $resultado = $this->usuarioModel->crear($datos);
-            
+
             if ($resultado) {
                 $success = urlencode('Usuario creado exitosamente');
                 header('Location: ' . url("/usuario?success=$success"));
@@ -104,7 +104,6 @@ class UsuarioController extends BaseController
                 header('Location: ' . url("/usuario/crear?error=$error"));
                 exit;
             }
-            
         } catch (\Exception $e) {
             error_log("Error en UsuarioController::store: " . $e->getMessage());
             $error = urlencode('Error interno del servidor');
@@ -120,15 +119,15 @@ class UsuarioController extends BaseController
     {
         try {
             $usuario = $this->usuarioModel->obtenerPorId($id);
-            
+
             if (!$usuario) {
                 $error = urlencode('Usuario no encontrado');
                 header('Location: ' . url("/usuario?error=$error"));
                 exit;
             }
-            
+
             $roles = $this->rolModel->obtenerActivos();
-            
+
             require_once __DIR__ . '/../views/usuario/editar.php';
         } catch (\Exception $e) {
             error_log("Error en UsuarioController::editar: " . $e->getMessage());
@@ -168,7 +167,7 @@ class UsuarioController extends BaseController
 
             // Validar datos (para actualización)
             $errores = $this->validarDatos($datos, false, $id);
-            
+
             if (!empty($errores)) {
                 $error = urlencode(implode(', ', $errores));
                 header('Location: ' . url("/usuario/editar/$id?error=$error"));
@@ -184,7 +183,7 @@ class UsuarioController extends BaseController
 
             // Actualizar usuario
             $resultado = $this->usuarioModel->actualizar($id, $datos);
-            
+
             if ($resultado) {
                 $success = urlencode('Usuario actualizado exitosamente');
                 header('Location: ' . url("/usuario?success=$success"));
@@ -194,7 +193,6 @@ class UsuarioController extends BaseController
                 header('Location: ' . url("/usuario/editar/$id?error=$error"));
                 exit;
             }
-            
         } catch (\Exception $e) {
             error_log("Error en UsuarioController::actualizar: " . $e->getMessage());
             $error = urlencode('Error interno del servidor');
@@ -224,7 +222,7 @@ class UsuarioController extends BaseController
 
             // Eliminar usuario
             $resultado = $this->usuarioModel->eliminar($id);
-            
+
             if ($resultado) {
                 $success = urlencode('Usuario eliminado exitosamente');
                 header('Location: ' . url("/usuario?success=$success"));
@@ -234,7 +232,6 @@ class UsuarioController extends BaseController
                 header('Location: ' . url("/usuario?error=$error"));
                 exit;
             }
-            
         } catch (\Exception $e) {
             error_log("Error en UsuarioController::eliminar: " . $e->getMessage());
             $error = urlencode('Error interno del servidor');
@@ -251,7 +248,7 @@ class UsuarioController extends BaseController
         try {
             error_log("UsuarioController::cambiarEstado llamado con ID: " . $id);
             error_log("Método HTTP: " . $_SERVER['REQUEST_METHOD']);
-            
+
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 error_log("Método no es POST, redirigiendo");
                 header('Location: ' . url('/usuario'));
@@ -261,7 +258,7 @@ class UsuarioController extends BaseController
             // Verificar que el usuario existe
             $usuario = $this->usuarioModel->obtenerPorId($id);
             error_log("Usuario obtenido: " . ($usuario ? json_encode($usuario) : 'null'));
-            
+
             if (!$usuario) {
                 $error = urlencode('Usuario no encontrado');
                 error_log("Usuario no encontrado con ID: " . $id);
@@ -272,10 +269,10 @@ class UsuarioController extends BaseController
             // Cambiar estado
             $nuevoEstado = $usuario['activo'] ? 0 : 1;
             error_log("Estado actual: " . $usuario['activo'] . ", nuevo estado: " . $nuevoEstado);
-            
+
             $resultado = $this->usuarioModel->cambiarEstado($id, $nuevoEstado);
             error_log("Resultado del cambio: " . ($resultado ? 'true' : 'false'));
-            
+
             if ($resultado) {
                 $estado = $nuevoEstado ? 'activado' : 'desactivado';
                 $success = urlencode("Usuario $estado exitosamente");
@@ -286,7 +283,6 @@ class UsuarioController extends BaseController
                 header('Location: ' . url("/usuario?error=$error"));
                 exit;
             }
-            
         } catch (\Exception $e) {
             error_log("Error en UsuarioController::cambiarEstado: " . $e->getMessage());
             $error = urlencode('Error interno del servidor');
@@ -356,21 +352,21 @@ class UsuarioController extends BaseController
         // Verificación adicional de seguridad
         $userRole = \Core\Helpers\SessionHelper::getRole();
         $userPermissions = \Core\Helpers\SessionHelper::getPermissions();
-        
+
         // Solo permitir acceso a admins o usuarios con rol 'usuario'
         $isAdmin = in_array('usuarios', $userPermissions ?: []);
         $isCliente = false;
-        
+
         if (is_array($userRole) && isset($userRole['nombre'])) {
             $isCliente = ($userRole['nombre'] === 'usuario');
         } elseif (is_string($userRole)) {
             $isCliente = ($userRole === 'usuario');
         } else {
             // Verificar por permisos - clientes típicamente solo tienen 'perfil'
-            $isCliente = in_array('perfil', $userPermissions ?: []) && 
-                        !in_array('productos', $userPermissions ?: []);
+            $isCliente = in_array('perfil', $userPermissions ?: []) &&
+                !in_array('productos', $userPermissions ?: []);
         }
-        
+
         if (!$isAdmin && !$isCliente) {
             error_log("❌ Acceso denegado a pedidos: usuario no es admin ni cliente");
             header('Location: ' . url('/error/forbidden'));
@@ -379,11 +375,11 @@ class UsuarioController extends BaseController
 
         try {
             $usuario = \Core\Helpers\SessionHelper::getUser();
-            
+
             // Obtener pedidos del usuario
             $pedidoModel = new \Models\Pedido();
             $pedidos = [];
-            
+
             if ($isAdmin) {
                 // Los admins pueden ver todos los pedidos (opcional: cambiar esta lógica si solo quieres que vean los suyos)
                 try {
@@ -415,11 +411,11 @@ class UsuarioController extends BaseController
             // Obtener detalles de cada pedido
             $detalleModel = new \Models\DetallePedido();
             $pedidoDireccionModel = new \Models\PedidoDireccion();
-            
+
             foreach ($pedidos as &$pedido) {
                 // Obtener detalles del pedido con información de productos
                 try {
-                    $pedido['detalles'] = $detalleModel->obtenerPorPedidoConProductos($pedido['id']);
+                    $pedido['detalles'] = $detalleModel->obtenerPorPedido($pedido['id']);
                 } catch (\Exception $e) {
                     // Fallback al método original si hay error
                     try {
@@ -428,7 +424,7 @@ class UsuarioController extends BaseController
                         $pedido['detalles'] = [];
                     }
                 }
-                
+
                 // Calcular total si no está presente o es 0
                 if (!isset($pedido['total']) || $pedido['total'] == 0) {
                     $total = 0;
@@ -441,7 +437,7 @@ class UsuarioController extends BaseController
                     }
                     $pedido['total'] = $total;
                 }
-                
+
                 // Obtener dirección del pedido
                 try {
                     $pedido['direccion_envio'] = $pedidoDireccionModel->obtenerDireccionCompleta($pedido['id']);
@@ -451,7 +447,6 @@ class UsuarioController extends BaseController
             }
 
             require_once __DIR__ . '/../views/usuario/pedidos.php';
-            
         } catch (\Exception $e) {
             error_log("Error en UsuarioController::pedidos: " . $e->getMessage());
             header('Location: ' . url('/error'));
@@ -487,20 +482,20 @@ class UsuarioController extends BaseController
             $usuario = \Core\Helpers\SessionHelper::getUser();
             $userRole = \Core\Helpers\SessionHelper::getRole();
             $userPermissions = \Core\Helpers\SessionHelper::getPermissions();
-            
+
             // Verificar permisos
             $isAdmin = in_array('usuarios', $userPermissions ?: []);
             $isCliente = false;
-            
+
             if (is_array($userRole) && isset($userRole['nombre'])) {
                 $isCliente = ($userRole['nombre'] === 'usuario');
             } elseif (is_string($userRole)) {
                 $isCliente = ($userRole === 'usuario');
             } else {
-                $isCliente = in_array('perfil', $userPermissions ?: []) && 
-                            !in_array('productos', $userPermissions ?: []);
+                $isCliente = in_array('perfil', $userPermissions ?: []) &&
+                    !in_array('productos', $userPermissions ?: []);
             }
-            
+
             if (!$isAdmin && !$isCliente) {
                 header('Content-Type: application/json');
                 echo json_encode(['error' => 'Sin permisos']);
@@ -509,7 +504,7 @@ class UsuarioController extends BaseController
 
             // Obtener el pedido
             $db = \Core\Database::getConexion();
-            
+
             if ($isAdmin) {
                 // Admin puede ver cualquier pedido
                 $stmt = $db->prepare("SELECT * FROM pedidos WHERE id = ?");
@@ -519,9 +514,9 @@ class UsuarioController extends BaseController
                 $stmt = $db->prepare("SELECT * FROM pedidos WHERE id = ? AND cliente_id = ?");
                 $stmt->execute([$pedidoId, $usuario['id']]);
             }
-            
+
             $pedido = $stmt->fetch(\PDO::FETCH_ASSOC);
-            
+
             if (!$pedido) {
                 header('Content-Type: application/json');
                 echo json_encode(['error' => 'Pedido no encontrado']);
@@ -531,13 +526,13 @@ class UsuarioController extends BaseController
             // Obtener detalles del pedido
             $detalleModel = new \Models\DetallePedido();
             $pedidoDireccionModel = new \Models\PedidoDireccion();
-            
+
             try {
                 $pedido['detalles'] = $detalleModel->obtenerPorPedido($pedido['id']);
             } catch (\Exception $e) {
                 $pedido['detalles'] = [];
             }
-            
+
             // Calcular total si no está presente o es 0
             if (!isset($pedido['total']) || $pedido['total'] == 0) {
                 $total = 0;
@@ -550,7 +545,7 @@ class UsuarioController extends BaseController
                 }
                 $pedido['total'] = $total;
             }
-            
+
             try {
                 $pedido['direccion_envio'] = $pedidoDireccionModel->obtenerDireccionCompleta($pedido['id']);
             } catch (\Exception $e) {
@@ -562,7 +557,6 @@ class UsuarioController extends BaseController
                 'success' => true,
                 'pedido' => $pedido
             ]);
-            
         } catch (\Exception $e) {
             error_log("Error en UsuarioController::detallePedido: " . $e->getMessage());
             header('Content-Type: application/json');
