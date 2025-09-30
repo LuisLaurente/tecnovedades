@@ -281,11 +281,6 @@ if (!empty($_SESSION['carrito']) && is_array($_SESSION['carrito'])) {
         </script>
 
       </div>
-
-      <!-- Footer -->
-      <div class="mt-6 max-w-7xl mx-auto">
-        <?php include_once __DIR__ . '/../admin/includes/footer.php'; ?>
-      </div>
     </main>
   </div>
 </div>

@@ -20,10 +20,8 @@ class AuthController extends BaseController
         $this->usuarioModel = new Usuario();
         $this->rolModel = new Rol();
         
-        // Iniciar sesión si no está iniciada
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+        // ✅ SOLUCIÓN: ELIMINAR session_start() - SessionHelper lo maneja automáticamente
+        // SessionHelper::start() se llamará cuando sea necesario
     }
 
     /**
@@ -68,6 +66,9 @@ class AuthController extends BaseController
                 header('Location: ' . url('/auth/login'));
                 exit;
             }
+            
+            // ✅ Asegurar que la sesión esté iniciada para usar $_SESSION
+            SessionHelper::start();
             
             // Verificar token CSRF
             $csrfToken = $_POST['csrf_token'] ?? '';

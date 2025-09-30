@@ -82,36 +82,16 @@
                                         <label for="tipo_regla" class="form-label">Tipo de Regla *</label>
                                         <select id="tipo_regla" name="tipo_regla" class="form-select" required>
                                             <option value="">-- Selecciona una regla --</option>
-                                            <option value="descuento_subtotal">
-                                                Descuento porcentual por monto mínimo en la compra (Ej: 10% off si gastas más de S/200)
-                                            </option>
-                                            <option value="descuento_fijo_subtotal">
-                                                Descuento fijo por monto mínimo en la compra (Ej: S/30 menos si gastas más de S/200)
-                                            </option>
-                                            <option value="envio_gratis_primera_compra">
-                                                Envío gratis en la primera compra del usuario
-                                            </option>
-                                            <option value="nxm_producto">
-                                                Lleva N unidades de un producto y paga solo M (Ej: 3x2 en un mismo producto)
-                                            </option>
-                                            <option value="descuento_enesima_unidad">
-                                                Descuento en la N-ésima unidad de un producto (Ej: 50% off en la 3ª unidad)
-                                            </option>
-                                            <option value="descuento_menor_valor_categoria">
-                                                Descuento al producto más barato al comprar N productos de una categoría
-                                            </option>
-                                            <option value="nxm_general">
-                                                Lleva N productos mixtos y paga solo M (Ej: 3x2 en cualquier combinación)
-                                            </option>
-                                            <option value="descuento_enesimo_producto">
-                                                Descuento en el N-ésimo producto más barato al comprar N productos mixtos
-                                            </option>
-                                            <option value="envio_gratis_general">
-                                                Envío gratis en todos los pedidos, sin condiciones
-                                            </option>
-                                            <option value="envio_gratis_monto_minimo">
-                                                Envío gratis para compras mayores a un monto mínimo (Ej: más de S/150)
-                                            </option>
+                                            <option value="descuento_subtotal">Descuento % por monto mínimo</option>
+                                            <option value="descuento_fijo_subtotal">Descuento fijo por monto mínimo</option>
+                                            <option value="envio_gratis_primera_compra">Envío gratis primera compra</option>
+                                            <option value="nxm_producto">Lleva N paga M (mismo producto)</option>
+                                            <option value="descuento_enesima_unidad">Descuento en N-ésima unidad</option>
+                                            <option value="descuento_menor_valor_categoria">Descuento producto más barato por categoría</option>
+                                            <option value="nxm_general">Lleva N paga M (productos mixtos)</option>
+                                            <option value="descuento_enesimo_producto">Descuento en N-ésimo producto más barato</option>
+                                            <option value="envio_gratis_general">Envío gratis general</option>
+                                            <option value="envio_gratis_monto_minimo">Envío gratis por monto mínimo</option>
                                         </select>
 
 
@@ -127,7 +107,6 @@
                         </div>
                     </div>
                 </div>
-                <?php include_once __DIR__ . '/../admin/includes/footer.php'; ?>
             </main>
         </div>
     </div>
@@ -244,7 +223,7 @@
                         <div class="form-group"><label class="form-label">Cantidad que paga (M)</label><input type="number" name="accion_cantidad_paga_general" class="form-input" min="1" required></div>
                     </div>`;
                         break;
-                    case 'descuento_producto_mas_barato':
+                    case 'descuento_enesimo_producto':
                         tipoCondicionInput.value = 'cantidad_total_productos';
                         tipoAccionInput.value = 'descuento_producto_mas_barato';
                         camposDinamicosContainer.innerHTML = `
