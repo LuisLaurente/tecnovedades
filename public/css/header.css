@@ -4,8 +4,8 @@
 
 /* Variables de Color (basadas en tu logo e imagen) */
 :root {
-  --color-primario: #00a9e0; /* Azul/Cian principal */
-  --color-fondo-header: #222529; /* Negro/Gris oscuro del header */
+  --color-primario: #2AC1DB; /* Azul/Cian principal */
+  --color-fondo-header: #1B1B1B; /* Negro/Gris oscuro del header */
   --color-texto-header: #ffffff;
   --color-borde-input: #4a4d50;
   --color-fondo-dropdown: #2d3035;

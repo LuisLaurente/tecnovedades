@@ -90,7 +90,7 @@ if (isset($_SESSION['carrito'])) {
                         </div>
                         <div class="resumen-item">
                             <span class="resumen-label">Descuento</span>
-                            <span class="resumen-valor" id="resumen-descuento">S/ <?= number_format($totales['descuento'] ?? 0, 2) ?></span>
+                            <span class="resumen-valor-descuento" id="resumen-descuento">S/ <?= number_format($totales['descuento'] ?? 0, 2) ?></span>
                         </div>
 
                         <!-- Sección de Cupones -->

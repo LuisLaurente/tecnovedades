@@ -546,10 +546,10 @@ $total_final = max(0, $totales['total'] - $descuento_cupon + $costo_envio_inicia
                     <div style="margin-top: 24px; padding: 16px; background: #f8f9fa; border-radius: 8px;">
                         <h4 style="margin: 0 0 12px 0; color: var(--dark-color); font-weight: 600;">🔒 Compra Segura</h4>
                         <div style="font-size: 0.85rem; color: var(--gray-dark); line-height: 1.6;">
-                            <p style="margin: 4px 0;">• ✅ Tus datos están protegidos</p>
-                            <p style="margin: 4px 0;">• 📦 Envío gratuito en compras +S/100</p>
-                            <p style="margin: 4px 0;">• 🔄 Garantía de satisfacción</p>
-                            <p style="margin: 4px 0;">• 📱 Seguimiento en tiempo real</p>
+                            <p style="margin: 4px 0;">• Tus datos están protegidos</p>
+                            <p style="margin: 4px 0;">• Envío gratuito en compras +S/100</p>
+                            <p style="margin: 4px 0;">• Garantía de satisfacción</p>
+                            <p style="margin: 4px 0;">• Seguimiento en tiempo real</p>
                         </div>
                     </div>
                 </div>

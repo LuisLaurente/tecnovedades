@@ -236,6 +236,10 @@ body {
 .resumen-valor {
     font-weight: 600;
 }
+.resumen-valor-descuento {
+    font-weight: 600;
+    color: #10b981;
+}
 .resumen-item.total-final {
     font-size: 1.25rem;
     font-weight: 700;
@@ -338,7 +342,7 @@ body {
     color: var(--white-color);
 }
 .boton-checkout:hover {
-    background-color: #7C3AED;
+    background-color: #3ae1ed;
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
 }
@@ -398,6 +402,30 @@ body {
 }
 
 @media (max-width: 576px) {
+    .boton-volver, .boton-checkout {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 10px 10px;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: var(--transition);
+    border: 2px solid transparent;
+}
+.acciones-carrito {
+    margin-top: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--gray-medium);
+    padding-bottom: 40px;
+}
+    .resumen-container {
+        position: static;
+        margin-top: 10px;
+    }
     .container-principal { 
         padding: 10px 8px; /* Más reducido aún */
     }
