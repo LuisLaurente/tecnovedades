@@ -103,8 +103,8 @@ if ($cupon_aplicado) {
     }
 }
 
-// Costo de envío inicial (Lima por defecto)
-$costo_envio_inicial = 8; // Siempre cobrar envío inicialmente
+// Costo de envío inicial
+$costo_envio_inicial = 8;
 
 // Calcular total final incluyendo envío inicial
 $total_final = max(0, $totales['total'] - $descuento_cupon + $costo_envio_inicial);
@@ -128,60 +128,6 @@ $total_final = max(0, $totales['total'] - $descuento_cupon + $costo_envio_inicia
 
     <!-- Enlace al archivo CSS específico de checkout -->
     <link rel="stylesheet" href="<?= url('css/checkout.css') ?>">
-    <style>
-        /* Estilos para secciones desplegables */
-        .checkout-section {
-            margin-bottom: 20px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .section-header {
-            padding: 16px 20px;
-            background: #f8f9fa;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: background-color 0.3s;
-        }
-
-        .section-header:hover {
-            background: #e9ecef;
-        }
-
-        .section-header h3 {
-            margin: 0;
-            font-size: 1.1rem;
-            color: #333;
-        }
-
-        .section-content {
-            padding: 0;
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-out, padding 0.3s ease;
-        }
-
-        .section-content.active {
-            padding: 20px;
-            max-height: 1000px;
-        }
-
-        .section-subtitle {
-            margin-top: 0;
-            margin-bottom: 15px;
-            color: #555;
-            font-size: 1rem;
-        }
-
-        /* Estilos para el costo de envío */
-        .envio-costo {
-            font-weight: bold;
-            color: #28a745;
-        }
-    </style>
 </head>
 
 <body>
@@ -190,8 +136,6 @@ $total_final = max(0, $totales['total'] - $descuento_cupon + $costo_envio_inicia
 
     <div class="container-principal">
         <h2 class="page-title">Finalizar Compra</h2>
-
-        <!-- Información del usuario -->
 
         <?php if (!empty($errores)): ?>
             <div class="checkout-card">
@@ -212,10 +156,10 @@ $total_final = max(0, $totales['total'] - $descuento_cupon + $costo_envio_inicia
             <div class="productos-container">
 
                 <form method="POST" action="<?= url('/pedido/registrar') ?>" id="checkoutForm">
-                    <!-- FORMULARIO DE DATOS DE ENVÍO (Desplegable) -->
+                    <!-- FORMULARIO DE DATOS DE ENVÍO -->
                     <div class="checkout-section">
                         <div class="section-header" onclick="toggleSection('envio-section')">
-                            <h3>📦 Datos de Envío</h3>
+                            <h3>Datos de Envío</h3>
                             <span class="toggle-icon">▼</span>
                         </div>
                         <div id="envio-section" class="section-content">
@@ -233,7 +177,7 @@ $total_final = max(0, $totales['total'] - $descuento_cupon + $costo_envio_inicia
                                                 <!-- Botón de eliminar -->
                                                 <button type="button" class="btn-eliminar-direccion"
                                                     onclick="eliminarDireccion(event, <?= $direccion['id'] ?>)">
-                                                    🗑️
+                                                    ×
                                                 </button>
 
                                                 <div class="address-content">
@@ -272,35 +216,31 @@ $total_final = max(0, $totales['total'] - $descuento_cupon + $costo_envio_inicia
                                         </div>
                                     </div>
 
-                                    <!-- Selector de ubicación (Lima/Provincia) -->
-                                    <div class="form-group">
-                                        <label>Ubicación *</label>
-                                        <select name="ubicacion" id="envio-ubicacion" required onchange="actualizarCostoEnvio()">
-                                            <option value="">Seleccionar ubicación</option>
-                                            <option value="lima">Lima Metropolitana (+S/ 8)</option>
-                                            <option value="provincia">Provincia (+S/ 12)</option>
-                                        </select>
+                                    <!-- Selector de ubicación (Departamento/Provincia/Distrito) -->
+                                    <div class="form-grid">
+                                        <div class="form-group">
+                                            <label>Departamento *</label>
+                                            <select name="departamento" id="departamento" required onchange="cargarProvincias()">
+                                                <option value="">Seleccionar departamento</option>
+                                                <!-- Se cargará dinámicamente -->
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Provincia *</label>
+                                            <select name="provincia" id="provincia" required onchange="actualizarMetodosPago()" disabled>
+                                                <option value="">Primero selecciona un departamento</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Distrito *</label>
+                                            <input type="text" name="distrito" id="distrito" required placeholder="Ingresa tu distrito">
+                                        </div>
                                     </div>
 
                                     <div class="form-group">
                                         <label>Dirección completa *</label>
                                         <textarea name="direccion" required rows="3"
                                             placeholder="Av. Principal 123, Urbanización..."></textarea>
-                                    </div>
-
-                                    <div class="form-grid">
-                                        <div class="form-group">
-                                            <label>Distrito</label>
-                                            <input type="text" name="distrito" placeholder="Ej: Miraflores">
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Provincia</label>
-                                            <input type="text" name="provincia" placeholder="Ej: Lima">
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Departamento</label>
-                                            <input type="text" name="departamento" placeholder="Ej: Lima">
-                                        </div>
                                     </div>
 
                                     <div class="form-group">
@@ -313,7 +253,7 @@ $total_final = max(0, $totales['total'] - $descuento_cupon + $costo_envio_inicia
                                     <div class="checkbox-group">
                                         <input type="checkbox" id="guardar_direccion" name="guardar_direccion" value="1" checked>
                                         <label for="guardar_direccion">
-                                            💾 <strong>Guardar esta dirección</strong> para futuras compras
+                                            <strong>Guardar esta dirección</strong> para futuras compras
                                         </label>
                                     </div>
 
@@ -322,9 +262,9 @@ $total_final = max(0, $totales['total'] - $descuento_cupon + $costo_envio_inicia
                                         <div class="form-group">
                                             <label>Tipo de dirección</label>
                                             <select name="tipo_direccion">
-                                                <option value="casa">🏠 Casa</option>
-                                                <option value="trabajo">🏢 Trabajo</option>
-                                                <option value="envio">📦 Solo envío</option>
+                                                <option value="casa">Casa</option>
+                                                <option value="trabajo">Trabajo</option>
+                                                <option value="envio">Solo envío</option>
                                             </select>
                                         </div>
                                         <div class="form-group">
@@ -341,10 +281,10 @@ $total_final = max(0, $totales['total'] - $descuento_cupon + $costo_envio_inicia
                         </div>
                     </div>
 
-                    <!-- FORMULARIO DE DATOS DE FACTURACIÓN (Desplegable) -->
+                    <!-- FORMULARIO DE DATOS DE FACTURACIÓN -->
                     <div class="checkout-section">
                         <div class="section-header" onclick="toggleSection('facturacion-section')">
-                            <h3>🧾 Datos de Facturación</h3>
+                            <h3>Datos de Facturación</h3>
                             <span class="toggle-icon">▼</span>
                         </div>
                         <div id="facturacion-section" class="section-content">
@@ -385,22 +325,15 @@ $total_final = max(0, $totales['total'] - $descuento_cupon + $costo_envio_inicia
                         </div>
                     </div>
 
-                    <!-- MÉTODO DE PAGO (Desplegable) -->
+                    <!-- MÉTODO DE PAGO -->
                     <div class="checkout-section">
                         <div class="section-header" onclick="toggleSection('pago-section')">
-                            <h3>💳 Método de Pago</h3>
+                            <h3>Método de Pago</h3>
                             <span class="toggle-icon">▼</span>
                         </div>
                         <div id="pago-section" class="section-content">
-                            <div class="payment-methods">
-                                <div class="payment-option">
-                                    <input type="radio" id="contrareembolso" name="metodo_pago" value="contrareembolso" checked>
-                                    <label for="contrareembolso">💵 Pago contra entrega</label>
-                                </div>
-                                <div class="payment-option">
-                                    <input type="radio" id="transferencia" name="metodo_pago" value="transferencia">
-                                    <label for="transferencia">🏦 Transferencia bancaria</label>
-                                </div>
+                            <div class="payment-methods" id="payment-methods-container">
+                                <!-- Se cargará dinámicamente según la ubicación -->
                             </div>
                         </div>
                     </div>
@@ -427,7 +360,7 @@ $total_final = max(0, $totales['total'] - $descuento_cupon + $costo_envio_inicia
             <!-- Columna derecha: Resumen del pedido -->
             <div class="resumen-container">
                 <div class="resumen-header">
-                    <h3>📋 Resumen del Pedido</h3>
+                    <h3>Resumen del Pedido</h3>
                 </div>
                 <div class="resumen-body">
 
@@ -465,86 +398,55 @@ $total_final = max(0, $totales['total'] - $descuento_cupon + $costo_envio_inicia
 
                         <?php if (($totales['descuento'] ?? 0) > 0): ?>
                             <div class="resumen-item">
-                                <span class="resumen-label">🎁 Descuento promociones:</span>
+                                <span class="resumen-label">Descuento promociones:</span>
                                 <span class="resumen-valor" style="color: var(--success-color);">-S/ <?= number_format($totales['descuento'], 2) ?></span>
                             </div>
                         <?php endif; ?>
 
                         <?php if ($cupon_aplicado && $descuento_cupon > 0): ?>
                             <div class="resumen-item">
-                                <span class="resumen-label">🏷️ Cupón "<?= htmlspecialchars($cupon_aplicado['codigo']) ?>":</span>
+                                <span class="resumen-label">Cupón "<?= htmlspecialchars($cupon_aplicado['codigo']) ?>":</span>
                                 <span class="resumen-valor" style="color: var(--success-color);">-S/ <?= number_format($descuento_cupon, 2) ?></span>
                             </div>
                         <?php endif; ?>
 
                         <div class="resumen-item">
-    <span class="resumen-label">🚚 Envío:</span>
-    <span class="resumen-valor envio-costo" id="costo-envio-display">
-        S/ <span id="costo-envio-valor">0.00</span>
-    </span>
-</div>
+                            <span class="resumen-label">Envío:</span>
+                            <span class="resumen-valor envio-costo" id="costo-envio-display">
+                                S/ <span id="costo-envio-valor"><?= number_format($costo_envio_inicial, 2) ?></span>
+                            </span>
+                        </div>
 
                         <div class="resumen-item total-final">
-                            <span class="resumen-label">💰 Total:</span>
+                            <span class="resumen-label">Total:</span>
                             <span class="resumen-valor">S/ <span id="total-final-display"><?= number_format($total_final, 2) ?></span></span>
                         </div>
 
                         <!-- Promociones aplicadas -->
-                        <!-- Promociones aplicadas -->
-<?php if (!empty($promociones) && is_array($promociones)): ?>
-    <div class="resumen-promociones">
-        <h4>🎉 Promociones Aplicadas:</h4>
-        <?php 
-        // Calcular descuento por promoción para mostrar
-        $subtotal = $totales['subtotal'] ?? 0;
-        $promocionesConInfo = [];
-        
-        foreach ($promociones as $promocion) {
-            $accion = $promocion['accion'] ?? [];
-            $tipoAccion = $accion['tipo'] ?? '';
-            $descuento = 0;
-            
-            // Calcular descuento según tipo de acción
-            if ($tipoAccion === 'descuento_porcentaje') {
-                $descuento = $subtotal * ($accion['valor'] / 100);
-            } elseif ($tipoAccion === 'descuento_fijo') {
-                $descuento = min($accion['valor'], $subtotal);
-            }
-            
-            if ($descuento > 0) {
-                $promocionesConInfo[] = [
-                    'nombre' => $promocion['promocion']['nombre'] ?? 'Promoción',
-                    'descuento' => $descuento
-                ];
-            }
-        }
-        ?>
-        
-        <?php if (!empty($promocionesConInfo)): ?>
-            <?php foreach ($promocionesConInfo as $promo): ?>
-                <div class="promocion-item">
-                    <span class="promocion-nombre">
-                        <?= htmlspecialchars($promo['nombre']) ?>
-                    </span>
-                    <span class="promocion-descuento">
-                        -S/ <?= number_format($promo['descuento'], 2) ?>
-                    </span>
-                </div>
-            <?php endforeach; ?>
-        <?php else: ?>
-            <p style="color: var(--gray-dark); font-size: 0.9rem; text-align: center; padding: 10px;">
-                No se aplicaron descuentos por promociones
-            </p>
-        <?php endif; ?>
-    </div>
-<?php endif; ?>
+                        <?php if (!empty($resultado['promociones_aplicadas'])): ?>
+                            <div class="resumen-promociones">
+                                <h4>Promociones Aplicadas:</h4>
+                                <?php foreach ($resultado['promociones_aplicadas'] as $promocion): ?>
+                                    <?php if (is_numeric($promocion['monto']) && $promocion['monto'] > 0): ?>
+                                        <div class="promocion-item">
+                                            <span class="promocion-nombre">
+                                                <?= htmlspecialchars($promocion['nombre']) ?>
+                                            </span>
+                                            <span class="promocion-descuento">
+                                                -S/ <?= number_format($promocion['monto'], 2) ?>
+                                            </span>
+                                        </div>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
                     <?php else: ?>
                         <p style="color: #999; text-align: center; padding: 32px 0;">No hay productos en el carrito</p>
                     <?php endif; ?>
 
                     <!-- Información adicional -->
-                    <div style="margin-top: 24px; padding: 16px; background: #f8f9fa; border-radius: 8px;">
-                        <h4 style="margin: 0 0 12px 0; color: var(--dark-color); font-weight: 600;">🔒 Compra Segura</h4>
+                    <div style="margin-top: 24px; padding: 16px; background: var(--gray-light); border-radius: 8px;">
+                        <h4 style="margin: 0 0 12px 0; color: var(--dark-color); font-weight: 600;">Compra Segura</h4>
                         <div style="font-size: 0.85rem; color: var(--gray-dark); line-height: 1.6;">
                             <p style="margin: 4px 0;">• Tus datos están protegidos</p>
                             <p style="margin: 4px 0;">• Envío gratuito en compras +S/100</p>
@@ -557,7 +459,7 @@ $total_final = max(0, $totales['total'] - $descuento_cupon + $costo_envio_inicia
         </div>
 
         <div class="acciones-carrito">
-            <a href="<?= url('carrito/ver') ?>" class="boton-volver">← Volver al carrito</a>
+            <a href="<?= url('carrito/ver') ?>" class="boton-volver">Volver al carrito</a>
         </div>
     </div>
 
@@ -566,6 +468,45 @@ $total_final = max(0, $totales['total'] - $descuento_cupon + $costo_envio_inicia
         const subtotalBase = <?= $totales['subtotal'] ?? 0 ?>;
         const descuentoPromociones = <?= $totales['descuento'] ?? 0 ?>;
         const descuentoCupon = <?= $descuento_cupon ?>;
+
+        // Datos de departamentos y provincias (simplificado)
+        const departamentosData = [
+            { id: '15', nombre: 'Lima' },
+            { id: '01', nombre: 'Amazonas' },
+            { id: '02', nombre: 'Áncash' },
+            { id: '03', nombre: 'Apurímac' },
+            { id: '04', nombre: 'Arequipa' },
+            { id: '05', nombre: 'Ayacucho' },
+            { id: '06', nombre: 'Cajamarca' },
+            { id: '07', nombre: 'Callao' },
+            { id: '08', nombre: 'Cusco' },
+            { id: '09', nombre: 'Huancavelica' },
+            { id: '10', nombre: 'Huánuco' },
+            { id: '11', nombre: 'Ica' },
+            { id: '12', nombre: 'Junín' },
+            { id: '13', nombre: 'La Libertad' },
+            { id: '14', nombre: 'Lambayeque' },
+            { id: '16', nombre: 'Loreto' },
+            { id: '17', nombre: 'Madre de Dios' },
+            { id: '18', nombre: 'Moquegua' },
+            { id: '19', nombre: 'Pasco' },
+            { id: '20', nombre: 'Piura' },
+            { id: '21', nombre: 'Puno' },
+            { id: '22', nombre: 'San Martín' },
+            { id: '23', nombre: 'Tacna' },
+            { id: '24', nombre: 'Tumbes' },
+            { id: '25', nombre: 'Ucayali' }
+        ];
+
+        const provinciasData = {
+            '15': [
+                { id: '1501', nombre: 'Lima' },
+                { id: '1507', nombre: 'Huaura' },
+                { id: '1508', nombre: 'Huarochirí' },
+                { id: '1509', nombre: 'Cañete' }
+            ]
+            // Agregar más provincias según sea necesario
+        };
 
         // Función para toggle de secciones
         function toggleSection(sectionId) {
@@ -576,360 +517,143 @@ $total_final = max(0, $totales['total'] - $descuento_cupon + $costo_envio_inicia
             icon.textContent = section.classList.contains('active') ? '▲' : '▼';
         }
 
+        // Función para cargar departamentos
+        function cargarDepartamentos() {
+            const departamentoSelect = document.getElementById('departamento');
+            departamentosData.forEach(depto => {
+                const option = document.createElement('option');
+                option.value = depto.id;
+                option.textContent = depto.nombre;
+                departamentoSelect.appendChild(option);
+            });
+        }
+
+        // Función para cargar provincias
+        function cargarProvincias() {
+            const departamentoSelect = document.getElementById('departamento');
+            const provinciaSelect = document.getElementById('provincia');
+            const distritoInput = document.getElementById('distrito');
+            
+            const departamentoId = departamentoSelect.value;
+            
+            // Reset provincias
+            provinciaSelect.innerHTML = '<option value="">Seleccionar provincia</option>';
+            provinciaSelect.disabled = true;
+            
+            // Reset distrito
+            distritoInput.value = '';
+            
+            if (departamentoId && provinciasData[departamentoId]) {
+                provinciaSelect.disabled = false;
+                provinciasData[departamentoId].forEach(prov => {
+                    const option = document.createElement('option');
+                    option.value = prov.id;
+                    option.textContent = prov.nombre;
+                    provinciaSelect.appendChild(option);
+                });
+            }
+            
+            // Actualizar métodos de pago
+            actualizarMetodosPago();
+            actualizarCostoEnvio();
+        }
+
+        // Función para actualizar métodos de pago según ubicación
+        function actualizarMetodosPago() {
+            const departamentoSelect = document.getElementById('departamento');
+            const provinciaSelect = document.getElementById('provincia');
+            const paymentMethodsContainer = document.getElementById('payment-methods-container');
+            
+            const departamentoId = departamentoSelect.value;
+            const provinciaId = provinciaSelect.value;
+            
+            let html = '';
+            
+            // Verificar si es Lima
+            const esLima = departamentoId === '15' && provinciaId;
+            
+            if (esLima) {
+                html = `
+                    <div class="payment-option">
+                        <input type="radio" id="contrareembolso" name="metodo_pago" value="contrareembolso" checked>
+                        <label for="contrareembolso">Pago contra entrega</label>
+                    </div>
+                `;
+            }
+            
+            html += `
+                <div class="payment-option">
+                    <input type="radio" id="tarjeta" name="metodo_pago" value="tarjeta" ${!esLima ? 'checked' : ''}>
+                    <label for="tarjeta">Pago con tarjeta</label>
+                </div>
+            `;
+            
+            paymentMethodsContainer.innerHTML = html;
+        }
+
         // Función para actualizar costo de envío
-function actualizarCostoEnvio() {
-    const ubicacionSelect = document.getElementById('envio-ubicacion');
-    const costoEnvioDisplay = document.getElementById('costo-envio-display');
-    const costoEnvioValor = document.getElementById('costo-envio-valor');
+        function actualizarCostoEnvio() {
+            const departamentoSelect = document.getElementById('departamento');
+            const costoEnvioValor = document.getElementById('costo-envio-valor');
+            
+            if (!departamentoSelect || !costoEnvioValor) return;
 
-    if (!ubicacionSelect) return;
+            const departamentoId = departamentoSelect.value;
+            let costoEnvio = 0;
 
-    const ubicacion = ubicacionSelect.value;
-    let costoEnvio = 0;
+            // Calcular costo según ubicación
+            if (departamentoId === '15') {
+                costoEnvio = 8; // Lima
+            } else if (departamentoId) {
+                costoEnvio = 12; // Provincia
+            }
 
-    // Calcular costo según ubicación
-    if (ubicacion === 'lima') {
-        costoEnvio = 8;
-    } else if (ubicacion === 'provincia') {
-        costoEnvio = 12;
-    }
-
-    // MOSTRAR SIEMPRE EL COSTO DE ENVÍO (sin condición de gratis)
-    if (costoEnvioValor) {
-        costoEnvioValor.textContent = costoEnvio.toFixed(2);
-    } else {
-        costoEnvioDisplay.innerHTML = `S/ <span id="costo-envio-valor">${costoEnvio.toFixed(2)}</span>`;
-    }
-
-    // Recalcular el total final
-    recalcularTotalFinal(costoEnvio);
-}
-
+            costoEnvioValor.textContent = costoEnvio.toFixed(2);
+            recalcularTotalFinal(costoEnvio);
+        }
 
         // Función para recalcular el total final
-function recalcularTotalFinal(costoEnvio) {
-    const subtotal = <?= $totales['subtotal'] ?? 0 ?>;
-    const descuento = <?= $totales['descuento'] ?? 0 ?>;
-    const descuentoCupon = <?= $descuento_cupon ?? 0 ?>;
+        function recalcularTotalFinal(costoEnvio) {
+            const subtotal = <?= $totales['subtotal'] ?? 0 ?>;
+            const descuento = <?= $totales['descuento'] ?? 0 ?>;
+            const descuentoCupon = <?= $descuento_cupon ?? 0 ?>;
 
-    // Calcular nuevo total - SIEMPRE sumar envío
-    let total = subtotal - descuento - descuentoCupon + costoEnvio;
-    
-    total = Math.max(total, 0);
+            let total = subtotal - descuento - descuentoCupon + costoEnvio;
+            total = Math.max(total, 0);
 
-    // Actualizar botón y total display
-    const btnFinalizar = document.querySelector('.btn-finalizar');
-    const totalDisplay = document.querySelector('.resumen-item.total-final .resumen-valor');
-    const totalSpan = document.getElementById('total-final');
-    
-    if (btnFinalizar && totalSpan) {
-        totalSpan.textContent = total.toFixed(2);
-    }
-    
-    if (totalDisplay) {
-        totalDisplay.textContent = `S/ ${total.toFixed(2)}`;
-    }
-}
+            // Actualizar botón y total display
+            const btnFinalizar = document.querySelector('.btn-finalizar');
+            const totalDisplay = document.querySelector('.resumen-item.total-final .resumen-valor');
+            const totalSpan = document.getElementById('total-final');
 
+            if (btnFinalizar && totalSpan) {
+                totalSpan.textContent = total.toFixed(2);
+            }
 
-        // Función auxiliar para manejar atributos required
-        function toggleRequiredFields(enableRequired) {
-            const direccionField = document.querySelector('textarea[name="direccion"]');
-
-            if (enableRequired) {
-                if (direccionField) direccionField.setAttribute('required', '');
-            } else {
-                if (direccionField) direccionField.removeAttribute('required');
+            if (totalDisplay) {
+                totalDisplay.textContent = `S/ ${total.toFixed(2)}`;
             }
         }
 
+        // Función para seleccionar dirección
         function selectAddress(card) {
-            // Deseleccionar dirección anterior
             if (selectedAddressCard) {
                 selectedAddressCard.classList.remove('selected');
             }
 
-            // Seleccionar nueva dirección
             selectedAddressCard = card;
             card.classList.add('selected');
 
-            // Obtener datos de la dirección
             const direccionData = JSON.parse(card.dataset.direccion);
-
-            // Llenar el formulario con los datos de la dirección seleccionada
             document.getElementById('direccion_id_seleccionada').value = direccionData.id;
-            document.querySelector('textarea[name="direccion"]').value = direccionData.direccion;
-            document.querySelector('input[name="distrito"]').value = direccionData.distrito || '';
-            document.querySelector('input[name="provincia"]').value = direccionData.provincia || '';
-            document.querySelector('input[name="departamento"]').value = direccionData.departamento || '';
-            document.querySelector('input[name="referencia"]').value = direccionData.referencia || '';
 
-            // Ocultar campos de nueva dirección y opciones de guardado
-            const addressFormFields = document.getElementById('newAddressForm').querySelector('.new-address-form');
-            if (addressFormFields) {
-                // Ocultar todos los campos de dirección excepto nombre y teléfono
-                const direccionField = document.querySelector('textarea[name="direccion"]');
-                const distritoField = document.querySelector('input[name="distrito"]');
-                const provinciaField = document.querySelector('input[name="provincia"]');
-                const departamentoField = document.querySelector('input[name="departamento"]');
-                const referenciaField = document.querySelector('input[name="referencia"]');
-
-                // Encontrar los contenedores y ocultarlos
-                if (direccionField) {
-                    const direccionGroup = direccionField.closest('.form-group');
-                    if (direccionGroup) direccionGroup.style.display = 'none';
-                }
-
-                // Ocultar el grid de distrito/provincia/departamento
-                if (distritoField) {
-                    const locationGrid = distritoField.closest('.form-grid');
-                    if (locationGrid) locationGrid.style.display = 'none';
-                }
-
-                // Ocultar referencia
-                if (referenciaField) {
-                    const referenciaGroup = referenciaField.closest('.form-group');
-                    if (referenciaGroup) referenciaGroup.style.display = 'none';
-                }
-
-                // Ocultar checkbox y opciones de guardado
-                const checkboxGroup = addressFormFields.querySelector('.checkbox-group');
-                const tipoDiv = document.getElementById('tipoDereccion');
-
-                if (checkboxGroup) checkboxGroup.style.display = 'none';
-                if (tipoDiv) tipoDiv.style.display = 'none';
-
-                const guardarCheckbox = document.querySelector('input[name="guardar_direccion"]');
-                if (guardarCheckbox) guardarCheckbox.checked = false;
-            }
-
-            // Deshabilitar validación required en campos ocultos
-            toggleRequiredFields(false);
-
-            // Mostrar el formulario de envío
-            document.getElementById('newAddressForm').classList.remove('hidden');
+            // Ocultar formulario de nueva dirección
+            document.getElementById('newAddressForm').classList.add('hidden');
         }
 
-        // Inicializar secciones y eventos
-        document.addEventListener('DOMContentLoaded', function() {
-            // Abrir primera sección por defecto
-            toggleSection('envio-section');
-            // Actualizar costo inicial
-            actualizarCostoEnvio();
-            // Event listener para cambios en la ubicación
-            const ubicacionSelect = document.getElementById('envio-ubicacion');
-            if (ubicacionSelect) {
-                ubicacionSelect.addEventListener('change', actualizarCostoEnvio);
-            }
-
-            // Preseleccionar primera dirección si existe
-            const firstAddress = document.querySelector('.address-card');
-            if (firstAddress) {
-                selectAddress(firstAddress);
-            }
-
-            // Inicializar estado de campos de tipo de dirección
-            const guardarCheckbox = document.getElementById('guardar_direccion');
-            const tipoDiv = document.getElementById('tipoDereccion');
-            if (guardarCheckbox && tipoDiv) {
-                tipoDiv.style.display = guardarCheckbox.checked ? 'grid' : 'none';
-            }
-        });
-
-        // Toggle para nueva dirección
-        document.getElementById('toggleNewAddress')?.addEventListener('click', function() {
-            const form = document.getElementById('newAddressForm');
-            const isHidden = form.classList.contains('hidden');
-
-            if (isHidden) {
-                form.classList.remove('hidden');
-                this.innerHTML = '<strong>➖ Usar dirección guardada</strong>';
-
-                // Limpiar selección de direcciones
-                if (selectedAddressCard) {
-                    selectedAddressCard.classList.remove('selected');
-                    selectedAddressCard = null;
-                }
-
-                // Limpiar formulario y mostrar campos
-                document.getElementById('direccion_id_seleccionada').value = '';
-
-                // Mostrar todos los campos de dirección y restaurar atributos required
-                const addressFormFields = document.getElementById('newAddressForm').querySelector('.new-address-form');
-                if (addressFormFields) {
-                    const formGroups = addressFormFields.querySelectorAll('.form-group');
-                    const formGrids = addressFormFields.querySelectorAll('.form-grid');
-                    const checkboxGroup = addressFormFields.querySelector('.checkbox-group');
-
-                    formGroups.forEach(group => {
-                        group.style.display = 'block';
-                    });
-
-                    formGrids.forEach(grid => {
-                        grid.style.display = 'grid';
-                    });
-
-                    if (checkboxGroup) checkboxGroup.style.display = 'block';
-
-                    // Restaurar atributo required en dirección
-                    const direccionField = document.querySelector('textarea[name="direccion"]');
-                    if (direccionField) {
-                        direccionField.setAttribute('required', '');
-                    }
-                }
-
-                // Habilitar validación required para nueva dirección
-                toggleRequiredFields(true);
-
-                const tipoDiv = document.getElementById('tipoDereccion');
-                if (tipoDiv) tipoDiv.style.display = 'grid';
-
-                const guardarCheckbox = document.querySelector('input[name="guardar_direccion"]');
-                if (guardarCheckbox) guardarCheckbox.checked = true;
-
-                // Limpiar campos del formulario
-                document.querySelector('textarea[name="direccion"]').value = '';
-                document.querySelector('input[name="distrito"]').value = '';
-                document.querySelector('input[name="provincia"]').value = '';
-                document.querySelector('input[name="departamento"]').value = '';
-                document.querySelector('input[name="referencia"]').value = '';
-
-                // Foco en el primer campo
-                const direccionField = document.querySelector('textarea[name="direccion"]');
-                if (direccionField) {
-                    setTimeout(() => direccionField.focus(), 100);
-                }
-            } else {
-                form.classList.add('hidden');
-                this.innerHTML = '<strong>➕ Agregar nueva dirección</strong>';
-            }
-        });
-
-        // Mostrar/ocultar campos de tipo de dirección según checkbox
-        document.getElementById('guardar_direccion')?.addEventListener('change', function() {
-            const tipoDiv = document.getElementById('tipoDereccion');
-            if (tipoDiv) {
-                tipoDiv.style.display = this.checked ? 'grid' : 'none';
-            }
-        });
-
-        // Validación del formulario antes del envío
-        document.getElementById('checkoutForm')?.addEventListener('submit', function(e) {
-            const direccionId = document.getElementById('direccion_id_seleccionada').value;
-            const newAddressForm = document.getElementById('newAddressForm');
-            const isNewAddressVisible = !newAddressForm.classList.contains('hidden');
-
-            // Si hay una dirección seleccionada, permitir envío inmediato
-            if (direccionId) {
-                return true;
-            }
-
-            // Si no hay dirección seleccionada y el formulario de nueva dirección está oculto
-            if (!direccionId && !isNewAddressVisible) {
-                e.preventDefault();
-                alert('Por favor, selecciona una dirección o completa el formulario de nueva dirección.');
-                return false;
-            }
-
-            // Si el formulario de nueva dirección está visible, validar campos requeridos
-            if (isNewAddressVisible && !direccionId) {
-                const direccionField = document.querySelector('textarea[name="direccion"]');
-                if (!direccionField || !direccionField.value.trim()) {
-                    e.preventDefault();
-                    alert('Por favor, completa la dirección.');
-                    if (direccionField) direccionField.focus();
-                    return false;
-                }
-            }
-
-            return true;
-        });
-
-        // Función adicional para prevenir errores de validación HTML5 en campos ocultos
-        document.addEventListener('invalid', function(e) {
-            const target = e.target;
-            // Si el campo que está causando el error está oculto, prevenirlo
-            if (target && target.closest('.form-group') &&
-                target.closest('.form-group').style.display === 'none') {
-                e.preventDefault();
-                e.stopPropagation();
-                return false;
-            }
-        }, true);
-
-        // Modal de términos y condiciones
-        document.addEventListener('DOMContentLoaded', function() {
-            const modal = document.getElementById('terms-modal');
-            const openBtn = document.getElementById('open-terms-modal');
-            const closeBtn = document.getElementById('close-terms-modal');
-            const closeBtn2 = document.getElementById('close-terms-btn');
-            const acceptBtn = document.getElementById('accept-terms-btn');
-            const checkbox = document.getElementById('terminos');
-            const submitBtn = document.getElementById('confirm-order-btn');
-
-            if (!modal || !openBtn) {
-                return;
-            }
-
-            // Función para abrir
-            function openModal() {
-                modal.style.display = 'flex';
-                document.body.style.overflow = 'hidden';
-            }
-
-            // Función para cerrar
-            function closeModal() {
-                modal.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            }
-
-            // Event listeners
-            openBtn.onclick = function(e) {
-                e.preventDefault();
-                openModal();
-            };
-
-            if (closeBtn) closeBtn.onclick = closeModal;
-            if (closeBtn2) closeBtn2.onclick = closeModal;
-
-            // Cerrar al hacer clic fuera
-            modal.onclick = function(e) {
-                if (e.target === modal) closeModal();
-            };
-
-            // Aceptar términos
-            if (acceptBtn && checkbox && submitBtn) {
-                acceptBtn.onclick = function() {
-                    checkbox.checked = true;
-                    submitBtn.disabled = false;
-                    submitBtn.classList.remove('disabled');
-                    closeModal();
-                };
-            }
-
-            // Validar checkbox
-            if (checkbox && submitBtn) {
-                checkbox.onchange = function() {
-                    if (this.checked) {
-                        submitBtn.disabled = false;
-                        submitBtn.classList.remove('disabled');
-                    } else {
-                        submitBtn.disabled = true;
-                        submitBtn.classList.add('disabled');
-                    }
-                };
-            }
-
-            // ESC para cerrar
-            document.onkeydown = function(e) {
-                if (e.key === 'Escape' && modal.style.display === 'flex') {
-                    closeModal();
-                }
-            };
-        });
         // Función para eliminar dirección
         function eliminarDireccion(event, direccionId) {
-            event.stopPropagation(); // Evita que se seleccione la dirección
+            event.stopPropagation();
 
             if (confirm('¿Estás seguro de que quieres eliminar esta dirección?')) {
                 fetch('<?= url("direccion/eliminar") ?>', {
@@ -942,7 +666,6 @@ function recalcularTotalFinal(costoEnvio) {
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            // Recargar la página para ver los cambios
                             location.reload();
                         } else {
                             alert('Error al eliminar la dirección: ' + data.message);
@@ -954,113 +677,173 @@ function recalcularTotalFinal(costoEnvio) {
                     });
             }
         }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cargar departamentos
+            cargarDepartamentos();
+            
+            // Abrir primera sección por defecto
+            toggleSection('envio-section');
+            
+            // Inicializar métodos de pago
+            actualizarMetodosPago();
+            
+            // Preseleccionar primera dirección si existe
+            const firstAddress = document.querySelector('.address-card');
+            if (firstAddress) {
+                selectAddress(firstAddress);
+            }
+
+            // Event listeners
+            const guardarCheckbox = document.getElementById('guardar_direccion');
+            const tipoDiv = document.getElementById('tipoDereccion');
+            if (guardarCheckbox && tipoDiv) {
+                tipoDiv.style.display = guardarCheckbox.checked ? 'grid' : 'none';
+                guardarCheckbox.addEventListener('change', function() {
+                    tipoDiv.style.display = this.checked ? 'grid' : 'none';
+                });
+            }
+
+            // Validación del formulario
+            document.getElementById('checkoutForm')?.addEventListener('submit', function(e) {
+                const direccionId = document.getElementById('direccion_id_seleccionada').value;
+                const newAddressForm = document.getElementById('newAddressForm');
+                const isNewAddressVisible = !newAddressForm.classList.contains('hidden');
+
+                if (!direccionId && !isNewAddressVisible) {
+                    e.preventDefault();
+                    alert('Por favor, selecciona una dirección o completa el formulario de nueva dirección.');
+                    return false;
+                }
+
+                return true;
+            });
+
+            // Modal de términos
+            const modal = document.getElementById('terms-modal');
+            const openBtn = document.getElementById('open-terms-modal');
+            const closeBtn = document.querySelector('#close-terms-modal');
+            const acceptBtn = document.getElementById('accept-terms-btn');
+            const checkbox = document.getElementById('terminos');
+            const submitBtn = document.getElementById('confirm-order-btn');
+
+            if (openBtn) {
+                openBtn.onclick = function(e) {
+                    e.preventDefault();
+                    modal.style.display = 'flex';
+                };
+            }
+
+            if (closeBtn) {
+                closeBtn.onclick = function() {
+                    modal.style.display = 'none';
+                };
+            }
+
+            if (acceptBtn && checkbox && submitBtn) {
+                acceptBtn.onclick = function() {
+                    checkbox.checked = true;
+                    submitBtn.disabled = false;
+                    modal.style.display = 'none';
+                };
+            }
+
+            if (checkbox && submitBtn) {
+                checkbox.onchange = function() {
+                    submitBtn.disabled = !this.checked;
+                };
+            }
+
+            // Cerrar modal al hacer clic fuera
+            if (modal) {
+                modal.onclick = function(e) {
+                    if (e.target === modal) {
+                        modal.style.display = 'none';
+                    }
+                };
+            }
+        });
     </script>
 
     <!-- Modal de términos y condiciones -->
     <div id="terms-modal" class="modal" style="display: none;">
         <div class="modal-content">
-            <!-- Header del modal -->
             <div class="modal-header">
                 <div class="modal-title-container">
-                    <h2 class="modal-title">
-                        📋 Términos y Condiciones
-                    </h2>
-                    <p class="modal-subtitle">
-                        Políticas y condiciones de uso de ByteBox
-                    </p>
+                    <h2 class="modal-title">Términos y Condiciones</h2>
+                    <p class="modal-subtitle">Políticas y condiciones de uso de ByteBox</p>
                 </div>
-                <button type="button" id="close-terms-modal" class="modal-close">
-                    &times;
-                </button>
+                <button type="button" id="close-terms-modal" class="modal-close">×</button>
             </div>
 
             <div class="modal-body">
-                <div class="terms-section">
-                    <h3 class="section-title">
-                        <span class="section-number">📋</span>
+                <div class="terms-section-modal">
+                    <h3 class="section-title-modal">
+                        <span class="section-number">1</span>
                         Información General
                     </h3>
-                    <p class="section-content">
-                        Bienvenido a <strong>ByteBox</strong>. Al utilizar nuestro sitio web y realizar compras,
-                        usted acepta estar sujeto a los siguientes términos y condiciones de uso y venta.
-                    </p>
+                    <div class="section-content">
+                        <p>Bienvenido a <strong>ByteBox</strong>. Al utilizar nuestro sitio web y realizar compras,
+                        usted acepta estar sujeto a los siguientes términos y condiciones de uso y venta.</p>
+                    </div>
                 </div>
 
-                <div class="terms-section">
-                    <h3 class="section-title">
-                        <span class="section-number">💰</span>
+                <div class="terms-section-modal">
+                    <h3 class="section-title-modal">
+                        <span class="section-number">2</span>
                         Productos y Precios
                     </h3>
                     <div class="section-content">
                         <p class="check-item"><span class="check-icon">✓</span> Todos los precios están expresados en soles peruanos (S/) e incluyen IGV</p>
                         <p class="check-item"><span class="check-icon">✓</span> Los precios están sujetos a cambios sin previo aviso</p>
                         <p class="check-item"><span class="check-icon">✓</span> Los productos están sujetos a disponibilidad de stock</p>
-                        <p class="check-item"><span class="check-icon">✓</span> Nos reservamos el derecho de limitar las cantidades de compra por cliente</p>
                     </div>
                 </div>
 
-                <div class="terms-section">
-                    <h3 class="section-title">
-                        <span class="section-number">🚚</span>
+                <div class="terms-section-modal">
+                    <h3 class="section-title-modal">
+                        <span class="section-number">3</span>
                         Política de Envío
                     </h3>
                     <div class="section-content">
                         <p class="check-item"><span class="check-icon">✓</span> <strong>Envío gratuito</strong> a todo el Perú en compras mayores a S/ 100</p>
                         <p class="check-item"><span class="check-icon">✓</span> Tiempo de entrega: 2-5 días hábiles en Lima, 3-7 días en provincias</p>
-                        <p class="check-item"><span class="check-icon">✓</span> Horarios de entrega: Lunes a Viernes de 9:00 AM a 6:00 PM</p>
-                        <p class="check-item"><span class="check-icon">✓</span> El cliente debe estar presente en el momento de la entrega</p>
+                        <p class="check-item"><span class="check-icon">✓</span> Pago contra entrega disponible solo en Lima Metropolitana</p>
                     </div>
                 </div>
 
-                <div class="terms-section">
-                    <h3 class="section-title">
-                        <span class="section-number">🔄</span>
-                        Devoluciones y Cambios
+                <div class="terms-section-modal">
+                    <h3 class="section-title-modal">
+                        <span class="section-number">4</span>
+                        Métodos de Pago
                     </h3>
                     <div class="section-content">
-                        <p class="check-item"><span class="check-icon">✓</span> Plazo para devoluciones: <strong>30 días</strong> calendarios desde la recepción</p>
-                        <p class="check-item"><span class="check-icon">✓</span> Los productos deben estar en perfecto estado, sin uso y con embalaje original</p>
-                        <p class="check-item"><span class="check-icon">✓</span> No se aceptan devoluciones de productos personalizados</p>
-                        <p class="check-item"><span class="check-icon">✓</span> Los gastos de envío para devoluciones corren por cuenta del cliente</p>
+                        <p class="check-item"><span class="check-icon">✓</span> <strong>Pago contra entrega:</strong> Solo disponible en Lima</p>
+                        <p class="check-item"><span class="check-icon">✓</span> <strong>Pago con tarjeta:</strong> Disponible a nivel nacional</p>
+                        <p class="check-item"><span class="check-icon">✓</span> Todas las transacciones son seguras y encriptadas</p>
                     </div>
                 </div>
 
-                <div class="terms-section">
-                    <h3 class="section-title">
-                        <span class="section-number">🔒</span>
-                        Protección de Datos
-                    </h3>
-                    <div class="section-content">
-                        <p class="check-item"><span class="check-icon">✓</span> Respetamos su privacidad conforme a la Ley de Protección de Datos Personales</p>
-                        <p class="check-item"><span class="check-icon">✓</span> Sus datos serán utilizados únicamente para procesar pedidos</p>
-                        <p class="check-item"><span class="check-icon">✓</span> No compartimos información personal con terceros sin consentimiento</p>
-                    </div>
-                </div>
-
-                <div class="terms-section">
-                    <h3 class="section-title">
-                        <span class="section-number">📞</span>
+                <div class="terms-section-modal">
+                    <h3 class="section-title-modal">
+                        <span class="section-number">5</span>
                         Contacto y Soporte
                     </h3>
                     <div class="section-content">
                         <p>Para consultas, reclamos o soporte técnico:</p>
                         <div class="contact-info">
-                            <p class="contact-item"><span class="contact-icon">📧</span> <strong>Email:</strong> info@bytebox.com</p>
-                            <p class="contact-item"><span class="contact-icon">📱</span> <strong>Teléfono:</strong> +51 999 123 456</p>
-                            <p class="contact-item"><span class="contact-icon">🕒</span> <strong>Horario:</strong> Lunes a Sábado 9:00 AM - 8:00 PM</p>
+                            <p class="contact-item"><strong>Email:</strong> info@bytebox.com</p>
+                            <p class="contact-item"><strong>Teléfono:</strong> +51 999 123 456</p>
+                            <p class="contact-item"><strong>Horario:</strong> Lunes a Sábado 9:00 AM - 8:00 PM</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Footer del modal -->
             <div class="modal-footer">
-                <button type="button" id="close-terms-btn" class="btn-secondary">
-                    Cerrar
-                </button>
-                <button type="button" id="accept-terms-btn" class="btn-accept-terms">
-                    ✅ Acepto los Términos
-                </button>
+                <button type="button" id="close-terms-btn" class="btn-secondary">Cerrar</button>
+                <button type="button" id="accept-terms-btn" class="btn-accept-terms">Acepto los Términos</button>
             </div>
         </div>
     </div>
