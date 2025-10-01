@@ -12,6 +12,7 @@ if (isset($_SESSION['carrito'])) {
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <?php include_once __DIR__ . '/../admin/includes/head.php'; ?>
     <meta charset="UTF-8">
@@ -27,8 +28,9 @@ if (isset($_SESSION['carrito'])) {
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <!-- Enlace al archivo CSS externo -->
-    <link rel="stylesheet" href="<?= url('css/carrito.css' ) ?>">
+    <link rel="stylesheet" href="<?= url('css/carrito.css') ?>">
 </head>
+
 <body>
 
     <?php include_once __DIR__ . '/../admin/includes/header.php'; ?>
@@ -59,18 +61,24 @@ if (isset($_SESSION['carrito'])) {
                                 <div class="producto-actions-wrapper">
                                     <div class="cantidad-container">
                                         <a href="<?= url('carrito/disminuir/' . urlencode($item['clave'])) ?>" class="btn-cantidad btn-disminuir" data-clave="<?= htmlspecialchars($item['clave']) ?>" title="Disminuir">
-                                            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 12H6" /></svg>
+                                            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 12H6" />
+                                            </svg>
                                         </a>
                                         <span class="cantidad-numero" id="cantidad-<?= htmlspecialchars($item['clave']) ?>"><?= $item['cantidad'] ?></span>
                                         <a href="<?= url('carrito/aumentar/' . urlencode($item['clave'])) ?>" class="btn-cantidad btn-aumentar" data-clave="<?= htmlspecialchars($item['clave']) ?>" title="Aumentar">
-                                            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                                            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                            </svg>
                                         </a>
                                     </div>
                                     <div class="producto-subtotal" id="subtotal-<?= htmlspecialchars($item['clave']) ?>">
                                         S/ <?= number_format($item['subtotal'], 2) ?>
                                     </div>
                                     <a href="<?= url('carrito/eliminar/' . urlencode($item['clave'])) ?>" class="btn-eliminar" data-clave="<?= htmlspecialchars($item['clave']) ?>" title="Eliminar producto">
-                                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
                                     </a>
                                 </div>
                             </div>
@@ -88,11 +96,50 @@ if (isset($_SESSION['carrito'])) {
                             <span class="resumen-label">Subtotal</span>
                             <span class="resumen-valor" id="resumen-subtotal">S/ <?= number_format($totales['subtotal'] ?? 0, 2) ?></span>
                         </div>
-                        <div class="resumen-item">
-                            <span class="resumen-label">Descuento</span>
-                            <span class="resumen-valor" id="resumen-descuento">S/ <?= number_format($totales['descuento'] ?? 0, 2) ?></span>
-                        </div>
+                        <?php if (!empty($promocionesAplicadas) && $totales['descuento'] > 0): ?>
+                            <div class="resumen-item descuentos-detalle">
+                                <span class="resumen-label">Descuentos:</span>
+                                <div class="descuentos-lista">
+                                    <?php foreach ($promocionesAplicadas as $promocion): ?>
+                                        <?php if (is_numeric($promocion['monto']) && $promocion['monto'] > 0): ?>
+                                            <div class="descuento-item">
+                                                <div class="descuento-nombre">
+                                                    <?= htmlspecialchars($promocion['nombre']) ?>
+                                                </div>
+                                                <div class="descuento-monto">
+                                                    - S/ <?= number_format($promocion['monto'], 2) ?>
+                                                </div>
+                                            </div>
+                                        <?php elseif ($promocion['monto'] === 'Gratis'): ?>
+                                            <div class="descuento-item">
+                                                <div class="descuento-nombre">
+                                                    <?= htmlspecialchars($promocion['nombre']) ?>
+                                                </div>
+                                                <div class="descuento-monto envio-gratis">
+                                                    Envío Gratis
+                                                </div>
+                                            </div>
+                                        <?php endif; ?>
+                                    <?php endforeach; ?>
 
+                                </div>
+                            </div>
+                        <?php else: ?>
+                            <!-- Si no hay promociones aplicadas, mostrar la línea simple de descuento -->
+                            <div class="resumen-item">
+                                <span class="resumen-label">Descuento</span>
+                                <span class="resumen-valor-descuento" id="resumen-descuento">
+                                    S/ <?= number_format($totales['descuento'] ?? 0, 2) ?>
+                                </span>
+                            </div>
+                        <?php endif; ?>
+
+
+
+                        <div class="resumen-item total-final">
+                            <span class="resumen-label">Total</span>
+                            <span class="resumen-valor" id="resumen-total">S/ <?= number_format($totales['total'] ?? 0, 2) ?></span>
+                        </div>
                         <!-- Sección de Cupones -->
                         <div class="resumen-item cupon-seccion">
                             <div class="cupon-titulo">
@@ -117,7 +164,7 @@ if (isset($_SESSION['carrito'])) {
                                 <?php endif; ?>
                             </div>
                         </div>
-                        
+
                         <?php if (isset($_SESSION['cupon_aplicado']) && !empty($totales['descuento_cupon'])): ?>
                             <div class="resumen-item cupon-aplicado-detalle">
                                 <span class="resumen-label">Descuento Cupón</span>
@@ -126,11 +173,6 @@ if (isset($_SESSION['carrito'])) {
                                 </span>
                             </div>
                         <?php endif; ?>
-
-                        <div class="resumen-item total-final">
-                            <span class="resumen-label">Total</span>
-                            <span class="resumen-valor" id="resumen-total">S/ <?= number_format($totales['total'] ?? 0, 2) ?></span>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -157,114 +199,121 @@ if (isset($_SESSION['carrito'])) {
 
     <!-- Scripts para AJAX y Cupones -->
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const productosList = document.getElementById('productos-list');
-        if (productosList) {
-            productosList.addEventListener('click', function(e) {
-                const target = e.target.closest('a[data-clave]');
-                if (!target) return;
+        document.addEventListener('DOMContentLoaded', function() {
+            const productosList = document.getElementById('productos-list');
+            if (productosList) {
+                productosList.addEventListener('click', function(e) {
+                    const target = e.target.closest('a[data-clave]');
+                    if (!target) return;
 
-                e.preventDefault();
-                const clave = target.dataset.clave;
-                let url;
+                    e.preventDefault();
+                    const clave = target.dataset.clave;
+                    let url;
 
-                if (target.classList.contains('btn-aumentar')) url = `<?= url('carrito/aumentar/') ?>${encodeURIComponent(clave)}`;
-                if (target.classList.contains('btn-disminuir')) url = `<?= url('carrito/disminuir/') ?>${encodeURIComponent(clave)}`;
-                if (target.classList.contains('btn-eliminar')) {
-                    if (confirm('¿Estás seguro de que quieres eliminar este producto?')) {
-                        url = `<?= url('carrito/eliminar/') ?>${encodeURIComponent(clave)}`;
+                    if (target.classList.contains('btn-aumentar')) url = `<?= url('carrito/aumentar/') ?>${encodeURIComponent(clave)}`;
+                    if (target.classList.contains('btn-disminuir')) url = `<?= url('carrito/disminuir/') ?>${encodeURIComponent(clave)}`;
+                    if (target.classList.contains('btn-eliminar')) {
+                        if (confirm('¿Estás seguro de que quieres eliminar este producto?')) {
+                            url = `<?= url('carrito/eliminar/') ?>${encodeURIComponent(clave)}`;
+                        } else {
+                            return;
+                        }
+                    }
+
+                    if (url) realizarPeticionAjax(url, clave);
+                });
+            }
+
+            async function realizarPeticionAjax(url, clave) {
+                const productoItem = document.getElementById(`producto-${clave}`);
+                if (productoItem) productoItem.style.opacity = '0.5';
+
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    });
+                    const result = await response.json();
+
+                    if (result.success) {
+                        actualizarVista(result.data);
                     } else {
-                        return;
+                        alert(result.message || 'Ocurrió un error');
+                        if (productoItem) productoItem.style.opacity = '1';
+                    }
+                } catch (error) {
+                    console.error('Error AJAX:', error);
+                    alert('Error de conexión. Por favor, recarga la página.');
+                    if (productoItem) productoItem.style.opacity = '1';
+                }
+            }
+
+            function actualizarVista(data) {
+                const formatter = new Intl.NumberFormat('es-PE', {
+                    style: 'currency',
+                    currency: 'PEN'
+                });
+
+                // Actualizar totales del resumen
+                document.getElementById('resumen-subtotal').textContent = formatter.format(data.totals.subtotal || 0);
+                document.getElementById('resumen-descuento').textContent = formatter.format(data.totals.descuento || 0);
+                document.getElementById('resumen-total').textContent = formatter.format(data.totals.total || 0);
+
+                const descuentoCuponEl = document.getElementById('resumen-descuento-cupon');
+                if (descuentoCuponEl) {
+                    if (data.totals.descuento_cupon > 0) {
+                        descuentoCuponEl.parentElement.style.display = 'flex';
+                        descuentoCuponEl.textContent = `- ${formatter.format(data.totals.descuento_cupon)}`;
+                    } else {
+                        descuentoCuponEl.parentElement.style.display = 'none';
                     }
                 }
-                
-                if (url) realizarPeticionAjax(url, clave);
-            });
-        }
 
-        async function realizarPeticionAjax(url, clave) {
-            const productoItem = document.getElementById(`producto-${clave}`);
-            if(productoItem) productoItem.style.opacity = '0.5';
+                // Actualizar cada producto
+                let itemsEnRespuesta = new Set();
+                if (data.itemDetails) {
+                    for (const clave in data.itemDetails) {
+                        const item = data.itemDetails[clave];
+                        itemsEnRespuesta.add(clave);
 
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                        const cantidadEl = document.getElementById(`cantidad-${clave}`);
+                        const subtotalEl = document.getElementById(`subtotal-${clave}`);
+                        const productoItem = document.getElementById(`producto-${clave}`);
+
+                        if (cantidadEl) cantidadEl.textContent = item.cantidad;
+                        if (subtotalEl) subtotalEl.textContent = formatter.format(item.subtotal);
+                        if (productoItem) productoItem.style.opacity = '1';
+                    }
+                }
+
+                // Eliminar productos que ya no están en la respuesta
+                const todosLosItemsEnDOM = document.querySelectorAll('.producto-item');
+                todosLosItemsEnDOM.forEach(itemEl => {
+                    const claveItem = itemEl.id.replace('producto-', '');
+                    if (!itemsEnRespuesta.has(claveItem)) {
+                        itemEl.style.transition = 'all 0.4s ease';
+                        itemEl.style.opacity = '0';
+                        itemEl.style.maxHeight = '0px';
+                        itemEl.style.paddingTop = '0';
+                        itemEl.style.paddingBottom = '0';
+                        itemEl.style.marginTop = '0';
+                        itemEl.style.marginBottom = '0';
+                        itemEl.style.overflow = 'hidden';
+                        setTimeout(() => itemEl.remove(), 400);
+                    }
                 });
-                const result = await response.json();
 
-                if (result.success) {
-                    actualizarVista(result.data);
-                } else {
-                    alert(result.message || 'Ocurrió un error');
-                    if(productoItem) productoItem.style.opacity = '1';
-                }
-            } catch (error) {
-                console.error('Error AJAX:', error);
-                alert('Error de conexión. Por favor, recarga la página.');
-                if(productoItem) productoItem.style.opacity = '1';
-            }
-        }
-
-        function actualizarVista(data) {
-            const formatter = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' });
-
-            // Actualizar totales del resumen
-            document.getElementById('resumen-subtotal').textContent = formatter.format(data.totals.subtotal || 0);
-            document.getElementById('resumen-descuento').textContent = formatter.format(data.totals.descuento || 0);
-            document.getElementById('resumen-total').textContent = formatter.format(data.totals.total || 0);
-            
-            const descuentoCuponEl = document.getElementById('resumen-descuento-cupon');
-            if (descuentoCuponEl) {
-                if (data.totals.descuento_cupon > 0) {
-                    descuentoCuponEl.parentElement.style.display = 'flex';
-                    descuentoCuponEl.textContent = `- ${formatter.format(data.totals.descuento_cupon)}`;
-                } else {
-                    descuentoCuponEl.parentElement.style.display = 'none';
+                // Si no quedan productos, recargar para mostrar el mensaje de "carrito vacío"
+                if (itemsEnRespuesta.size === 0) {
+                    setTimeout(() => window.location.reload(), 500);
                 }
             }
-
-            // Actualizar cada producto
-            let itemsEnRespuesta = new Set();
-            if (data.itemDetails) {
-                for(const clave in data.itemDetails) {
-                    const item = data.itemDetails[clave];
-                    itemsEnRespuesta.add(clave);
-                    
-                    const cantidadEl = document.getElementById(`cantidad-${clave}`);
-                    const subtotalEl = document.getElementById(`subtotal-${clave}`);
-                    const productoItem = document.getElementById(`producto-${clave}`);
-
-                    if(cantidadEl) cantidadEl.textContent = item.cantidad;
-                    if(subtotalEl) subtotalEl.textContent = formatter.format(item.subtotal);
-                    if(productoItem) productoItem.style.opacity = '1';
-                }
-            }
-
-            // Eliminar productos que ya no están en la respuesta
-            const todosLosItemsEnDOM = document.querySelectorAll('.producto-item');
-            todosLosItemsEnDOM.forEach(itemEl => {
-                const claveItem = itemEl.id.replace('producto-', '');
-                if (!itemsEnRespuesta.has(claveItem)) {
-                    itemEl.style.transition = 'all 0.4s ease';
-                    itemEl.style.opacity = '0';
-                    itemEl.style.maxHeight = '0px';
-                    itemEl.style.paddingTop = '0';
-                    itemEl.style.paddingBottom = '0';
-                    itemEl.style.marginTop = '0';
-                    itemEl.style.marginBottom = '0';
-                    itemEl.style.overflow = 'hidden';
-                    setTimeout(() => itemEl.remove(), 400);
-                }
-            });
-
-            // Si no quedan productos, recargar para mostrar el mensaje de "carrito vacío"
-            if (itemsEnRespuesta.size === 0) {
-                setTimeout(() => window.location.reload(), 500);
-            }
-        }
-    });
+        });
     </script>
 
 </body>
+
 </html>

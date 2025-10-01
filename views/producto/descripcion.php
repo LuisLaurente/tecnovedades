@@ -122,16 +122,31 @@ $reviews = $reviews ?? [];
 
         <section class="product-info-grid">
             <div class="product-image-gallery">
-                <img id="main-product-image" src="<?= producto_imagen_url($producto, 0) ?>" alt="<?= htmlspecialchars($producto['nombre']) ?>" class="main-product-image clickable-image" style="cursor: pointer;" title="Click para ampliar imagen">
-                <?php if (!empty($producto['imagenes']) && count($producto['imagenes']) > 1): ?>
-                    <div class="thumbnail-images" role="list">
-                        <?php foreach ($producto['imagenes'] as $idx => $img): ?>
-                            <?php $imgUrl = producto_imagen_url($producto, $idx); ?>
-                            <img class="thumb <?= $idx === 0 ? 'activo' : '' ?>" src="<?= $imgUrl ?>" data-src="<?= $imgUrl ?>" alt="<?= htmlspecialchars($producto['nombre']) ?> miniatura <?= $idx + 1 ?>" role="listitem">
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
-            </div>
+    <!-- Contenedor principal del zoom -->
+    <div class="image-zoom-container">
+        <div class="image-wrapper">
+            <img id="main-product-image" 
+                 src="<?= producto_imagen_url($producto, 0) ?>" 
+                 alt="<?= htmlspecialchars($producto['nombre']) ?>" 
+                 class="zoomable-image">
+        </div>
+        <!-- Lente de zoom (solo desktop) -->
+        <div class="zoom-lens"></div>
+    </div>
+    
+    <?php if (!empty($producto['imagenes']) && count($producto['imagenes']) > 1): ?>
+        <div class="thumbnail-images" role="list">
+            <?php foreach ($producto['imagenes'] as $idx => $img): ?>
+                <?php $imgUrl = producto_imagen_url($producto, $idx); ?>
+                <img class="thumb <?= $idx === 0 ? 'activo' : '' ?>" 
+                     src="<?= $imgUrl ?>" 
+                     data-src="<?= $imgUrl ?>" 
+                     alt="<?= htmlspecialchars($producto['nombre']) ?> miniatura <?= $idx + 1 ?>" 
+                     role="listitem">
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
+</div>
 
             <div class="product-short-description">
                 <h2>Especificaciones Clave:</h2>
@@ -372,7 +387,7 @@ $reviews = $reviews ?? [];
         // Pasar el stock al JavaScript
         window.productStock = <?= isset($producto['stock']) && $producto['stock'] !== null ? (int)$producto['stock'] : 'null' ?>;
     </script>
-    <script src="<?= url('js/image-modal.js') ?>"></script>
+    <script src="<?= url('js/producto-zoom.js') ?>"></script>
     <script src="<?= url('js/producto-descripcion.js') ?>"></script>
 </body>
 
