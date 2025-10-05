@@ -234,15 +234,21 @@ class ProductoController extends BaseController
                 }
             }
 
-            // Variantes
-            if (isset($_POST['variantes']) && !empty($_POST['variantes']['talla'][0])) {
+            // Variantes - permitir variantes con solo talla, solo color, o ambos
+            if (isset($_POST['variantes']) && 
+                (isset($_POST['variantes']['talla']) || isset($_POST['variantes']['color']))) {
                 $tallas = $_POST['variantes']['talla'] ?? [];
                 $colores = $_POST['variantes']['color'] ?? [];
                 $stocks = $_POST['variantes']['stock'] ?? [];
-                for ($i = 0; $i < count($tallas); $i++) {
+                
+                $maxIndex = max(count($tallas), count($colores), count($stocks));
+                
+                for ($i = 0; $i < $maxIndex; $i++) {
                     $talla = trim($tallas[$i] ?? '');
                     $color = trim($colores[$i] ?? '');
                     $stockVar = (int)($stocks[$i] ?? 0);
+                    
+                    // Solo insertar si al menos talla o color tiene valor
                     if (!empty($talla) || !empty($color)) {
                         $stmtVar = $db->prepare("INSERT INTO variantes_producto (producto_id, talla, color, stock) VALUES (?, ?, ?, ?)");
                         $stmtVar->execute([$producto_id, $talla ?: null, $color ?: null, $stockVar]);
@@ -530,13 +536,16 @@ class ProductoController extends BaseController
             // Eliminar variantes existentes
             $db->prepare("DELETE FROM variantes_producto WHERE producto_id = ?")->execute([$id]);
 
-            // Agregar nuevas variantes
-            if (isset($_POST['variantes']) && !empty($_POST['variantes']['talla'][0])) {
+            // Agregar nuevas variantes - permitir solo talla, solo color, o ambos
+            if (isset($_POST['variantes']) && 
+                (isset($_POST['variantes']['talla']) || isset($_POST['variantes']['color']))) {
                 $tallas = $_POST['variantes']['talla'] ?? [];
                 $colores = $_POST['variantes']['color'] ?? [];
                 $stocks = $_POST['variantes']['stock'] ?? [];
 
-                for ($i = 0; $i < count($tallas); $i++) {
+                $maxIndex = max(count($tallas), count($colores), count($stocks));
+
+                for ($i = 0; $i < $maxIndex; $i++) {
                     $talla = trim($tallas[$i] ?? '');
                     $color = trim($colores[$i] ?? '');
                     $stockVar = (int)($stocks[$i] ?? 0);
@@ -667,6 +676,14 @@ class ProductoController extends BaseController
 
         $producto['categorias'] = Producto::obtenerCategoriasPorProducto($producto['id']);
         $producto['imagenes'] = \Models\ImagenProducto::obtenerPorProducto($producto['id']);
+        
+        // Obtener variantes del producto
+        $producto['variantes'] = VarianteProducto::obtenerPorProductoId($producto['id']);
+        
+        // DEBUG: Verificar variantes
+        error_log("=== DEBUG VARIANTES PRODUCTO ID: {$producto['id']} ===");
+        error_log("Variantes obtenidas: " . json_encode($producto['variantes']));
+        error_log("Cantidad de variantes: " . count($producto['variantes']));
 
         // --- CALCULAR ESTADÍSTICAS DE RESEÑAS ---
         try {

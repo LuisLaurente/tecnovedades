@@ -55,6 +55,17 @@ if (isset($_SESSION['carrito'])) {
                                     </div>
                                     <div class="producto-info">
                                         <div class="producto-nombre"><?= htmlspecialchars($item['nombre']) ?></div>
+                                        <?php if (!empty($item['talla']) || !empty($item['color'])): ?>
+                                            <div class="producto-variante" style="font-size: 0.85rem; color: #666; margin-top: 4px;">
+                                                <?php if (!empty($item['talla'])): ?>
+                                                    <span>Talla: <strong><?= htmlspecialchars($item['talla']) ?></strong></span>
+                                                <?php endif; ?>
+                                                <?php if (!empty($item['color'])): ?>
+                                                    <?php if (!empty($item['talla'])): ?> | <?php endif; ?>
+                                                    <span>Color: <strong><?= htmlspecialchars($item['color']) ?></strong></span>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php endif; ?>
                                         <div class="producto-precio">S/ <?= number_format($item['precio'], 2) ?></div>
                                     </div>
                                 </div>

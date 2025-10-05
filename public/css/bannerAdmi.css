@@ -674,3 +674,168 @@ input:checked + .slider:before {
         font-size: 1rem;
     }
 }
+
+/* ==========================================
+   ESTILOS PARA CAMPO DE ENLACE
+   ========================================== */
+
+.input-enlace {
+    width: 100%;
+    max-width: 250px;
+    padding: 6px 10px;
+    border: 2px solid #e0e0e0;
+    border-radius: 5px;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    background-color: #fff;
+}
+
+.input-enlace:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.input-enlace.saving {
+    border-color: #f39c12;
+    background-color: #fff9e6;
+}
+
+.input-enlace.saved {
+    border-color: var(--success-color);
+    background-color: #e8f8f0;
+    animation: savedPulse 0.5s ease;
+}
+
+@keyframes savedPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+}
+
+.link-column {
+    min-width: 200px;
+}
+
+/* Form group para nuevo enlace */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--text-color);
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.nuevo-enlace {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #e0e0e0;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.nuevo-enlace:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+/* ==========================================
+   MEJORAS EN BOTONES DE ACCIÓN
+   ========================================== */
+
+.actions-column {
+    min-width: 180px;
+}
+
+.btn-xs {
+    padding: 8px 14px;
+    font-size: 0.85em;
+    border-radius: 5px;
+    cursor: pointer;
+    border: none;
+    margin-right: 5px;
+    margin-bottom: 4px;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-primary-xs {
+    background-color: var(--primary-color);
+    color: white;
+    box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+}
+
+.btn-primary-xs:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(52, 152, 219, 0.4);
+}
+
+.btn-primary-xs:active {
+    transform: translateY(0);
+}
+
+.btn-danger-xs {
+    background-color: var(--danger-color);
+    color: white;
+    box-shadow: 0 2px 4px rgba(231, 76, 60, 0.3);
+}
+
+.btn-danger-xs:hover {
+    background-color: var(--danger-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(231, 76, 60, 0.4);
+}
+
+.btn-danger-xs:active {
+    transform: translateY(0);
+}
+
+/* Iconos en botones - Ahora los iconos vienen del HTML con <i> tags */
+.btn-xs i {
+    margin-right: 4px;
+    font-size: 0.9em;
+}
+
+/* Ocultar input file */
+.file-reemplazo {
+    display: none;
+}
+
+/* Tooltip para enlaces guardados */
+.enlace-status {
+    display: inline-block;
+    margin-left: 5px;
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 3px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.enlace-status.show {
+    opacity: 1;
+}
+
+.enlace-status.saving {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.enlace-status.saved {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.enlace-status.error {
+    background-color: #f8d7da;
+    color: #721c24;
+}

@@ -20,12 +20,12 @@ class Banner
         $banners = [];
         try {
             if ($conn instanceof \PDO) {
-                $stmt = $conn->prepare("SELECT id, nombre_imagen, orden FROM banners WHERE activo = 1 AND tipo = :tipo ORDER BY orden ASC");
+                $stmt = $conn->prepare("SELECT id, nombre_imagen, orden, enlace FROM banners WHERE activo = 1 AND tipo = :tipo ORDER BY orden ASC");
                 $stmt->execute([':tipo' => $tipo]);
                 $banners = $stmt->fetchAll(\PDO::FETCH_ASSOC);
             } elseif ($conn instanceof \mysqli) {
                 $tipoEsc = $conn->real_escape_string($tipo);
-                $sql = "SELECT id, nombre_imagen, orden FROM banners WHERE activo = 1 AND tipo = '$tipoEsc' ORDER BY orden ASC";
+                $sql = "SELECT id, nombre_imagen, orden, enlace FROM banners WHERE activo = 1 AND tipo = '$tipoEsc' ORDER BY orden ASC";
                 if ($res = $conn->query($sql)) {
                     while ($row = $res->fetch_assoc()) $banners[] = $row;
                     $res->free();
@@ -73,20 +73,21 @@ class Banner
      * @param int $activo
      * @return int|null devuelve id insertado o null en error
      */
-    public static function crear(string $nombre_imagen, string $tipo = 'principal', int $orden = 0, int $activo = 1): ?int
+    public static function crear(string $nombre_imagen, string $tipo = 'principal', int $orden = 0, int $activo = 1, ?string $enlace = null): ?int
     {
         $conn = self::conn();
         try {
             if ($conn instanceof \PDO) {
-                $stmt = $conn->prepare("INSERT INTO banners (nombre_imagen, tipo, orden, activo, creado_en) VALUES (:img, :tipo, :ord, :act, NOW())");
-                $ok = $stmt->execute([':img' => $nombre_imagen, ':tipo' => $tipo, ':ord' => $orden, ':act' => $activo]);
+                $stmt = $conn->prepare("INSERT INTO banners (nombre_imagen, enlace, tipo, orden, activo, creado_en) VALUES (:img, :enlace, :tipo, :ord, :act, NOW())");
+                $ok = $stmt->execute([':img' => $nombre_imagen, ':enlace' => $enlace, ':tipo' => $tipo, ':ord' => $orden, ':act' => $activo]);
                 if ($ok) return (int)$conn->lastInsertId();
             } elseif ($conn instanceof \mysqli) {
                 $imgEsc = $conn->real_escape_string($nombre_imagen);
+                $enlaceEsc = $enlace ? "'" . $conn->real_escape_string($enlace) . "'" : 'NULL';
                 $tipoEsc = $conn->real_escape_string($tipo);
                 $orden = (int)$orden;
                 $activo = (int)$activo;
-                if ($conn->query("INSERT INTO banners (nombre_imagen, tipo, orden, activo, creado_en) VALUES ('$imgEsc', '$tipoEsc', $orden, $activo, NOW())")) {
+                if ($conn->query("INSERT INTO banners (nombre_imagen, enlace, tipo, orden, activo, creado_en) VALUES ('$imgEsc', $enlaceEsc, '$tipoEsc', $orden, $activo, NOW())")) {
                     return (int)$conn->insert_id;
                 }
             }
@@ -188,6 +189,26 @@ class Banner
         }
         return false;
     }
-}
 
+    /**
+     * Actualiza el enlace de un banner
+     */
+    public static function actualizarEnlace(int $id, ?string $enlace): bool
+    {
+        $conn = self::conn();
+        try {
+            if ($conn instanceof \PDO) {
+                $stmt = $conn->prepare("UPDATE banners SET enlace = :enlace WHERE id = :id");
+                return $stmt->execute([':enlace' => $enlace, ':id' => $id]);
+            } elseif ($conn instanceof \mysqli) {
+                $id = (int)$id;
+                $enlaceEsc = $enlace ? "'" . $conn->real_escape_string($enlace) . "'" : 'NULL';
+                return (bool)$conn->query("UPDATE banners SET enlace = $enlaceEsc WHERE id = $id");
+            }
+        } catch (\Throwable $e) {
+            error_log('Banner::actualizarEnlace error: ' . $e->getMessage());
+        }
+        return false;
+    }
+}
 

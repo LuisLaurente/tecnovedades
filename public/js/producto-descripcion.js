@@ -181,5 +181,147 @@
 
     // Inicializar
     init();
+    
+    // ========================================
+    // GESTIÓN DE VARIANTES DE PRODUCTO
+    // ========================================
+    
+    function initVariants() {
+        // Verificar si hay variantes
+        if (!window.productVariants || window.productVariants.length === 0) {
+            return;
+        }
+        
+        // Elementos del DOM
+        const variantOptions = document.querySelectorAll('.variant-option');
+        const addToCartBtn = document.querySelector('.add-to-cart-btn');
+        const variantStockInfo = document.querySelector('.variant-stock-info');
+        const variantStockCount = document.getElementById('variant-stock-count');
+        const variantIdInput = document.getElementById('form-variante-id');
+        const qtyInput = document.getElementById('qty-input');
+        const formCantidad = document.getElementById('form-cantidad');
+        
+        if (variantOptions.length === 0) {
+            return;
+        }
+        
+        // Estado
+        const selectedVariants = {
+            talla: null,
+            color: null
+        };
+        
+        let currentVariant = null;
+        
+        // Registrar eventos
+        variantOptions.forEach((btn) => {
+            btn.addEventListener('click', function(event) {
+                const variantType = this.dataset.variantType;
+                const variantValue = this.dataset.variantValue;
+                
+                // Remover selección anterior del mismo tipo
+                document.querySelectorAll(`[data-variant-type="${variantType}"]`).forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                
+                // Agregar selección actual
+                this.classList.add('selected');
+                selectedVariants[variantType] = variantValue;
+                
+                // Buscar variante que coincida
+                updateVariantInfo();
+            }, false);
+        });
+        
+        // Función para actualizar info de variante
+        function updateVariantInfo() {
+            const matchingVariant = window.productVariants.find(variant => {
+                let matches = true;
+                
+                if (selectedVariants.talla !== null && variant.talla !== selectedVariants.talla) {
+                    matches = false;
+                }
+                
+                if (selectedVariants.color !== null && variant.color !== selectedVariants.color) {
+                    matches = false;
+                }
+                
+                return matches;
+            });
+            
+            if (matchingVariant) {
+                currentVariant = matchingVariant;
+                
+                const stock = parseInt(matchingVariant.stock) || 0;
+                
+                // Mostrar stock
+                if (variantStockCount) variantStockCount.textContent = stock;
+                if (variantStockInfo) {
+                    variantStockInfo.style.display = 'flex';
+                    variantStockInfo.classList.remove('low-stock', 'out-of-stock');
+                    if (stock === 0) {
+                        variantStockInfo.classList.add('out-of-stock');
+                    } else if (stock <= 5) {
+                        variantStockInfo.classList.add('low-stock');
+                    }
+                }
+                
+                // Habilitar botón
+                if (stock > 0) {
+                    if (variantIdInput) variantIdInput.value = matchingVariant.id;
+                    if (addToCartBtn) {
+                        addToCartBtn.disabled = false;
+                        addToCartBtn.textContent = 'Agregar al Carro';
+                    }
+                } else {
+                    if (addToCartBtn) {
+                        addToCartBtn.disabled = true;
+                        addToCartBtn.textContent = 'Agotado';
+                    }
+                }
+                
+                // Actualizar límites de cantidad
+                if (qtyInput) {
+                    qtyInput.max = stock;
+                    const currentQty = parseInt(qtyInput.value) || 1;
+                    if (currentQty > stock) {
+                        qtyInput.value = Math.max(1, stock);
+                    }
+                    if (formCantidad) formCantidad.value = qtyInput.value;
+                }
+                
+                window.productStock = stock;
+                
+            } else {
+                if (variantStockInfo) variantStockInfo.style.display = 'none';
+                if (variantIdInput) variantIdInput.value = '';
+                if (addToCartBtn) {
+                    addToCartBtn.disabled = true;
+                    addToCartBtn.textContent = 'Selecciona una variante';
+                }
+            }
+        }
+        
+        // Auto-seleccionar si solo hay una opción
+        const tallas = [...new Set(window.productVariants.map(v => v.talla).filter(Boolean))];
+        const colores = [...new Set(window.productVariants.map(v => v.color).filter(Boolean))];
+        
+        if (tallas.length === 1) {
+            const tallaBtn = document.querySelector(`[data-variant-type="talla"][data-variant-value="${tallas[0]}"]`);
+            if (tallaBtn) {
+                setTimeout(() => tallaBtn.click(), 100);
+            }
+        }
+        
+        if (colores.length === 1) {
+            const colorBtn = document.querySelector(`[data-variant-type="color"][data-variant-value="${colores[0]}"]`);
+            if (colorBtn) {
+                setTimeout(() => colorBtn.click(), 100);
+            }
+        }
+    }
+    
+    // Inicializar variantes después de un pequeño delay
+    setTimeout(initVariants, 300);
 
 })();

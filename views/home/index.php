@@ -54,7 +54,13 @@ if (!isset($categorias)) {
         <?php if (!empty($banners)): ?>
           <?php foreach ($banners as $index => $ban): ?>
             <div class="hero-slide <?= $index === 0 ? 'active' : '' ?>">
-              <img src="<?= url('uploads/banners/' . htmlspecialchars($ban['nombre_imagen'])) ?>" alt="Banner <?= $index + 1 ?>">
+              <?php if (!empty($ban['enlace'])): ?>
+                <a href="<?= htmlspecialchars($ban['enlace']) ?>" target="_blank" rel="noopener noreferrer">
+                  <img src="<?= url('uploads/banners/' . htmlspecialchars($ban['nombre_imagen'])) ?>" alt="Banner <?= $index + 1 ?>">
+                </a>
+              <?php else: ?>
+                <img src="<?= url('uploads/banners/' . htmlspecialchars($ban['nombre_imagen'])) ?>" alt="Banner <?= $index + 1 ?>">
+              <?php endif; ?>
             </div>
           <?php endforeach; ?>
         <?php else: ?>
@@ -137,9 +143,15 @@ if (!isset($categorias)) {
           ?>
 
           <?php if ($banner_sec_izq): ?>
-            <a href="#" class="promo-banner-item">
-              <img src="<?= url("uploads/banners/" . htmlspecialchars($banner_sec_izq["nombre_imagen"])) ?>" alt="Banner Secundario Izquierda">
-            </a>
+            <?php if (!empty($banner_sec_izq['enlace'])): ?>
+              <a href="<?= htmlspecialchars($banner_sec_izq['enlace']) ?>" class="promo-banner-item" target="_blank" rel="noopener noreferrer">
+                <img src="<?= url("uploads/banners/" . htmlspecialchars($banner_sec_izq["nombre_imagen"])) ?>" alt="Banner Secundario Izquierda">
+              </a>
+            <?php else: ?>
+              <div class="promo-banner-item">
+                <img src="<?= url("uploads/banners/" . htmlspecialchars($banner_sec_izq["nombre_imagen"])) ?>" alt="Banner Secundario Izquierda">
+              </div>
+            <?php endif; ?>
           <?php else: ?>
             <!-- Fallback si no hay banner secundario izquierdo en la BD -->
             <a href="#" class="promo-banner-item">
@@ -148,9 +160,15 @@ if (!isset($categorias)) {
           <?php endif; ?>
 
           <?php if ($banner_sec_der): ?>
-            <a href="#" class="promo-banner-item">
-              <img src="<?= url("uploads/banners/" . htmlspecialchars($banner_sec_der["nombre_imagen"])) ?>" alt="Banner Secundario Derecha">
-            </a>
+            <?php if (!empty($banner_sec_der['enlace'])): ?>
+              <a href="<?= htmlspecialchars($banner_sec_der['enlace']) ?>" class="promo-banner-item" target="_blank" rel="noopener noreferrer">
+                <img src="<?= url("uploads/banners/" . htmlspecialchars($banner_sec_der["nombre_imagen"])) ?>" alt="Banner Secundario Derecha">
+              </a>
+            <?php else: ?>
+              <div class="promo-banner-item">
+                <img src="<?= url("uploads/banners/" . htmlspecialchars($banner_sec_der["nombre_imagen"])) ?>" alt="Banner Secundario Derecha">
+              </div>
+            <?php endif; ?>
           <?php else: ?>
             <!-- Fallback si no hay banner secundario derecho en la BD -->
             <a href="#" class="promo-banner-item">
