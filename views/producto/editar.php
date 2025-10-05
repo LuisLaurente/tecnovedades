@@ -291,6 +291,9 @@ if (!empty($_SESSION['carrito']) && is_array($_SESSION['carrito'])) {
                             <!-- Variants Section -->
                             <section class="form-section">
                                 <h2 class="section-title">🎨 Variantes del Producto</h2>
+                                <p class="form-help" style="margin-bottom: 15px;">
+                                    <i class="fas fa-info-circle"></i> Puedes crear variantes con solo talla, solo color, o ambos. Al menos uno de los dos campos debe tener valor.
+                                </p>
                                 
                                 <div id="variantes-container" class="variants-container">
                                     <?php if (!empty($variantes)): ?>
@@ -298,16 +301,16 @@ if (!empty($_SESSION['carrito']) && is_array($_SESSION['carrito'])) {
                                             <div class="variant-item">
                                                 <input type="hidden" name="variantes[id][]" value="<?= $var['id'] ?>">
                                                 <div class="variant-field">
-                                                    <label>Talla</label>
-                                                    <input type="text" name="variantes[talla][]" value="<?= htmlspecialchars($var['talla']) ?>" class="form-input">
+                                                    <label>Talla (opcional)</label>
+                                                    <input type="text" name="variantes[talla][]" value="<?= htmlspecialchars($var['talla'] ?? '') ?>" placeholder="Ej: S, M, L" class="form-input">
                                                 </div>
                                                 <div class="variant-field">
-                                                    <label>Color</label>
-                                                    <input type="text" name="variantes[color][]" value="<?= htmlspecialchars($var['color']) ?>" class="form-input">
+                                                    <label>Color (opcional)</label>
+                                                    <input type="text" name="variantes[color][]" value="<?= htmlspecialchars($var['color'] ?? '') ?>" placeholder="Ej: Rojo, Azul" class="form-input">
                                                 </div>
                                                 <div class="variant-field">
                                                     <label>Stock</label>
-                                                    <input type="number" name="variantes[stock][]" value="<?= htmlspecialchars($var['stock']) ?>" class="form-input">
+                                                    <input type="number" name="variantes[stock][]" value="<?= htmlspecialchars($var['stock'] ?? '0') ?>" class="form-input">
                                                 </div>
                                                 <a href="<?= url('variante/eliminar/' . $var['id'] . '?producto_id=' . $producto['id']) ?>" 
                                                    class="delete-variant-btn" onclick="return confirm('¿Eliminar esta variante?')">❌ Eliminar</a>
@@ -333,17 +336,54 @@ if (!empty($_SESSION['carrito']) && is_array($_SESSION['carrito'])) {
     </div>
 
 <script>
+    // Validación de variantes antes de enviar el formulario
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('.product-form');
+        
+        form.addEventListener('submit', function(e) {
+            const variantes = document.querySelectorAll('.variant-item, .variante');
+            let variantesValidas = true;
+            let mensajeError = [];
+            
+            variantes.forEach((variante, index) => {
+                const tallaInput = variante.querySelector('input[name="variantes[talla][]"]');
+                const colorInput = variante.querySelector('input[name="variantes[color][]"]');
+                const stockInput = variante.querySelector('input[name="variantes[stock][]"]');
+                
+                const talla = tallaInput ? tallaInput.value.trim() : '';
+                const color = colorInput ? colorInput.value.trim() : '';
+                const stock = stockInput ? stockInput.value.trim() : '';
+                
+                // Si hay stock pero no hay ni talla ni color
+                if (stock !== '' && stock !== '0' && talla === '' && color === '') {
+                    variantesValidas = false;
+                    mensajeError.push(`Variante ${index + 1}: Debes especificar al menos una talla o un color.`);
+                    
+                    // Resaltar los campos
+                    if (tallaInput) tallaInput.style.borderColor = 'red';
+                    if (colorInput) colorInput.style.borderColor = 'red';
+                }
+            });
+            
+            if (!variantesValidas) {
+                e.preventDefault();
+                alert('Error en variantes:\n\n' + mensajeError.join('\n'));
+                return false;
+            }
+        });
+    });
+
     function agregarVariante() {
         const container = document.getElementById('variantes-container');
         const html = `
             <div class="variante">
                 <input type="hidden" name="variantes[id][]" value="">
                 <div>
-                    <label>Talla</label>
+                    <label>Talla (opcional)</label>
                     <input type="text" name="variantes[talla][]" placeholder="Ej: S, M, L, XL">
                 </div>
                 <div>
-                    <label>Color</label>
+                    <label>Color (opcional)</label>
                     <input type="text" name="variantes[color][]" placeholder="Ej: Rojo, Azul">
                 </div>
                 <div>

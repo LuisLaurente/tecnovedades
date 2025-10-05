@@ -234,14 +234,17 @@ if (!empty($_SESSION['carrito']) && is_array($_SESSION['carrito'])) {
                         <!-- Variantes -->
                         <h3 class="_productoCrear_section-title">🎨 Variantes del Producto</h3>
                         <div class="_productoCrear_variants-section">
+                            <p class="_productoCrear_help-text" style="margin-bottom: 15px;">
+                                <i class="fas fa-info-circle"></i> Puedes crear variantes con solo talla, solo color, o ambos. Al menos uno de los dos campos debe tener valor.
+                            </p>
                             <div id="variantes-container" class="_productoCrear_variants-container">
                                 <div class="_productoCrear_variant">
                                     <div class="_productoCrear_variant-field">
-                                        <label class="_productoCrear_label">Talla</label>
+                                        <label class="_productoCrear_label">Talla (opcional)</label>
                                         <input type="text" name="variantes[talla][]" placeholder="Ej: S, M, L, XL" class="_productoCrear_input">
                                     </div>
                                     <div class="_productoCrear_variant-field">
-                                        <label class="_productoCrear_label">Color</label>
+                                        <label class="_productoCrear_label">Color (opcional)</label>
                                         <input type="text" name="variantes[color][]" placeholder="Ej: Rojo, Azul" class="_productoCrear_input">
                                     </div>
                                     <div class="_productoCrear_variant-field">
@@ -274,16 +277,53 @@ if (!empty($_SESSION['carrito']) && is_array($_SESSION['carrito'])) {
 </div>
 
 <script>
+    // Validación de variantes antes de enviar el formulario
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('._productoCrear_form');
+        
+        form.addEventListener('submit', function(e) {
+            const variantes = document.querySelectorAll('._productoCrear_variant');
+            let variantesValidas = true;
+            let mensajeError = [];
+            
+            variantes.forEach((variante, index) => {
+                const tallaInput = variante.querySelector('input[name="variantes[talla][]"]');
+                const colorInput = variante.querySelector('input[name="variantes[color][]"]');
+                const stockInput = variante.querySelector('input[name="variantes[stock][]"]');
+                
+                const talla = tallaInput ? tallaInput.value.trim() : '';
+                const color = colorInput ? colorInput.value.trim() : '';
+                const stock = stockInput ? stockInput.value.trim() : '';
+                
+                // Si hay stock pero no hay ni talla ni color
+                if (stock !== '' && stock !== '0' && talla === '' && color === '') {
+                    variantesValidas = false;
+                    mensajeError.push(`Variante ${index + 1}: Debes especificar al menos una talla o un color.`);
+                    
+                    // Resaltar los campos
+                    if (tallaInput) tallaInput.style.borderColor = 'red';
+                    if (colorInput) colorInput.style.borderColor = 'red';
+                }
+            });
+            
+            if (!variantesValidas) {
+                e.preventDefault();
+                alert('Error en variantes:\n\n' + mensajeError.join('\n'));
+                return false;
+            }
+        });
+    });
+
     function agregarVariante() {
         const container = document.getElementById('variantes-container');
         const html = `
             <div class="_productoCrear_variant">
                 <div class="_productoCrear_variant-field">
-                    <label class="_productoCrear_label">Talla</label>
+                    <label class="_productoCrear_label">Talla (opcional)</label>
                     <input type="text" name="variantes[talla][]" placeholder="Ej: S, M, L, XL" class="_productoCrear_input">
                 </div>
                 <div class="_productoCrear_variant-field">
-                    <label class="_productoCrear_label">Color</label>
+                    <label class="_productoCrear_label">Color (opcional)</label>
                     <input type="text" name="variantes[color][]" placeholder="Ej: Rojo, Azul" class="_productoCrear_input">
                 </div>
                 <div class="_productoCrear_variant-field">

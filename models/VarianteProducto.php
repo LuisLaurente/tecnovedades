@@ -47,6 +47,16 @@ class VarianteProducto
         $stmt->execute([$producto_id]);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
+    
+    // Este método me permite obtener UNA variante específica por su ID
+    public static function obtenerPorId($id)
+    {
+        $db = \Core\Database::getInstance()->getConnection();
+        $stmt = $db->prepare("SELECT * FROM variantes_producto WHERE id = ?");
+        $stmt->execute([$id]);
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
+    }
+    
     // Este método me permite actualizar una variante existente
     public static function actualizar($id, $talla, $color, $stock)
     {

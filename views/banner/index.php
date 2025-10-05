@@ -21,6 +21,7 @@
             data-ruta-eliminar="<?= url('banner/eliminar') ?>"
             data-ruta-guardar="<?= url('banner/guardar') ?>"
             data-ruta-actualizar="<?= url('banner/actualizar-imagen') ?>"
+            data-ruta-actualizar-enlace="<?= url('banner/actualizar_enlace') ?>"
             data-base-upload-url="<?= htmlspecialchars($baseUploadUrl, ENT_QUOTES) ?>">
 
             <div class="management-grid">
@@ -36,6 +37,7 @@
                                     <th class="drag-column"></th>
                                     <th>#</th>
                                     <th>Imagen</th>
+                                    <th class="link-column">Enlace</th>
                                     <th class="status-column">Activo</th>
                                     <th class="actions-column">Acciones</th>
                                 </tr>
@@ -43,7 +45,7 @@
                             <tbody class="sortable-list">
                                 <?php if (empty($banners_principales)): ?>
                                     <tr>
-                                        <td colspan="5" class="no-banners">No hay banners principales.</td>
+                                        <td colspan="6" class="no-banners">No hay banners principales.</td>
                                     </tr>
                                 <?php else: ?>
                                     <?php foreach ($banners_principales as $i => $b): ?>
@@ -58,12 +60,15 @@
                                             <td class="row-index"><?= $i + 1 ?></td>
                                             <td><img src="<?= url($baseUploadUrl . $b['nombre_imagen']) ?>" alt="banner" class="banner-preview"></td>
                                             <td>
+                                                <input type="text" class="input-enlace" value="<?= htmlspecialchars($b['enlace'] ?? '') ?>" placeholder="https://..." title="El enlace se guarda automáticamente">
+                                            </td>
+                                            <td>
                                                 <label class="switch"><input type="checkbox" class="switch-activo" <?= !empty($b['activo']) ? 'checked' : '' ?>><span class="slider"></span></label>
                                             </td>
                                             <td>
-                                                <button class="btn-xs btn-primary-xs btn-reemplazar">Reemplazar</button>
+                                                <button class="btn-xs btn-primary-xs btn-reemplazar" title="Cambiar imagen del banner"><i class="fas fa-sync-alt"></i> Reemplazar</button>
                                                 <input type="file" class="file-reemplazo" accept=".jpg,.jpeg,.png,.webp,.gif">
-                                                <button class="btn-xs btn-danger-xs btn-eliminar">Eliminar</button>
+                                                <button class="btn-xs btn-danger-xs btn-eliminar" title="Eliminar este banner"><i class="fas fa-trash-alt"></i> Eliminar</button>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -82,6 +87,13 @@
                         <input type="file" class="input-nuevo-file" accept=".jpg,.jpeg,.png,.webp,.gif">
                     </div>
                     <div class="preview-nuevo" aria-live="polite"></div>
+                    <div class="form-group">
+                        <label for="nuevo-enlace-principal">Enlace (URL):</label>
+                        <input type="text" id="nuevo-enlace-principal" class="nuevo-enlace" placeholder="https://ejemplo.com" style="width: 100%; padding: 8px; margin-top: 5px;">
+                        <small style="color: #666; font-size: 0.85em; display: block; margin-top: 5px;">
+                            <i class="fas fa-info-circle"></i> Opcional. Si agregas un enlace, el banner será clickeable.
+                        </small>
+                    </div>
                     <div class="active-toggle">
                         <label>
                             <span>Activo</span>
@@ -107,6 +119,7 @@
             data-ruta-eliminar="<?= url('banner/eliminar') ?>"
             data-ruta-guardar="<?= url('banner/guardar') ?>"
             data-ruta-actualizar="<?= url('banner/actualizar-imagen') ?>"
+            data-ruta-actualizar-enlace="<?= url('banner/actualizar_enlace') ?>"
             data-base-upload-url="<?= htmlspecialchars($baseUploadUrl, ENT_QUOTES) ?>">
 
             <div class="management-grid">
@@ -122,6 +135,7 @@
                                     <th class="drag-column"></th>
                                     <th>#</th>
                                     <th>Imagen</th>
+                                    <th class="link-column">Enlace</th>
                                     <th class="status-column">Activo</th>
                                     <th class="actions-column">Acciones</th>
                                 </tr>
@@ -129,7 +143,7 @@
                             <tbody class="sortable-list">
                                 <?php if (empty($banners_secundarios_izquierda)): ?>
                                     <tr>
-                                        <td colspan="5" class="no-banners">No hay banners secundarios izquierdos.</td>
+                                        <td colspan="6" class="no-banners">No hay banners secundarios izquierdos.</td>
                                     </tr>
                                 <?php else: ?>
                                     <?php foreach ($banners_secundarios_izquierda as $i => $b): ?>
@@ -138,12 +152,15 @@
                                             <td><?= $i + 1 ?></td>
                                             <td><img src="<?= url($baseUploadUrl . $b['nombre_imagen']) ?>" alt="banner" class="banner-preview"></td>
                                             <td>
+                                                <input type="text" class="input-enlace" value="<?= htmlspecialchars($b['enlace'] ?? '') ?>" placeholder="https://..." title="El enlace se guarda automáticamente">
+                                            </td>
+                                            <td>
                                                 <label class="switch"><input type="checkbox" class="switch-activo" <?= !empty($b['activo']) ? 'checked' : '' ?>><span class="slider"></span></label>
                                             </td>
                                             <td>
-                                                <button class="btn-xs btn-primary-xs btn-reemplazar">Reemplazar</button>
+                                                <button class="btn-xs btn-primary-xs btn-reemplazar" title="Cambiar imagen del banner"><i class="fas fa-sync-alt"></i> Reemplazar</button>
                                                 <input type="file" class="file-reemplazo" accept=".jpg,.jpeg,.png,.webp,.gif">
-                                                <button class="btn-xs btn-danger-xs btn-eliminar">Eliminar</button>
+                                                <button class="btn-xs btn-danger-xs btn-eliminar" title="Eliminar este banner"><i class="fas fa-trash-alt"></i> Eliminar</button>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -162,6 +179,13 @@
                         <input type="file" class="input-nuevo-file" accept=".jpg,.jpeg,.png,.webp,.gif">
                     </div>
                     <div class="preview-nuevo" aria-live="polite"></div>
+                    <div class="form-group">
+                        <label for="nuevo-enlace-sec-izq">Enlace (URL):</label>
+                        <input type="text" id="nuevo-enlace-sec-izq" class="nuevo-enlace" placeholder="https://ejemplo.com" style="width: 100%; padding: 8px; margin-top: 5px;">
+                        <small style="color: #666; font-size: 0.85em; display: block; margin-top: 5px;">
+                            <i class="fas fa-info-circle"></i> Opcional. Si agregas un enlace, el banner será clickeable.
+                        </small>
+                    </div>
                     <div class="active-toggle">
                         <label>
                             <span>Activo</span>
@@ -187,6 +211,7 @@
             data-ruta-eliminar="<?= url('banner/eliminar') ?>"
             data-ruta-guardar="<?= url('banner/guardar') ?>"
             data-ruta-actualizar="<?= url('banner/actualizar-imagen') ?>"
+            data-ruta-actualizar-enlace="<?= url('banner/actualizar_enlace') ?>"
             data-base-upload-url="<?= htmlspecialchars($baseUploadUrl, ENT_QUOTES) ?>">
 
             <div class="management-grid">
@@ -202,6 +227,7 @@
                                     <th class="drag-column"></th>
                                     <th>#</th>
                                     <th>Imagen</th>
+                                    <th class="link-column">Enlace</th>
                                     <th class="status-column">Activo</th>
                                     <th class="actions-column">Acciones</th>
                                 </tr>
@@ -209,7 +235,7 @@
                             <tbody class="sortable-list">
                                 <?php if (empty($banners_secundarios_derecha)): ?>
                                     <tr>
-                                        <td colspan="5" class="no-banners">No hay banners secundarios derechos.</td>
+                                        <td colspan="6" class="no-banners">No hay banners secundarios derechos.</td>
                                     </tr>
                                 <?php else: ?>
                                     <?php foreach ($banners_secundarios_derecha as $i => $b): ?>
@@ -218,12 +244,15 @@
                                             <td><?= $i + 1 ?></td>
                                             <td><img src="<?= url($baseUploadUrl . $b['nombre_imagen']) ?>" alt="banner" class="banner-preview"></td>
                                             <td>
+                                                <input type="text" class="input-enlace" value="<?= htmlspecialchars($b['enlace'] ?? '') ?>" placeholder="https://..." title="El enlace se guarda automáticamente">
+                                            </td>
+                                            <td>
                                                 <label class="switch"><input type="checkbox" class="switch-activo" <?= !empty($b['activo']) ? 'checked' : '' ?>><span class="slider"></span></label>
                                             </td>
                                             <td>
-                                                <button class="btn-xs btn-primary-xs btn-reemplazar">Reemplazar</button>
+                                                <button class="btn-xs btn-primary-xs btn-reemplazar" title="Cambiar imagen del banner"><i class="fas fa-sync-alt"></i> Reemplazar</button>
                                                 <input type="file" class="file-reemplazo" accept=".jpg,.jpeg,.png,.webp,.gif">
-                                                <button class="btn-xs btn-danger-xs btn-eliminar">Eliminar</button>
+                                                <button class="btn-xs btn-danger-xs btn-eliminar" title="Eliminar este banner"><i class="fas fa-trash-alt"></i> Eliminar</button>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -242,6 +271,13 @@
                         <input type="file" class="input-nuevo-file" accept=".jpg,.jpeg,.png,.webp,.gif">
                     </div>
                     <div class="preview-nuevo" aria-live="polite"></div>
+                    <div class="form-group">
+                        <label for="nuevo-enlace-sec-der">Enlace (URL):</label>
+                        <input type="text" id="nuevo-enlace-sec-der" class="nuevo-enlace" placeholder="https://ejemplo.com" style="width: 100%; padding: 8px; margin-top: 5px;">
+                        <small style="color: #666; font-size: 0.85em; display: block; margin-top: 5px;">
+                            <i class="fas fa-info-circle"></i> Opcional. Si agregas un enlace, el banner será clickeable.
+                        </small>
+                    </div>
                     <div class="active-toggle">
                         <label>
                             <span>Activo</span>
@@ -277,6 +313,7 @@
                     eliminar: app.dataset.rutaEliminar,
                     guardar: app.dataset.rutaGuardar,
                     actualizar: app.dataset.rutaActualizar,
+                    actualizarEnlace: app.dataset.rutaActualizarEnlace,
                 };
                 const baseUploadUrl = app.dataset.baseUploadUrl || '';
                 const csrf = (document.querySelector('meta[name="csrf"]')?.content || '').trim();
@@ -440,6 +477,7 @@
                 const inputNuevoFile = $('.input-nuevo-file');
                 const previewNuevo = $('.preview-nuevo');
                 const nuevoActivo = $('.nuevo-activo');
+                const nuevoEnlace = $('.nuevo-enlace');
                 const btnGuardarNuevo = $('.btn-guardar-nuevo');
                 let nuevoArchivo = null;
 
@@ -483,6 +521,7 @@
                     const nextOrden = $$('.sortable-list tr').length;
                     fd.append('orden', String(nextOrden));
                     if (nuevoActivo.checked) fd.append('activo', '1');
+                    if (nuevoEnlace?.value) fd.append('enlace', nuevoEnlace.value);
 
                     const resp = await postForm(rutas.guardar, fd);
 
@@ -501,12 +540,15 @@
                         <td class="row-index">${$$('.sortable-list tr').length + 1}</td>
                         <td><img src="${baseUploadUrl}${resp.data.nombre_imagen}" alt="banner" class="banner-preview"></td>
                         <td>
+                            <input type="text" class="input-enlace" value="${resp.data.enlace || ''}" placeholder="https://..." title="El enlace se guarda automáticamente">
+                        </td>
+                        <td>
                             <label class="switch"><input type="checkbox" class="switch-activo" ${resp.data.activo ? 'checked' : ''}><span class="slider"></span></label>
                         </td>
                         <td>
-                            <button class="btn-xs btn-primary-xs btn-reemplazar">Reemplazar</button>
+                            <button class="btn-xs btn-primary-xs btn-reemplazar" title="Cambiar imagen del banner"><i class="fas fa-sync-alt"></i> Reemplazar</button>
                             <input type="file" class="file-reemplazo" accept=".jpg,.jpeg,.png,.webp,.gif">
-                            <button class="btn-xs btn-danger-xs btn-eliminar">Eliminar</button>
+                            <button class="btn-xs btn-danger-xs btn-eliminar" title="Eliminar este banner"><i class="fas fa-trash-alt"></i> Eliminar</button>
                         </td>
                     `;
                         $('.sortable-list').appendChild(newRow);
@@ -516,6 +558,7 @@
                         previewNuevo.innerHTML = '';
                         nuevoArchivo = null;
                         nuevoActivo.checked = true;
+                        if (nuevoEnlace) nuevoEnlace.value = '';
                     } else {
                         showToast(resp?.message || 'Error al guardar el banner', 'error');
                     }
@@ -529,6 +572,7 @@
                     const btnReemplazar = row.querySelector('.btn-reemplazar');
                     const fileReemplazo = row.querySelector('.file-reemplazo');
                     const imgElement = row.querySelector('img');
+                    const inputEnlace = row.querySelector('.input-enlace');
 
                     switchActivo?.addEventListener('change', async e => {
                         const activo = e.target.checked ? 1 : 0;
@@ -572,6 +616,38 @@
                         } else {
                             showToast(resp?.message || 'Error al actualizar imagen', 'error');
                         }
+                    });
+
+                    // Handler para actualizar enlace con debounce
+                    let timeoutEnlace = null;
+                    inputEnlace?.addEventListener('input', e => {
+                        clearTimeout(timeoutEnlace);
+                        
+                        // Añadir clase "saving" para feedback visual
+                        inputEnlace.classList.remove('saved');
+                        inputEnlace.classList.add('saving');
+                        
+                        timeoutEnlace = setTimeout(async () => {
+                            const enlace = e.target.value.trim();
+                            const fd = new FormData();
+                            fd.append('id', id);
+                            fd.append('enlace', enlace);
+
+                            const resp = await postForm(rutas.actualizarEnlace, fd);
+                            
+                            // Remover clase saving
+                            inputEnlace.classList.remove('saving');
+                            
+                            if (resp?.ok) {
+                                // Mostrar feedback visual de éxito
+                                inputEnlace.classList.add('saved');
+                                setTimeout(() => {
+                                    inputEnlace.classList.remove('saved');
+                                }, 2000);
+                            } else {
+                                showToast(resp?.message || 'Error al actualizar enlace', 'error');
+                            }
+                        }, 800); // Esperar 800ms después de que el usuario deje de escribir
                     });
                 }
 
