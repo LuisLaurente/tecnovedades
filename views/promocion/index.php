@@ -18,6 +18,34 @@ if (!function_exists('describirPromocion')) {
             error_log("Inconsistencia en tipo: DB=$tipo, Condicion=$tipoCondicion");
         }
 
+        // --- 🔍 Funciones internas para obtener nombres ---
+        $getNombreProducto = function ($id) {
+            if (!$id) return null;
+            try {
+                $pdo = \Core\Database::getInstance()->getConnection();
+                $stmt = $pdo->prepare("SELECT nombre FROM productos WHERE id = ?");
+                $stmt->execute([$id]);
+                return $stmt->fetchColumn() ?: "Producto #$id";
+            } catch (Exception $e) {
+                error_log("Error obteniendo nombre de producto: " . $e->getMessage());
+                return "Producto #$id";
+            }
+        };
+
+        $getNombreCategoria = function ($id) {
+            if (!$id) return null;
+            try {
+                $pdo = \Core\Database::getInstance()->getConnection();
+                $stmt = $pdo->prepare("SELECT nombre FROM categorias WHERE id = ?");
+                $stmt->execute([$id]);
+                return $stmt->fetchColumn() ?: "Categoría #$id";
+            } catch (Exception $e) {
+                error_log("Error obteniendo nombre de categoría: " . $e->getMessage());
+                return "Categoría #$id";
+            }
+        };
+
+        // --- 🧠 Descripción de cada tipo de promoción ---
         switch ($tipoCondicion) {
             case 'subtotal_minimo':
                 $valorCond = number_format($condicion['valor'] ?? 0, 2);
@@ -41,25 +69,27 @@ if (!function_exists('describirPromocion')) {
                 break;
 
             case 'cantidad_producto_identico':
-                $prodId = $condicion['producto_id'] ?? 'N/A';
+                $prodId = $condicion['producto_id'] ?? null;
+                $nombreProd = $getNombreProducto($prodId);
                 if ($tipoAccion === 'compra_n_paga_m') {
                     $lleva = $accion['cantidad_lleva'] ?? 'N';
                     $paga = $accion['cantidad_paga'] ?? 'M';
-                    return "Lleva {$lleva}, Paga {$paga} en Producto #{$prodId}";
+                    return "Lleva {$lleva}, Paga {$paga} en <strong>{$nombreProd}</strong>";
                 }
                 if ($tipoAccion === 'descuento_enesima_unidad') {
                     $unidad = $accion['numero_unidad'] ?? 'N';
                     $desc = $accion['descuento_unidad'] ?? 0;
-                    return "<strong>{$desc}% de descuento</strong> en la {$unidad}ª unidad del Producto #{$prodId}";
+                    return "<strong>{$desc}% de descuento</strong> en la {$unidad}ª unidad de <strong>{$nombreProd}</strong>";
                 }
                 break;
 
             case 'cantidad_producto_categoria':
                 if ($tipoAccion === 'descuento_menor_valor') {
-                    $catId = $condicion['categoria_id'] ?? 'N/A';
+                    $catId = $condicion['categoria_id'] ?? null;
+                    $nombreCat = $getNombreCategoria($catId);
                     $cantidad = $condicion['cantidad_min'] ?? 'N';
                     $desc = $accion['valor'] ?? 0;
-                    return "<strong>{$desc}% de descuento</strong> en el producto de menor valor al llevar {$cantidad} de la Categoría #{$catId}";
+                    return "<strong>{$desc}% de descuento</strong> en el producto de menor valor al llevar {$cantidad} de la categoría <strong>{$nombreCat}</strong>";
                 }
                 break;
 
@@ -68,11 +98,11 @@ if (!function_exists('describirPromocion')) {
                 if ($tipoAccion === 'compra_n_paga_m_general') {
                     $lleva = $accion['cantidad_lleva'] ?? 'N';
                     $paga = $accion['cantidad_paga'] ?? 'M';
-                    return "Al llevar {$cantidadMin} productos mezclados → <strong>Lleva {$lleva}, Paga {$paga} (el de menor valor gratis)</strong>";
+                    return "Al llevar {$cantidadMin} productos mezclados → <strong>Lleva {$lleva}, Paga {$paga}</strong> (el de menor valor gratis)";
                 }
                 if ($tipoAccion === 'descuento_enesimo_producto') {
                     $descuento = $accion['valor'] ?? 0;
-                    return "Al llevar {$cantidadMin} productos mezclados → <strong>{$descuento}% de descuento en el producto más barato</strong>";
+                    return "Al llevar {$cantidadMin} productos mezclados → <strong>{$descuento}% de descuento</strong> en el producto más barato";
                 }
                 break;
 
@@ -86,11 +116,13 @@ if (!function_exists('describirPromocion')) {
                 error_log("Tipo de condición desconocido: $tipoCondicion, Accion: $tipoAccion");
                 return 'Regla personalizada';
         }
+
         error_log("Combinación no soportada: Condicion=$tipoCondicion, Accion=$tipoAccion");
         return 'Regla personalizada';
     }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="es">
