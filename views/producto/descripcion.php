@@ -122,16 +122,31 @@ $reviews = $reviews ?? [];
 
         <section class="product-info-grid">
             <div class="product-image-gallery">
-                <img id="main-product-image" src="<?= producto_imagen_url($producto, 0) ?>" alt="<?= htmlspecialchars($producto['nombre']) ?>" class="main-product-image clickable-image" style="cursor: pointer;" title="Click para ampliar imagen">
-                <?php if (!empty($producto['imagenes']) && count($producto['imagenes']) > 1): ?>
-                    <div class="thumbnail-images" role="list">
-                        <?php foreach ($producto['imagenes'] as $idx => $img): ?>
-                            <?php $imgUrl = producto_imagen_url($producto, $idx); ?>
-                            <img class="thumb <?= $idx === 0 ? 'activo' : '' ?>" src="<?= $imgUrl ?>" data-src="<?= $imgUrl ?>" alt="<?= htmlspecialchars($producto['nombre']) ?> miniatura <?= $idx + 1 ?>" role="listitem">
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
-            </div>
+    <!-- Contenedor principal del zoom -->
+    <div class="image-zoom-container">
+        <div class="image-wrapper">
+            <img id="main-product-image" 
+                 src="<?= producto_imagen_url($producto, 0) ?>" 
+                 alt="<?= htmlspecialchars($producto['nombre']) ?>" 
+                 class="zoomable-image">
+        </div>
+        <!-- Lente de zoom (solo desktop) -->
+        <div class="zoom-lens"></div>
+    </div>
+    
+    <?php if (!empty($producto['imagenes']) && count($producto['imagenes']) > 1): ?>
+        <div class="thumbnail-images" role="list">
+            <?php foreach ($producto['imagenes'] as $idx => $img): ?>
+                <?php $imgUrl = producto_imagen_url($producto, $idx); ?>
+                <img class="thumb <?= $idx === 0 ? 'activo' : '' ?>" 
+                     src="<?= $imgUrl ?>" 
+                     data-src="<?= $imgUrl ?>" 
+                     alt="<?= htmlspecialchars($producto['nombre']) ?> miniatura <?= $idx + 1 ?>" 
+                     role="listitem">
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
+</div>
 
             <div class="product-short-description">
                 <h2>Especificaciones Clave:</h2>
@@ -205,19 +220,82 @@ $reviews = $reviews ?? [];
                     <?php endif; ?>
                 </div>
 
+                <!-- Nueva sección para seleccionar variantes -->
+                <?php if (!empty($producto['variantes']) && is_array($producto['variantes'])): ?>
+                    <div class="product-variants">
+                        <?php
+                        // Agrupar variantes por talla y color
+                        $tallas = [];
+                        $colores = [];
+                        foreach ($producto['variantes'] as $variante) {
+                            if (!empty($variante['talla']) && !in_array($variante['talla'], $tallas)) {
+                                $tallas[] = $variante['talla'];
+                            }
+                            if (!empty($variante['color']) && !in_array($variante['color'], $colores)) {
+                                $colores[] = $variante['color'];
+                            }
+                        }
+                        ?>
+
+                        <?php if (!empty($tallas)): ?>
+                            <div class="variant-group">
+                                <label class="variant-label">Seleccione:</label>
+                                <div class="variant-options">
+                                    <?php foreach ($tallas as $talla): ?>
+                                        <button type="button" class="variant-option" data-variant-type="talla" data-variant-value="<?= htmlspecialchars($talla) ?>">
+                                            <?= htmlspecialchars($talla) ?>
+                                        </button>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if (!empty($colores)): ?>
+                            <div class="variant-group">
+                                <label class="variant-label">Color:</label>
+                                <div class="variant-options">
+                                    <?php foreach ($colores as $color): ?>
+                                        <button type="button" class="variant-option color-option" data-variant-type="color" data-variant-value="<?= htmlspecialchars($color) ?>">
+                                            <span class="color-name"><?= htmlspecialchars($color) ?></span>
+                                        </button>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+
+                        <!-- Información de stock de la variante seleccionada -->
+                        <div class="variant-stock-info" style="display: none;">
+                            <svg class="stock-icon" width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+                            </svg>
+                            <span class="variant-stock-text">Stock disponible: <strong id="variant-stock-count" class="stock-number">0</strong> unidades</span>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
                 <div class="quantity-selector" aria-label="Seleccionar cantidad">
                     <button type="button" id="qty-decrease" aria-label="Disminuir cantidad">−</button>
                     <input type="number" id="qty-input" name="cantidad" value="1" min="1" step="1" class="qty-input" />
                     <button type="button" id="qty-increase" aria-label="Aumentar cantidad">+</button>
-                    <?php if (isset($producto['stock']) && $producto['stock'] !== null): ?>
-                        <span class="stock-info">Stock: <?= (int)$producto['stock'] ?> unidades</span>
+                    
+                    <?php if (empty($producto['variantes'])): ?>
+                        <!-- Solo mostrar stock general si no hay variantes -->
+                        <?php if (isset($producto['stock']) && $producto['stock'] !== null): ?>
+                            <span class="stock-info">Stock: <?= (int)$producto['stock'] ?> unidades</span>
+                        <?php endif; ?>
                     <?php endif; ?>
                 </div>
 
                 <form method="POST" action="<?= url('carrito/agregar') ?>" class="add-to-cart-form">
                     <input type="hidden" name="producto_id" value="<?= (int)$producto['id'] ?>">
                     <input type="hidden" name="cantidad" id="form-cantidad" value="1">
-                    <button type="submit" class="add-to-cart-btn">Agregar al Carro</button>
+                    <input type="hidden" name="variante_id" id="form-variante-id" value="">
+                    <?php 
+                    $tieneVariantes = !empty($producto['variantes']) && is_array($producto['variantes']) && count($producto['variantes']) > 0;
+                    ?>
+                    <button type="submit" class="add-to-cart-btn" <?= $tieneVariantes ? 'disabled' : '' ?>>
+                        <?= $tieneVariantes ? 'Selecciona una variante' : 'Agregar al Carro' ?>
+                    </button>
                 </form>
             </div>
         </section>
@@ -255,11 +333,16 @@ $reviews = $reviews ?? [];
             <?php if (!empty($relatedProducts) && is_array($relatedProducts)): ?>
                 <div class="products-carousel-container" aria-label="Carrusel de productos relacionados">
                     <?php
+                    // CRÍTICO: Guardar tanto $productos como $producto antes del include
                     $__productos_backup = $productos ?? null;
+                    $__producto_backup = $producto ?? null;
                     $productos = $relatedProducts;
                     include __DIR__ . '/../home/_products_grid.php';
+                    // Restaurar ambas variables
                     if ($__productos_backup === null) unset($productos);
                     else $productos = $__productos_backup;
+                    if ($__producto_backup === null) unset($producto);
+                    else $producto = $__producto_backup;
                     ?>
                 </div>
             <?php else: ?>
@@ -371,8 +454,11 @@ $reviews = $reviews ?? [];
     <script>
         // Pasar el stock al JavaScript
         window.productStock = <?= isset($producto['stock']) && $producto['stock'] !== null ? (int)$producto['stock'] : 'null' ?>;
+        
+        // Pasar las variantes al JavaScript
+        window.productVariants = <?= json_encode($producto['variantes'] ?? []) ?>;
     </script>
-    <script src="<?= url('js/image-modal.js') ?>"></script>
+    <script src="<?= url('js/producto-zoom.js') ?>"></script>
     <script src="<?= url('js/producto-descripcion.js') ?>"></script>
 </body>
 

@@ -102,6 +102,7 @@ class CarritoController
                 $productosDetallados[$clave] = [
                     'clave' => $clave,
                     'producto_id' => $item['producto_id'],
+                    'variante_id' => $item['variante_id'] ?? null,
                     'nombre' => $producto['nombre'],
                     'cantidad' => $item['cantidad'],
                     'precio' => (float)$item['precio'],
@@ -297,6 +298,7 @@ class CarritoController
         if (session_status() === PHP_SESSION_NONE) session_start();
 
         $producto_id = isset($_POST['producto_id']) ? (int) $_POST['producto_id'] : 0;
+        $variante_id = isset($_POST['variante_id']) && $_POST['variante_id'] !== '' ? (int) $_POST['variante_id'] : null;
         $talla = isset($_POST['talla']) ? trim((string) $_POST['talla']) : null;
         $color = isset($_POST['color']) ? trim((string) $_POST['color']) : null;
         $cantidad = isset($_POST['cantidad']) ? (int) $_POST['cantidad'] : 1;
@@ -316,8 +318,28 @@ class CarritoController
         }
 
         $precio = (float)($producto['precio'] ?? 0.0);
-        $stock = is_numeric($producto['stock'] ?? null) ? (int)$producto['stock'] : null;
-        $clave = $producto_id . '_' . ($talla ?? '') . '_' . ($color ?? '');
+        
+        // Si hay variante_id, obtener stock de la variante específica
+        $stock = null;
+        if ($variante_id !== null) {
+            require_once __DIR__ . '/../models/VarianteProducto.php';
+            $variante = \Models\VarianteProducto::obtenerPorId($variante_id);
+            if ($variante) {
+                $stock = (int)$variante['stock'];
+                $talla = $variante['talla'] ?? $talla;
+                $color = $variante['color'] ?? $color;
+            } else {
+                $_SESSION['flash_error'] = 'Variante no encontrada.';
+                header('Location: ' . $referer);
+                exit;
+            }
+        } else {
+            // Sin variante, usar stock general del producto
+            $stock = is_numeric($producto['stock'] ?? null) ? (int)$producto['stock'] : null;
+        }
+        
+        // Clave única: incluir variante_id si existe
+        $clave = $producto_id . '_' . ($variante_id ?? '') . '_' . ($talla ?? '') . '_' . ($color ?? '');
 
         if (!isset($_SESSION['carrito'])) $_SESSION['carrito'] = [];
         $cantidadActual = $_SESSION['carrito'][$clave]['cantidad'] ?? 0;
@@ -342,6 +364,7 @@ class CarritoController
         } else {
             $_SESSION['carrito'][$clave] = [
                 'producto_id' => $producto_id,
+                'variante_id' => $variante_id,
                 'talla' => $talla,
                 'color' => $color,
                 'cantidad' => $cantidad,

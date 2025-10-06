@@ -82,11 +82,12 @@ class BannerController extends BaseController
         $tipo   = isset($_POST['tipo']) && in_array($_POST['tipo'], ['principal', 'secundario_izquierda', 'secundario_derecha']) ? $_POST['tipo'] : 'principal';
         $orden  = isset($_POST['orden']) ? (int)$_POST['orden'] : 0;
         $activo = isset($_POST['activo']) ? 1 : 0;
+        $enlace = isset($_POST['enlace']) && trim($_POST['enlace']) !== '' ? trim($_POST['enlace']) : null;
 
         try {
-            $id = \Models\Banner::crear($safeName, $tipo, $orden, $activo);
+            $id = \Models\Banner::crear($safeName, $tipo, $orden, $activo, $enlace);
             if ($id) {
-                echo json_encode(['ok' => true, 'data' => ['id' => $id, 'nombre_imagen' => $safeName, 'activo' => $activo, 'tipo' => $tipo]]);
+                echo json_encode(['ok' => true, 'data' => ['id' => $id, 'nombre_imagen' => $safeName, 'activo' => $activo, 'tipo' => $tipo, 'enlace' => $enlace]]);
             } else {
                 if (file_exists($destFs)) @unlink($destFs);
                 http_response_code(500);
@@ -249,6 +250,38 @@ class BannerController extends BaseController
         } catch (\Throwable $e) {
             if (file_exists($destFs)) @unlink($destFs);
             error_log('BannerController::actualizar_imagen error: ' . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['ok' => false, 'message' => 'Error interno del servidor.']);
+        }
+    }
+
+    public function actualizar_enlace()
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        if (!$this->hasAccess()) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'message' => 'Acceso denegado']);
+            return;
+        }
+
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $enlace = isset($_POST['enlace']) && trim($_POST['enlace']) !== '' ? trim($_POST['enlace']) : null;
+
+        if ($id === 0) {
+            http_response_code(400);
+            echo json_encode(['ok' => false, 'message' => 'ID de banner no válido.']);
+            return;
+        }
+
+        try {
+            if (\Models\Banner::actualizarEnlace($id, $enlace)) {
+                echo json_encode(['ok' => true, 'data' => ['enlace' => $enlace]]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['ok' => false, 'message' => 'Error al actualizar el enlace en la base de datos.']);
+            }
+        } catch (\Throwable $e) {
+            error_log('BannerController::actualizar_enlace error: ' . $e->getMessage());
             http_response_code(500);
             echo json_encode(['ok' => false, 'message' => 'Error interno del servidor.']);
         }

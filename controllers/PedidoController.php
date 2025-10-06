@@ -6,6 +6,7 @@ use Models\Pedido;
 use Models\Usuario;
 use Models\DetallePedido;
 use Models\PedidoDireccion;
+use Models\Producto;
 use Core\Helpers\PromocionHelper;
 use Core\Helpers\CuponHelper;
 use Exception;
@@ -352,6 +353,34 @@ class PedidoController
                     );
                     if (!$ok) {
                         throw new Exception('No se pudo guardar el detalle del pedido');
+                    }
+                }
+
+                // ==================== DESCONTAR STOCK ====================
+                foreach ($carrito as $item) {
+                    $cantidad = (int)$item['cantidad'];
+                    
+                    // Si hay variante_id, descontar del stock de la variante
+                    if (!empty($item['variante_id'])) {
+                        require_once __DIR__ . '/../models/VarianteProducto.php';
+                        $variante = \Models\VarianteProducto::obtenerPorId($item['variante_id']);
+                        if ($variante) {
+                            $nuevoStock = max(0, (int)$variante['stock'] - $cantidad);
+                            \Models\VarianteProducto::actualizar(
+                                $item['variante_id'],
+                                $variante['talla'],
+                                $variante['color'],
+                                $nuevoStock
+                            );
+                        }
+                    } else {
+                        // Sin variante, descontar del stock general del producto
+                        $producto = Producto::obtenerPorId($item['producto_id']);
+                        if ($producto && $producto['stock'] !== null) {
+                            $nuevoStock = max(0, (int)$producto['stock'] - $cantidad);
+                            $stmtStock = $conexion->prepare("UPDATE productos SET stock = ? WHERE id = ?");
+                            $stmtStock->execute([$nuevoStock, $item['producto_id']]);
+                        }
                     }
                 }
 

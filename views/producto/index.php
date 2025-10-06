@@ -15,97 +15,98 @@ if (!empty($_SESSION['carrito']) && is_array($_SESSION['carrito'])) {
 <!DOCTYPE html>
 <html lang="es">
 <?php include_once __DIR__ . '/../admin/includes/head.php'; ?>
-<body class="bg-gray-50 text-gray-900" data-base-url="<?= htmlspecialchars(url('producto')) ?>">
+    <link rel="stylesheet" href="<?= url('/css/navbar.css') ?>">
+    <link rel="stylesheet" href="<?= url('/css/productoIndex.css') ?>">
 
-<div class="flex h-screen">
+<body class="_productoIndex_body" data-base-url="<?= htmlspecialchars(url('producto')) ?>">
+
+<div class="_productoIndex_layout">
   <!-- Sidebar -->
-  <aside class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r shadow-sm">
-    <?php include_once __DIR__ . '/../admin/includes/navbar.php'; ?>
-  </aside>
+  <?php include_once __DIR__ . '/../admin/includes/navbar.php'; ?>
 
   <!-- Main -->
-  <div class="flex-1 ml-64 flex flex-col min-h-screen">
+  <div class="_productoIndex_main">
     <!-- Header -->
-    <div class="sticky top-0 z-40">
+    <header class="_productoIndex_header">
         <?php include_once __DIR__ . '/../admin/includes/header.php'; ?>
-    </div>
+    </header>
 
     <!-- Content -->
-    <main class="flex-1 overflow-y-auto p-6">
-      <div class="max-w-7xl mx-auto space-y-6">
+    <main class="_productoIndex_content">
+      <div class="_productoIndex_container">
 
         <!-- Page header -->
-        <div class="bg-white rounded-lg shadow p-6">
-          <h1 class="text-3xl font-semibold text-gray-800 flex items-center gap-3">📦 Gestión de Productos</h1>
-          <p class="text-gray-600 mt-1">Administra el catálogo completo de productos</p>
+        <div class="_productoIndex_page-header">
+          <h1 class="_productoIndex_title">📦 Gestión de Productos</h1>
+          <p class="_productoIndex_subtitle">Administra el catálogo completo de productos</p>
         </div>
 
         <!-- Session alert -->
         <?php if (isset($_SESSION['mensaje_carrito'])): ?>
           <div id="mensaje-alerta"
-               class="fixed left-1/2 top-5 transform -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center gap-4">
-            <span class="font-medium"><?= htmlspecialchars($_SESSION['mensaje_carrito']) ?></span>
-            <button id="cerrarAlerta" class="text-white/90 hover:text-white">✖</button>
+               class="_productoIndex_alert">
+            <span class="_productoIndex_alert-text"><?= htmlspecialchars($_SESSION['mensaje_carrito']) ?></span>
+            <button id="cerrarAlerta" class="_productoIndex_alert-close">✖</button>
           </div>
           <?php unset($_SESSION['mensaje_carrito']); ?>
         <?php endif; ?>
 
         <!-- Acciones --> 
-         <div class="flex flex-wrap gap-3 mb-6"> 
-            <a href="<?= url('cargaMasiva/descargarPlantilla') ?>" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 shadow"> 📥 Descargar Plantilla CSV </a> 
-            <a href="<?= url('cargaMasiva/gestionImagenes') ?>" class="inline-flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-white hover:bg-purple-700 shadow"> 📸 Gestión Imágenes </a>
-            <a href="<?= url('producto/crear') ?>" class="ml-2 inline-flex items-center px-4 py-2 bg-green-600 text-white rounded shadow hover:bg-green-700">➕ Nuevo Producto</a>
+         <div class="_productoIndex_actions"> 
+            <a href="<?= url('cargaMasiva/descargarPlantilla') ?>" class="_productoIndex_action-btn _productoIndex_action-blue"> 📥 Descargar Plantilla CSV </a> 
+            <a href="<?= url('cargaMasiva/gestionImagenes') ?>" class="_productoIndex_action-btn _productoIndex_action-purple"> 📸 Gestión Imágenes </a>
+            <a href="<?= url('producto/crear') ?>" class="_productoIndex_action-btn _productoIndex_action-green">➕ Nuevo Producto</a>
         </div>
 
         <!-- CSV upload card -->
-        <div class="bg-white rounded-lg shadow p-6">
-          <h2 class="text-lg font-medium text-gray-800 mb-3">📂 Carga masiva (CSV)</h2>
-          <p class="text-sm text-gray-600 mb-4">Sube un CSV para crear o actualizar productos. Formato: (sku,nombre,descripcion,precio,...)</p>
+        <div class="_productoIndex_card">
+          <h2 class="_productoIndex_card-title">📂 Carga masiva (CSV)</h2>
+          <p class="_productoIndex_card-text">Sube un CSV para crear o actualizar productos. Formato: (sku,nombre,descripcion,precio,...)</p>
 
-          <form action="<?= url('cargaMasiva/procesarCSV') ?>" method="POST" enctype="multipart/form-data" class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <label for="archivo_csv" class="inline-block w-40 text-center px-4 py-2 bg-indigo-600 text-white rounded-lg cursor-pointer hover:bg-indigo-700 transition">
+          <form action="<?= url('cargaMasiva/procesarCSV') ?>" method="POST" enctype="multipart/form-data" class="_productoIndex_upload-form">
+            <label for="archivo_csv" class="_productoIndex_file-label">
               📂 Elegir archivo
             </label>
-            <input id="archivo_csv" name="archivo_csv" type="file" accept=".csv" required class="sr-only">
-            <span id="archivoNombre" class="text-sm text-gray-600">Ningún archivo seleccionado</span>
+            <input id="archivo_csv" name="archivo_csv" type="file" accept=".csv" required class="_productoIndex_file-input">
+            <span id="archivoNombre" class="_productoIndex_file-name">Ningún archivo seleccionado</span>
 
-            <button type="submit" class="ml-auto sm:ml-0 px-5 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
+            <button type="submit" class="_productoIndex_upload-btn">
               📤 Subir CSV
             </button>
           </form>
         </div>
 
         <!-- Filters card -->
-        <div class="bg-white rounded-lg shadow p-6">
-          <h3 class="text-lg font-semibold text-gray-800 mb-3">🔍 Filtros de búsqueda</h3>
+        <div class="_productoIndex_card">
+          <h3 class="_productoIndex_card-title">🔍 Filtros de búsqueda</h3>
 
           <?php if (!empty($estadisticasPrecios)): ?>
-            <div class="text-sm text-gray-700 mb-4 space-y-1">
-              <div>Rango: <span class="font-medium">S/ <?= htmlspecialchars($estadisticasPrecios['precio_minimo']) ?> - S/ <?= htmlspecialchars($estadisticasPrecios['precio_maximo']) ?></span></div>
-              <div>Promedio: <span class="font-medium">S/ <?= htmlspecialchars($estadisticasPrecios['precio_promedio']) ?></span></div>
-              <div>Total: <span class="font-medium"><?= htmlspecialchars($estadisticasPrecios['total_productos']) ?></span></div>
+            <div class="_productoIndex_stats">
+              <div>Rango: <span class="_productoIndex_stat-value">S/ <?= htmlspecialchars($estadisticasPrecios['precio_minimo']) ?> - S/ <?= htmlspecialchars($estadisticasPrecios['precio_maximo']) ?></span></div>
+              <div>Promedio: <span class="_productoIndex_stat-value">S/ <?= htmlspecialchars($estadisticasPrecios['precio_promedio']) ?></span></div>
+              <div>Total: <span class="_productoIndex_stat-value"><?= htmlspecialchars($estadisticasPrecios['total_productos']) ?></span></div>
             </div>
           <?php endif; ?>
 
-          <form id="filtroForm" method="GET" action="<?= url('producto') ?>" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <form id="filtroForm" method="GET" action="<?= url('producto') ?>" class="_productoIndex_filter-form">
             <!-- Min price -->
-            <div>
-              <label for="min_price" class="block text-sm font-medium text-gray-700">Precio mínimo (S/):</label>
+            <div class="_productoIndex_form-group">
+              <label for="min_price" class="_productoIndex_label">Precio mínimo (S/):</label>
               <input id="min_price" name="min_price" type="number" step="1" min="0" value="<?= htmlspecialchars($_GET['min_price'] ?? '') ?>"
-                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500">
+                     class="_productoIndex_input">
             </div>
 
             <!-- Max price -->
-            <div>
-              <label for="max_price" class="block text-sm font-medium text-gray-700">Precio máximo (S/):</label>
+            <div class="_productoIndex_form-group">
+              <label for="max_price" class="_productoIndex_label">Precio máximo (S/):</label>
               <input id="max_price" name="max_price" type="number" step="1" min="0" value="<?= htmlspecialchars($_GET['max_price'] ?? '') ?>"
-                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500">
+                     class="_productoIndex_input">
             </div>
 
             <!-- Category -->
-            <div class="lg:col-span-1">
-              <label for="categoria" class="block text-sm font-medium text-gray-700">Categoría:</label>
-              <select id="categoria" name="categoria" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500">
+            <div class="_productoIndex_form-group _productoIndex_form-group-full">
+              <label for="categoria" class="_productoIndex_label">Categoría:</label>
+              <select id="categoria" name="categoria" class="_productoIndex_select">
                 <option value="">-- Todas --</option>
                 <?php foreach ($categoriasDisponibles as $categoria): ?>
                   <option value="<?= htmlspecialchars($categoria['id']) ?>" <?= (($_GET['categoria'] ?? '') == $categoria['id']) ? 'selected' : '' ?>>
@@ -116,14 +117,14 @@ if (!empty($_SESSION['carrito']) && is_array($_SESSION['carrito'])) {
             </div>
 
             <!-- Tags full-width -->
-            <fieldset class="sm:col-span-2 lg:col-span-3">
-              <legend class="text-sm font-medium text-gray-700">Etiquetas:</legend>
-              <div class="mt-2 flex flex-wrap gap-3">
+            <fieldset class="_productoIndex_fieldset">
+              <legend class="_productoIndex_legend">Etiquetas:</legend>
+              <div class="_productoIndex_tags">
                 <?php foreach ($todasEtiquetas as $etiqueta): ?>
-                  <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+                  <label class="_productoIndex_tag-label">
                     <input type="checkbox" name="etiquetas[]" value="<?= htmlspecialchars($etiqueta['id']) ?>"
                            <?= in_array($etiqueta['id'], $_GET['etiquetas'] ?? []) ? 'checked' : '' ?>
-                           class="rounded text-indigo-600 focus:ring-indigo-500">
+                           class="_productoIndex_checkbox">
                     <?= htmlspecialchars($etiqueta['nombre']) ?>
                   </label>
                 <?php endforeach; ?>
@@ -131,17 +132,17 @@ if (!empty($_SESSION['carrito']) && is_array($_SESSION['carrito'])) {
             </fieldset>
 
             <!-- Disponibilidad -->
-            <div class="sm:col-span-2">
-              <label class="inline-flex items-center text-sm text-gray-700">
-                <input type="checkbox" id="disponibles" name="disponibles" value="1" <?= isset($_GET['disponibles']) ? 'checked' : '' ?> class="mr-2 rounded text-indigo-600">
-                Solo productos disponibles (stock &gt; 0)
+            <div class="_productoIndex_availability">
+              <label class="_productoIndex_checkbox-label">
+                <input type="checkbox" id="disponibles" name="disponibles" value="1" <?= isset($_GET['disponibles']) ? 'checked' : '' ?> class="_productoIndex_checkbox">
+                Solo productos disponibles (stock > 0)
               </label>
             </div>
 
             <!-- Orden -->
-            <div>
-              <label for="orden" class="block text-sm font-medium text-gray-700">Ordenar por:</label>
-              <select id="orden" name="orden" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500">
+            <div class="_productoIndex_form-group">
+              <label for="orden" class="_productoIndex_label">Ordenar por:</label>
+              <select id="orden" name="orden" class="_productoIndex_select">
                 <option value="">-- Seleccionar --</option>
                 <option value="precio_asc" <?= (($_GET['orden'] ?? '') === 'precio_asc') ? 'selected' : '' ?>>Precio: Menor a mayor</option>
                 <option value="precio_desc" <?= (($_GET['orden'] ?? '') === 'precio_desc') ? 'selected' : '' ?>>Precio: Mayor a menor</option>
@@ -152,105 +153,105 @@ if (!empty($_SESSION['carrito']) && is_array($_SESSION['carrito'])) {
             </div>
 
             <!-- Buttons -->
-            <div class="sm:col-span-2 lg:col-span-3 flex items-center gap-3">
-              <button type="button" id="btnFiltrar" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">🔍 Filtrar</button>
-              <button type="button" id="btnLimpiar" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400">❌ Limpiar</button>
-              <span id="loading" class="hidden text-sm text-gray-500">⏳ Cargando...</span>
+            <div class="_productoIndex_filter-actions">
+              <button type="button" id="btnFiltrar" class="_productoIndex_filter-btn _productoIndex_filter-primary">🔍 Filtrar</button>
+              <button type="button" id="btnLimpiar" class="_productoIndex_filter-btn _productoIndex_filter-secondary">❌ Limpiar</button>
+              <span id="loading" class="_productoIndex_loading">⏳ Cargando...</span>
             </div>
           </form>
         </div>
 
         <!-- Error & active filters placeholders -->
-        <div id="errorFiltros" class="hidden bg-red-50 border border-red-200 text-red-700 rounded p-3">
+        <div id="errorFiltros" class="_productoIndex_error">
           <strong>❌ Errores en filtros:</strong>
-          <ul id="listaErrores" class="list-disc pl-6 mt-2 text-sm"></ul>
+          <ul id="listaErrores" class="_productoIndex_error-list"></ul>
         </div>
 
-        <div id="filtrosActivos" class="hidden bg-yellow-50 border border-yellow-200 text-yellow-800 rounded p-3">
+        <div id="filtrosActivos" class="_productoIndex_active-filters">
           <strong>🔍 Filtros activos:</strong>
-          <div id="infoFiltros" class="mt-1 text-sm"></div>
+          <div id="infoFiltros" class="_productoIndex_filters-info"></div>
         </div>
 
         <!-- 🔍 Barra de búsqueda -->
-        <div class="flex items-center max-w-md mx-auto mt-4 mb-6">
-          <div class="relative w-full">
+        <div class="_productoIndex_search-container">
+          <div class="_productoIndex_search-wrapper">
             <input 
               type="text" 
               id="busquedaProducto" 
               placeholder="Escriba para buscar..." 
-              class="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              class="_productoIndex_search-input"
             >
             <!-- Icono lupa -->
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">🔍</span>
+            <span class="_productoIndex_search-icon">🔍</span>
           </div>
         </div>
 
         <!-- 📦 Tabla de productos -->
-        <div id="productosContainer" class="overflow-x-auto">
-          <table id="tablaProductos" class="w-full text-sm">
-            <thead class="bg-gray-100 text-gray-700">
+        <div id="productosContainer" class="_productoIndex_table-container">
+          <table id="tablaProductos" class="_productoIndex_table">
+            <thead class="_productoIndex_table-header">
               <tr>
-                <th class="px-3 py-2 text-left">ID</th>
-                <th class="px-3 py-2 text-left">SKU</th>
-                <th class="px-3 py-2 text-left">Nombre</th>
-                <th class="px-3 py-2 text-left">Descripción</th>
-                <th class="px-3 py-2 text-left">Precio</th>
-                <th class="px-3 py-2 text-left">Original</th>
-                <th class="px-3 py-2 text-left">% Desc.</th>
-                <th class="px-3 py-2 text-left">Visible</th>
-                <th class="px-3 py-2 text-left">Categorías</th>
-                <th class="px-3 py-2 text-left">Imágenes</th>
-                <th class="px-3 py-2 text-left">Acciones</th>
+                <th class="_productoIndex_table-head">ID</th>
+                <th class="_productoIndex_table-head">SKU</th>
+                <th class="_productoIndex_table-head">Nombre</th>
+                <th class="_productoIndex_table-head">Descripción</th>
+                <th class="_productoIndex_table-head">Precio</th>
+                <th class="_productoIndex_table-head">Original</th>
+                <th class="_productoIndex_table-head">% Desc.</th>
+                <th class="_productoIndex_table-head">Visible</th>
+                <th class="_productoIndex_table-head">Categorías</th>
+                <th class="_productoIndex_table-head">Imágenes</th>
+                <th class="_productoIndex_table-head">Acciones</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-200">
+            <tbody class="_productoIndex_table-body">
               <?php foreach ($productos as $producto): ?>
-              <tr class="hover:bg-gray-50">
-                <td class="px-3 py-2 align-top"><?= htmlspecialchars($producto['id'] ?? '') ?></td>
-                <td class="px-3 py-2 align-top"><?= htmlspecialchars($producto['sku'] ?? '') ?></td>
-                <td class="px-3 py-2 align-top"><?= htmlspecialchars($producto['nombre'] ?? '') ?></td>
-                <td class="px-3 py-2 align-top">
+              <tr class="_productoIndex_table-row">
+                <td class="_productoIndex_table-cell"><?= htmlspecialchars($producto['id'] ?? '') ?></td>
+                <td class="_productoIndex_table-cell"><?= htmlspecialchars($producto['sku'] ?? '') ?></td>
+                <td class="_productoIndex_table-cell"><?= htmlspecialchars($producto['nombre'] ?? '') ?></td>
+                <td class="_productoIndex_table-cell">
                   <?php
                     $desc = $producto['descripcion'] ?? '';
                     $shortDesc = strlen($desc) > 60 ? substr($desc, 0, 57) . '...' : $desc;
                   ?>
                   <span title="<?= htmlspecialchars($desc) ?>"><?= htmlspecialchars($shortDesc) ?></span>
                 </td>
-                <td class="px-3 py-2 align-top">S/ <?= number_format($producto['precio'] ?? 0, 2) ?></td>
-                <td class="px-3 py-2 align-top">
+                <td class="_productoIndex_table-cell">S/ <?= number_format($producto['precio'] ?? 0, 2) ?></td>
+                <td class="_productoIndex_table-cell">
                   <?php if (!empty($producto['precio_tachado']) && $producto['precio_tachado'] > ($producto['precio'] ?? 0)): ?>
                     S/ <?= number_format($producto['precio_tachado'], 2) ?>
                   <?php else: ?>—<?php endif; ?>
                 </td>
-                <td class="px-3 py-2 align-top">
+                <td class="_productoIndex_table-cell">
                   <?php if (!empty($producto['porcentaje_descuento']) && $producto['porcentaje_descuento'] > 0): ?>
                     <?= number_format($producto['porcentaje_descuento'], 2) ?>%
                   <?php else: ?>—<?php endif; ?>
                 </td>
-                <td class="px-3 py-2 align-top font-semibold <?= !empty($producto['visible']) ? 'text-green-600' : 'text-red-600' ?>">
+                <td class="_productoIndex_table-cell _productoIndex_visible-cell <?= !empty($producto['visible']) ? '_productoIndex_visible-yes' : '_productoIndex_visible-no' ?>">
                   <?= !empty($producto['visible']) ? 'Sí' : 'No' ?>
                 </td>
-                <td class="px-3 py-2 align-top">
+                <td class="_productoIndex_table-cell">
                   <?php if (!empty($producto['categorias'])): ?>
                     <?= implode(', ', array_map('htmlspecialchars', $producto['categorias'])) ?>
                   <?php else: ?>
-                    <span class="text-gray-400 italic">Sin categoría</span>
+                    <span class="_productoIndex_no-category">Sin categoría</span>
                   <?php endif; ?>
                 </td>
-                <td class="px-3 py-2 align-top">
+                <td class="_productoIndex_table-cell">
                   <?php if (!empty($producto['imagenes']) && is_array($producto['imagenes'])): ?>
-                    <div class="flex flex-wrap gap-2">
+                    <div class="_productoIndex_images">
                       <?php foreach ($producto['imagenes'] as $imagen): ?>
-                        <img src="<?= htmlspecialchars(url('uploads/' . ($imagen['nombre_imagen'] ?? ''))) ?>" alt="Img <?= htmlspecialchars($producto['nombre'] ?? '') ?>" class="w-12 h-12 object-cover rounded border">
+                        <img src="<?= htmlspecialchars(url('uploads/' . ($imagen['nombre_imagen'] ?? ''))) ?>" alt="Img <?= htmlspecialchars($producto['nombre'] ?? '') ?>" class="_productoIndex_image">
                       <?php endforeach; ?>
                     </div>
                   <?php else: ?>
-                    <span class="text-gray-400 italic">Sin imágenes</span>
+                    <span class="_productoIndex_no-images">Sin imágenes</span>
                   <?php endif; ?>
                 </td>
-                <td class="px-3 py-2 align-top space-x-2">
-                  <a href="<?= url('producto/editar/' . ($producto['id'] ?? '')) ?>" class="text-blue-600 hover:underline">✏️ Editar</a>
-                  <a href="<?= url('producto/eliminar/' . ($producto['id'] ?? '')) ?>" class="text-red-600 hover:underline"
+                <td class="_productoIndex_table-cell _productoIndex_actions-cell">
+                  <a href="<?= url('producto/editar/' . ($producto['id'] ?? '')) ?>" class="_productoIndex_action-link _productoIndex_edit-link">✏️ Editar</a>
+                  <a href="<?= url('producto/eliminar/' . ($producto['id'] ?? '')) ?>" class="_productoIndex_action-link _productoIndex_delete-link"
                      onclick="return confirm('¿Estás seguro de eliminar este producto?')">🗑️ Eliminar</a>
                 </td>
               </tr>
@@ -258,27 +259,6 @@ if (!empty($_SESSION['carrito']) && is_array($_SESSION['carrito'])) {
             </tbody>
           </table>
         </div>
-
-        <!-- 🧩 Script búsqueda -->
-        <script>
-        document.getElementById('busquedaProducto').addEventListener('keyup', function() {
-          let valor = this.value.toLowerCase();
-          let filas = document.querySelectorAll("#tablaProductos tbody tr");
-
-          filas.forEach(fila => {
-            let celdas = fila.querySelectorAll("td");
-            let coincide = false;
-
-            celdas.forEach(celda => {
-              if (celda.textContent.toLowerCase().includes(valor)) {
-                coincide = true;
-              }
-            });
-
-            fila.style.display = coincide ? "" : "none";
-          });
-        });
-        </script>
 
       </div>
     </main>
@@ -317,7 +297,7 @@ if (!empty($_SESSION['carrito']) && is_array($_SESSION['carrito'])) {
     if (btnFiltrar && form) {
       btnFiltrar.addEventListener('click', (e) => {
         e.preventDefault();
-        if (loading) loading.classList.remove('hidden');
+        if (loading) loading.classList.remove('_productoIndex_hidden');
         const url = form.getAttribute('action') + '?' + new URLSearchParams(new FormData(form)).toString();
         window.location.href = url + '#productosContainer';
       });
@@ -329,6 +309,25 @@ if (!empty($_SESSION['carrito']) && is_array($_SESSION['carrito'])) {
       });
     }
   })();
+
+  // Búsqueda en tiempo real
+  document.getElementById('busquedaProducto').addEventListener('keyup', function() {
+    let valor = this.value.toLowerCase();
+    let filas = document.querySelectorAll("._productoIndex_table-row");
+
+    filas.forEach(fila => {
+      let celdas = fila.querySelectorAll("._productoIndex_table-cell");
+      let coincide = false;
+
+      celdas.forEach(celda => {
+        if (celda.textContent.toLowerCase().includes(valor)) {
+          coincide = true;
+        }
+      });
+
+      fila.style.display = coincide ? "" : "none";
+    });
+  });
 </script>
 
 </body>
