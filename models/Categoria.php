@@ -211,4 +211,12 @@ class Categoria
 
         return $ancestros;
     }
+    public static function buscarPorNombre(string $nombre): array
+    {
+        $db = \Core\Database::getInstance()->getConnection();
+        $stmt = $db->prepare("SELECT id, nombre FROM categorias WHERE nombre LIKE ? ORDER BY nombre ASC LIMIT 10");
+        $stmt->execute(['%' . $nombre . '%']);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
 }

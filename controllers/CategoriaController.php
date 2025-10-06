@@ -232,4 +232,26 @@ class CategoriaController
             @unlink($filePath);
         }
     }
+    public function buscarPorNombre()
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        require_once __DIR__ . '/../Core/Helpers/urlHelper.php';
+
+        $termino = trim($_GET['q'] ?? '');
+
+        if ($termino === '') {
+            echo json_encode([]);
+            exit;
+        }
+
+        try {
+            $categorias = \Models\Categoria::buscarPorNombre($termino);
+            echo json_encode($categorias);
+        } catch (\Throwable $e) {
+            echo json_encode([]);
+        }
+
+        exit;
+    }
+
 }
