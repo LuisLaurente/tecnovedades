@@ -457,6 +457,9 @@ $reviews = $reviews ?? [];
         
         // Pasar las variantes al JavaScript
         window.productVariants = <?= json_encode($producto['variantes'] ?? []) ?>;
+        
+        // Pasar la base URL para construcción de rutas de imágenes
+        window.baseImageUrl = '<?= url('uploads/') ?>';
     </script>
     <script src="<?= url('js/producto-zoom.js') ?>"></script>
     <script src="<?= url('js/producto-descripcion.js') ?>"></script>

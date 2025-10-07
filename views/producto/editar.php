@@ -312,6 +312,34 @@ if (!empty($_SESSION['carrito']) && is_array($_SESSION['carrito'])) {
                                                     <label>Stock</label>
                                                     <input type="number" name="variantes[stock][]" value="<?= htmlspecialchars($var['stock'] ?? '0') ?>" class="form-input">
                                                 </div>
+                                                <div class="variant-field">
+                                                    <label>Imagen 🖼️</label>
+                                                    <select name="variantes[imagen][]" 
+                                                            class="form-input variante-imagen-select"
+                                                            data-variante-id="<?= $var['id'] ?>"
+                                                            title="Selecciona una imagen de la galería del producto">
+                                                        <option value="">Sin imagen</option>
+                                                        <?php
+                                                        // Obtener todas las imágenes del producto desde imagenes_producto
+                                                        $imagenesProducto = [];
+                                                        if (!empty($imagenes)) {
+                                                            foreach ($imagenes as $imgData) {
+                                                                $imagenesProducto[] = $imgData['nombre_imagen'];
+                                                            }
+                                                        }
+                                                        
+                                                        foreach ($imagenesProducto as $img):
+                                                            $selected = ($var['imagen'] ?? '') === $img ? 'selected' : '';
+                                                            // Mostrar nombre corto
+                                                            $nombreCorto = strlen($img) > 20 ? '...' . substr($img, -17) : $img;
+                                                        ?>
+                                                            <option value="<?= htmlspecialchars($img) ?>" <?= $selected ?>>
+                                                                <?= htmlspecialchars($nombreCorto) ?>
+                                                            </option>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                    <small style="color: #666; font-size: 0.85em;">De la galería</small>
+                                                </div>
                                                 <a href="<?= url('variante/eliminar/' . $var['id'] . '?producto_id=' . $producto['id']) ?>" 
                                                    class="delete-variant-btn" onclick="return confirm('¿Eliminar esta variante?')">❌ Eliminar</a>
                                             </div>
@@ -341,7 +369,7 @@ if (!empty($_SESSION['carrito']) && is_array($_SESSION['carrito'])) {
         const form = document.querySelector('.product-form');
         
         form.addEventListener('submit', function(e) {
-            const variantes = document.querySelectorAll('.variant-item, .variante');
+            const variantes = document.querySelectorAll('.variant-item');
             let variantesValidas = true;
             let mensajeError = [];
             
@@ -360,14 +388,32 @@ if (!empty($_SESSION['carrito']) && is_array($_SESSION['carrito'])) {
                     mensajeError.push(`Variante ${index + 1}: Debes especificar al menos una talla o un color.`);
                     
                     // Resaltar los campos
-                    if (tallaInput) tallaInput.style.borderColor = 'red';
-                    if (colorInput) colorInput.style.borderColor = 'red';
+                    if (tallaInput) {
+                        tallaInput.style.borderColor = 'red';
+                        tallaInput.style.boxShadow = '0 0 5px rgba(220, 53, 69, 0.5)';
+                    }
+                    if (colorInput) {
+                        colorInput.style.borderColor = 'red';
+                        colorInput.style.boxShadow = '0 0 5px rgba(220, 53, 69, 0.5)';
+                    }
+                    
+                    // Quitar resaltado después de 3 segundos
+                    setTimeout(() => {
+                        if (tallaInput) {
+                            tallaInput.style.borderColor = '';
+                            tallaInput.style.boxShadow = '';
+                        }
+                        if (colorInput) {
+                            colorInput.style.borderColor = '';
+                            colorInput.style.boxShadow = '';
+                        }
+                    }, 3000);
                 }
             });
             
             if (!variantesValidas) {
                 e.preventDefault();
-                alert('Error en variantes:\n\n' + mensajeError.join('\n'));
+                alert('❌ Error en variantes:\n\n' + mensajeError.join('\n'));
                 return false;
             }
         });
@@ -375,24 +421,104 @@ if (!empty($_SESSION['carrito']) && is_array($_SESSION['carrito'])) {
 
     function agregarVariante() {
         const container = document.getElementById('variantes-container');
+        
+        // Obtener lista de imágenes disponibles del primer select (si existe)
+        const primeraVariante = container.querySelector('.variant-item');
+        let opcionesImagenes = '<option value="">Sin imagen</option>';
+        
+        if (primeraVariante) {
+            const primerSelect = primeraVariante.querySelector('.variante-imagen-select');
+            if (primerSelect) {
+                // Copiar las opciones del primer select
+                Array.from(primerSelect.options).forEach(option => {
+                    if (option.value !== '') {
+                        opcionesImagenes += `<option value="${option.value}">${option.textContent}</option>`;
+                    }
+                });
+            }
+        }
+        
         const html = `
-            <div class="variante">
-                <input type="hidden" name="variantes[id][]" value="">
-                <div>
+            <div class="variant-item new-variant-item" style="animation: slideIn 0.3s ease-out;">
+                <input type="hidden" name="variantes[id][]" value="0">
+                <div class="variant-field">
                     <label>Talla (opcional)</label>
-                    <input type="text" name="variantes[talla][]" placeholder="Ej: S, M, L, XL">
+                    <input type="text" name="variantes[talla][]" placeholder="Ej: S, M, L" class="form-input">
                 </div>
-                <div>
+                <div class="variant-field">
                     <label>Color (opcional)</label>
-                    <input type="text" name="variantes[color][]" placeholder="Ej: Rojo, Azul">
+                    <input type="text" name="variantes[color][]" placeholder="Ej: Rojo, Azul" class="form-input">
                 </div>
-                <div>
+                <div class="variant-field">
                     <label>Stock</label>
-                    <input type="number" name="variantes[stock][]" placeholder="Cantidad">
+                    <input type="number" name="variantes[stock][]" value="0" class="form-input">
                 </div>
+                <div class="variant-field">
+                    <label>Imagen 🖼️</label>
+                    <select name="variantes[imagen][]" class="form-input" title="Selecciona una imagen de la galería">
+                        ${opcionesImagenes}
+                    </select>
+                    <small style="color: #666; font-size: 0.85em;">De la galería</small>
+                </div>
+                <button type="button" class="delete-variant-btn" onclick="eliminarVarianteNueva(this)">❌ Eliminar</button>
             </div>`;
+        
+        // Remover mensaje "no hay variantes" si existe
+        const noVariantsMsg = container.querySelector('.no-variants');
+        if (noVariantsMsg) {
+            noVariantsMsg.remove();
+        }
+        
         container.insertAdjacentHTML('beforeend', html);
     }
+    
+    // Función para eliminar variantes nuevas (no guardadas en BD)
+    function eliminarVarianteNueva(button) {
+        if (confirm('¿Eliminar esta variante?')) {
+            const variantItem = button.closest('.variant-item');
+            variantItem.style.animation = 'slideOut 0.3s ease-out';
+            setTimeout(() => {
+                variantItem.remove();
+                
+                // Si no quedan variantes, mostrar mensaje
+                const container = document.getElementById('variantes-container');
+                if (container.querySelectorAll('.variant-item').length === 0) {
+                    container.innerHTML = '<p class="no-variants">No hay variantes registradas.</p>';
+                }
+            }, 300);
+        }
+    }
+    
+    // Agregar animaciones CSS
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+        }
+        
+        .new-variant-item {
+            border-left: 3px solid #4CAF50 !important;
+        }
+    `;
+    document.head.appendChild(style);
 </script>
 <script>
     (function() {
@@ -755,4 +881,77 @@ if (!empty($_SESSION['carrito']) && is_array($_SESSION['carrito'])) {
             reader.readAsDataURL(file);
         });
     }
+</script><script>
+    //  AJAX para guardar imagen de variante automáticamente
+    document.addEventListener('DOMContentLoaded', function() {
+        // Event listener para cambios en el selector de imagen de variante
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('variante-imagen-select')) {
+                const varianteId = e.target.dataset.varianteId;
+                const imagen = e.target.value;
+                const selectElement = e.target;
+                
+                // Deshabilitar temporalmente el select
+                selectElement.disabled = true;
+                selectElement.style.opacity = '0.6';
+                
+                // Guardar automáticamente vía AJAX
+                fetch('<?= url('variante/actualizar_imagen') ?>', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `id=${varianteId}&imagen=${encodeURIComponent(imagen)}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Re-habilitar el select
+                    selectElement.disabled = false;
+                    selectElement.style.opacity = '1';
+                    
+                    if (data.success) {
+                        // Mostrar feedback visual exitoso
+                        selectElement.style.borderColor = '#28a745';
+                        selectElement.style.boxShadow = '0 0 5px rgba(40, 167, 69, 0.5)';
+                        
+                        // Crear mensaje de éxito temporal
+                        const successMsg = document.createElement('small');
+                        successMsg.textContent = ' Guardado';
+                        successMsg.style.color = '#28a745';
+                        successMsg.style.fontWeight = 'bold';
+                        successMsg.style.marginLeft = '8px';
+                        selectElement.parentElement.appendChild(successMsg);
+                        
+                        setTimeout(() => {
+                            selectElement.style.borderColor = '';
+                            selectElement.style.boxShadow = '';
+                            if (successMsg.parentElement) {
+                                successMsg.remove();
+                            }
+                        }, 2000);
+                    } else {
+                        // Mostrar error
+                        selectElement.style.borderColor = '#dc3545';
+                        alert('Error al guardar la imagen: ' + (data.message || 'Error desconocido'));
+                        setTimeout(() => {
+                            selectElement.style.borderColor = '';
+                        }, 2000);
+                    }
+                })
+                .catch(error => {
+                    // Re-habilitar el select
+                    selectElement.disabled = false;
+                    selectElement.style.opacity = '1';
+                    selectElement.style.borderColor = '#dc3545';
+                    
+                    console.error('Error:', error);
+                    alert('Error al guardar la imagen. Por favor intenta de nuevo.');
+                    
+                    setTimeout(() => {
+                        selectElement.style.borderColor = '';
+                    }, 2000);
+                });
+            }
+        });
+    });
 </script>
