@@ -235,18 +235,36 @@
         
         // Función para actualizar info de variante
         function updateVariantInfo() {
+            // Solo buscar si hay al menos una variante seleccionada
+            if (selectedVariants.talla === null && selectedVariants.color === null) {
+                if (variantStockInfo) variantStockInfo.style.display = 'none';
+                if (variantIdInput) variantIdInput.value = '';
+                if (addToCartBtn) {
+                    addToCartBtn.disabled = true;
+                    addToCartBtn.textContent = 'Selecciona una variante';
+                }
+                return;
+            }
+            
             const matchingVariant = window.productVariants.find(variant => {
-                let matches = true;
+                // Verificar coincidencia exacta de talla
+                const tallaMatch = selectedVariants.talla === null || 
+                                   variant.talla === selectedVariants.talla || 
+                                   (!variant.talla && selectedVariants.talla === null);
                 
-                if (selectedVariants.talla !== null && variant.talla !== selectedVariants.talla) {
-                    matches = false;
+                // Verificar coincidencia exacta de color
+                const colorMatch = selectedVariants.color === null || 
+                                   variant.color === selectedVariants.color || 
+                                   (!variant.color && selectedVariants.color === null);
+                
+                // Solo coincide si AMBOS criterios seleccionados coinciden
+                // Si el usuario seleccionó talla Y color, la variante debe tener esa talla Y ese color
+                if (selectedVariants.talla !== null && selectedVariants.color !== null) {
+                    return variant.talla === selectedVariants.talla && variant.color === selectedVariants.color;
                 }
                 
-                if (selectedVariants.color !== null && variant.color !== selectedVariants.color) {
-                    matches = false;
-                }
-                
-                return matches;
+                // Si solo seleccionó uno, debe coincidir ese y el otro puede ser cualquiera
+                return tallaMatch && colorMatch;
             });
             
             if (matchingVariant) {
@@ -259,6 +277,17 @@
                 if (variantStockInfo) {
                     variantStockInfo.style.display = 'flex';
                     variantStockInfo.classList.remove('low-stock', 'out-of-stock');
+                    
+                    // Actualizar el texto según el stock
+                    const stockText = variantStockInfo.querySelector('.variant-stock-text');
+                    if (stockText) {
+                        if (stock === 0) {
+                            stockText.innerHTML = '<strong>Sin stock disponible</strong>';
+                        } else {
+                            stockText.innerHTML = `Stock disponible: <strong id="variant-stock-count" class="stock-number">${stock}</strong> unidades`;
+                        }
+                    }
+                    
                     if (stock === 0) {
                         variantStockInfo.classList.add('out-of-stock');
                     } else if (stock <= 5) {
@@ -293,12 +322,32 @@
                 window.productStock = stock;
                 
             } else {
-                if (variantStockInfo) variantStockInfo.style.display = 'none';
-                if (variantIdInput) variantIdInput.value = '';
-                if (addToCartBtn) {
-                    addToCartBtn.disabled = true;
-                    addToCartBtn.textContent = 'Selecciona una variante';
+                // No se encontró una variante que coincida con la combinación seleccionada
+                // Mostrar "Sin stock" si ambos están seleccionados
+                if (selectedVariants.talla !== null && selectedVariants.color !== null) {
+                    if (variantStockInfo) {
+                        variantStockInfo.style.display = 'flex';
+                        variantStockInfo.classList.remove('low-stock');
+                        variantStockInfo.classList.add('out-of-stock');
+                        
+                        // Actualizar el texto
+                        const stockText = variantStockInfo.querySelector('.variant-stock-text');
+                        if (stockText) {
+                            stockText.innerHTML = '<strong>Sin stock disponible</strong>';
+                        }
+                    }
+                    if (addToCartBtn) {
+                        addToCartBtn.disabled = true;
+                        addToCartBtn.textContent = 'Sin stock';
+                    }
+                } else {
+                    if (variantStockInfo) variantStockInfo.style.display = 'none';
+                    if (addToCartBtn) {
+                        addToCartBtn.disabled = true;
+                        addToCartBtn.textContent = 'Selecciona una variante';
+                    }
                 }
+                if (variantIdInput) variantIdInput.value = '';
             }
         }
         
