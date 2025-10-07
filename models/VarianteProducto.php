@@ -16,11 +16,11 @@ class VarianteProducto
     }
 
     // Este método me permite registrar una nueva variante
-    public function crear($producto_id, $talla, $color, $stock)
+    public function crear($producto_id, $talla, $color, $stock, $imagen = null)
     {
-        $sql = "INSERT INTO variantes_producto (producto_id, talla, color, stock) VALUES (?, ?, ?, ?)";
+        $sql = "INSERT INTO variantes_producto (producto_id, talla, color, stock, imagen) VALUES (?, ?, ?, ?, ?)";
         $stmt = $this->db->prepare($sql);
-        return $stmt->execute([$producto_id, $talla, $color, $stock]);
+        return $stmt->execute([$producto_id, $talla, $color, $stock, $imagen]);
     }
 
     // Este método me permite obtener todas las variantes de un producto específico
@@ -58,11 +58,19 @@ class VarianteProducto
     }
     
     // Este método me permite actualizar una variante existente
-    public static function actualizar($id, $talla, $color, $stock)
+    public static function actualizar($id, $talla, $color, $stock, $imagen = null)
     {
         $db = \Core\Database::getInstance()->getConnection();
-        $stmt = $db->prepare("UPDATE variantes_producto SET talla = ?, color = ?, stock = ? WHERE id = ?");
-        $stmt->execute([$talla, $color, $stock, $id]);
+        $stmt = $db->prepare("UPDATE variantes_producto SET talla = ?, color = ?, stock = ?, imagen = ? WHERE id = ?");
+        $stmt->execute([$talla, $color, $stock, $imagen, $id]);
+    }
+    
+    // Este método me permite actualizar solo la imagen de una variante
+    public static function actualizarImagen($id, $imagen)
+    {
+        $db = \Core\Database::getInstance()->getConnection();
+        $stmt = $db->prepare("UPDATE variantes_producto SET imagen = ? WHERE id = ?");
+        return $stmt->execute([$imagen, $id]);
     }
     // Este método me permite eliminar una variante por su ID
     public static function eliminar($id)

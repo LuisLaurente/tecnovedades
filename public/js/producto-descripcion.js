@@ -272,6 +272,38 @@
                 
                 const stock = parseInt(matchingVariant.stock) || 0;
                 
+                // 🖼️ CAMBIAR IMAGEN SI LA VARIANTE TIENE UNA ASOCIADA
+                if (matchingVariant.imagen) {
+                    const mainImage = document.getElementById('main-product-image');
+                    if (mainImage) {
+                        // Usar la base URL pasada desde PHP (incluye /TECNOVEDADES/public/uploads/)
+                        const variantImageUrl = window.baseImageUrl + matchingVariant.imagen;
+                        
+                        // Cambiar la imagen principal con efecto de transición
+                        mainImage.style.transition = 'opacity 0.3s ease-in-out';
+                        mainImage.style.opacity = '0.4';
+                        
+                        setTimeout(() => {
+                            mainImage.src = variantImageUrl;
+                            mainImage.onload = function() {
+                                mainImage.style.opacity = '1';
+                            };
+                        }, 200);
+                        
+                        // Actualizar las miniaturas - activar la que coincida
+                        const thumbs = document.querySelectorAll('.thumbnail-images .thumb');
+                        thumbs.forEach(thumb => {
+                            thumb.classList.remove('activo');
+                            
+                            // Verificar si esta miniatura corresponde a la imagen de la variante
+                            const thumbSrc = thumb.dataset.src || thumb.src;
+                            if (thumbSrc.includes(matchingVariant.imagen)) {
+                                thumb.classList.add('activo');
+                            }
+                        });
+                    }
+                }
+                
                 // Mostrar stock
                 if (variantStockCount) variantStockCount.textContent = stock;
                 if (variantStockInfo) {

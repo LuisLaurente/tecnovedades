@@ -44,4 +44,51 @@ class VarianteController
         }
         exit;
     }
+
+    // 🖼️ Acción para actualizar la imagen de una variante vía AJAX
+    public function actualizar_imagen()
+    {
+        header('Content-Type: application/json');
+        
+        try {
+            // Obtener datos
+            $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+            $imagen = isset($_POST['imagen']) ? trim($_POST['imagen']) : null;
+            
+            // Validar ID
+            if (!$id) {
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'ID de variante no válido'
+                ]);
+                return;
+            }
+            
+            // Permitir imagen vacía (null) para quitar la asociación
+            if ($imagen === '') {
+                $imagen = null;
+            }
+            
+            // Actualizar en la base de datos
+            $resultado = VarianteProducto::actualizarImagen($id, $imagen);
+            
+            if ($resultado) {
+                echo json_encode([
+                    'success' => true, 
+                    'message' => 'Imagen actualizada correctamente'
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'No se pudo actualizar la imagen'
+                ]);
+            }
+            
+        } catch (\Exception $e) {
+            echo json_encode([
+                'success' => false, 
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+    }
 }

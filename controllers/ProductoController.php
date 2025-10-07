@@ -240,6 +240,7 @@ class ProductoController extends BaseController
                 $tallas = $_POST['variantes']['talla'] ?? [];
                 $colores = $_POST['variantes']['color'] ?? [];
                 $stocks = $_POST['variantes']['stock'] ?? [];
+                $imagenes = $_POST['variantes']['imagen'] ?? [];
                 
                 $maxIndex = max(count($tallas), count($colores), count($stocks));
                 
@@ -247,11 +248,18 @@ class ProductoController extends BaseController
                     $talla = trim($tallas[$i] ?? '');
                     $color = trim($colores[$i] ?? '');
                     $stockVar = (int)($stocks[$i] ?? 0);
+                    $imagen = trim($imagenes[$i] ?? '');
                     
                     // Solo insertar si al menos talla o color tiene valor
                     if (!empty($talla) || !empty($color)) {
-                        $stmtVar = $db->prepare("INSERT INTO variantes_producto (producto_id, talla, color, stock) VALUES (?, ?, ?, ?)");
-                        $stmtVar->execute([$producto_id, $talla ?: null, $color ?: null, $stockVar]);
+                        $stmtVar = $db->prepare("INSERT INTO variantes_producto (producto_id, talla, color, stock, imagen) VALUES (?, ?, ?, ?, ?)");
+                        $stmtVar->execute([
+                            $producto_id, 
+                            $talla ?: null, 
+                            $color ?: null, 
+                            $stockVar,
+                            !empty($imagen) ? $imagen : null
+                        ]);
                     }
                 }
             }
@@ -533,32 +541,49 @@ class ProductoController extends BaseController
             }
 
             // ==================== ACTUALIZAR VARIANTES ====================
-            // Eliminar variantes existentes
-            $db->prepare("DELETE FROM variantes_producto WHERE producto_id = ?")->execute([$id]);
+            // Obtener IDs de variantes existentes
+            $variantesIds = $_POST['variantes']['id'] ?? [];
+            $tallas = $_POST['variantes']['talla'] ?? [];
+            $colores = $_POST['variantes']['color'] ?? [];
+            $stocks = $_POST['variantes']['stock'] ?? [];
+            $imagenes = $_POST['variantes']['imagen'] ?? [];
 
-            // Agregar nuevas variantes - permitir solo talla, solo color, o ambos
+            // Actualizar o crear variantes
             if (isset($_POST['variantes']) && 
                 (isset($_POST['variantes']['talla']) || isset($_POST['variantes']['color']))) {
-                $tallas = $_POST['variantes']['talla'] ?? [];
-                $colores = $_POST['variantes']['color'] ?? [];
-                $stocks = $_POST['variantes']['stock'] ?? [];
-
+                
                 $maxIndex = max(count($tallas), count($colores), count($stocks));
 
                 for ($i = 0; $i < $maxIndex; $i++) {
                     $talla = trim($tallas[$i] ?? '');
                     $color = trim($colores[$i] ?? '');
                     $stockVar = (int)($stocks[$i] ?? 0);
+                    $imagen = trim($imagenes[$i] ?? '');
+                    $varianteId = isset($variantesIds[$i]) ? (int)$variantesIds[$i] : 0;
 
-                    // Solo insertar si hay al menos talla o color
+                    // Solo procesar si hay al menos talla o color
                     if (!empty($talla) || !empty($color)) {
-                        $stmtVar = $db->prepare("INSERT INTO variantes_producto (producto_id, talla, color, stock) VALUES (?, ?, ?, ?)");
-                        $stmtVar->execute([
-                            $id,
-                            !empty($talla) ? $talla : null,
-                            !empty($color) ? $color : null,
-                            $stockVar
-                        ]);
+                        if ($varianteId > 0) {
+                            // ACTUALIZAR variante existente (mantiene la imagen si no se especifica nueva)
+                            $stmtVar = $db->prepare("UPDATE variantes_producto SET talla = ?, color = ?, stock = ?, imagen = ? WHERE id = ?");
+                            $stmtVar->execute([
+                                !empty($talla) ? $talla : null,
+                                !empty($color) ? $color : null,
+                                $stockVar,
+                                !empty($imagen) ? $imagen : null,
+                                $varianteId
+                            ]);
+                        } else {
+                            // CREAR nueva variante
+                            $stmtVar = $db->prepare("INSERT INTO variantes_producto (producto_id, talla, color, stock, imagen) VALUES (?, ?, ?, ?, ?)");
+                            $stmtVar->execute([
+                                $id,
+                                !empty($talla) ? $talla : null,
+                                !empty($color) ? $color : null,
+                                $stockVar,
+                                !empty($imagen) ? $imagen : null
+                            ]);
+                        }
                     }
                 }
             }
