@@ -203,30 +203,30 @@
                     break;
 
                 case 'nxm_producto':
-    // Mantener coherencia con el backend
-    tipoCondicionInput.value = 'cantidad_producto_identico';
-    tipoAccionInput.value = 'compra_n_paga_m';
+                // Mantener coherencia con el backend
+                tipoCondicionInput.value = 'cantidad_producto_identico';
+                tipoAccionInput.value = 'compra_n_paga_m';
 
-    camposDinamicosContainer.innerHTML = `
-        <p class="info-text">Aplica para un producto específico. Ej: Lleva 3, Paga 2.</p>
-        <div class="form-grid">
-            <div class="form-group">
-                <label class="form-label">Buscar Producto</label>
-                <input type="text" id="buscarProductoNXM" class="form-input" placeholder="Escribe el nombre del producto..." autocomplete="off">
-                <ul id="listaProductosNXM" class="autocomplete-list border rounded mt-1 bg-white shadow-md max-h-40 overflow-y-auto hidden"></ul>
-                <input type="hidden" name="cond_producto_id" id="productoIdSeleccionadoNXM" required>
-            </div>
+                camposDinamicosContainer.innerHTML = `
+                    <p class="info-text">Aplica para un producto específico. Ej: Lleva 3, Paga 2.</p>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Buscar Producto</label>
+                            <input type="text" id="buscarProductoNXM" class="form-input" placeholder="Escribe el nombre del producto..." autocomplete="off">
+                            <ul id="listaProductosNXM" class="autocomplete-list border rounded mt-1 bg-white shadow-md max-h-40 overflow-y-auto hidden"></ul>
+                            <input type="hidden" name="cond_producto_id" id="productoIdSeleccionadoNXM" required>
+                        </div>
 
-            <div class="form-group">
-                <label class="form-label">Cantidad que lleva (N)</label>
-                <input type="number" name="accion_cantidad_lleva" class="form-input" min="2" required>
-            </div>
+                        <div class="form-group">
+                            <label class="form-label">Cantidad que lleva (N)</label>
+                            <input type="number" name="accion_cantidad_lleva" class="form-input" min="2" required>
+                        </div>
 
-            <div class="form-group">
-                <label class="form-label">Cantidad que paga (M)</label>
-                <input type="number" name="accion_cantidad_paga" class="form-input" min="1" required>
-            </div>
-        </div>
+                        <div class="form-group">
+                            <label class="form-label">Cantidad que paga (M)</label>
+                            <input type="number" name="accion_cantidad_paga" class="form-input" min="1" required>
+                        </div>
+                    </div>
     `;
 
     // --- LÓGICA DEL AUTOCOMPLETE (modelo del caso 'descuento_enesima_unidad') ---

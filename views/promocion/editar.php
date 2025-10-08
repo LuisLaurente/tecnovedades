@@ -209,67 +209,86 @@
                         break;
 
                     case 'nxm_producto':
-                        tipoCondicionInput.value = 'cantidad_producto_identico';
-                        tipoAccionInput.value = 'compra_n_paga_m';
-                        camposDinamicosContainer.innerHTML = `
-                        <p class="info-text">Aplica para un producto específico. Ej: Lleva 3, Paga 2.</p>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label class="form-label">ID del Producto</label>
-                                <input type="number" name="cond_producto_id" class="form-input" value="${cond.producto_id || ''}" required min="1">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Cantidad que lleva (N)</label>
-                                <input type="number" name="accion_cantidad_lleva" class="form-input" value="${acc.cantidad_lleva || ''}" required min="2">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Cantidad que paga (M)</label>
-                                <input type="number" name="accion_cantidad_paga" class="form-input" value="${acc.cantidad_paga || ''}" required min="1">
-                            </div>
-                        </div>`;
-                        break;
+                    tipoCondicionInput.value = 'cantidad_producto_identico';
+                    tipoAccionInput.value = 'compra_n_paga_m';
+                    camposDinamicosContainer.innerHTML = `
+                    <p class="info-text">Aplica para un producto específico. Ej: Lleva 3, Paga 2.</p>
+                    <div class="form-grid">
+                        
+                        <div class="form-group relative">
+                            <label class="form-label">Buscar nuevo producto (para reemplazar)</label>
+                            <input type="text" id="producto_nombre" class="form-input" placeholder="Buscar producto..." autocomplete="off"
+                                value="${cond.producto_nombre || ''}">
+                            <input type="hidden" name="cond_producto_id" id="producto_id" value="${cond.producto_id || ''}">
+                            <ul id="lista_productos" class="autocomplete-list rounded mt-1 bg-white shadow-md max-h-40 overflow-y-auto"></ul>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Cantidad que lleva (N)</label>
+                            <input type="number" name="accion_cantidad_lleva" class="form-input" value="${acc.cantidad_lleva || ''}" required min="2">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Cantidad que paga (M)</label>
+                            <input type="number" name="accion_cantidad_paga" class="form-input" value="${acc.cantidad_paga || ''}" required min="1">
+                        </div>
+                    </div>`;
+                    inicializarBuscadorProducto();
+                    break;
+
 
                     case 'descuento_enesima_unidad':
-                        tipoCondicionInput.value = 'cantidad_producto_identico';
-                        tipoAccionInput.value = 'descuento_enesima_unidad';
-                        camposDinamicosContainer.innerHTML = `
-                        <p class="info-text">Aplica un descuento a una unidad específica. Ej: 50% en la 3ra unidad.</p>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label class="form-label">ID del Producto</label>
-                                <input type="number" name="cond_producto_id" class="form-input" value="${cond.producto_id || ''}" required min="1">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">N-ésima unidad a descontar</label>
-                                <input type="number" name="accion_numero_unidad" class="form-input" value="${acc.numero_unidad || ''}" required min="2">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Porcentaje de descuento (%)</label>
-                                <input type="number" name="accion_descuento_unidad" class="form-input" value="${acc.descuento_unidad || ''}" required min="0" max="100" step="0.01">
-                            </div>
-                        </div>`;
-                        break;
+                    tipoCondicionInput.value = 'cantidad_producto_identico';
+                    tipoAccionInput.value = 'descuento_enesima_unidad';
+                    camposDinamicosContainer.innerHTML = `
+                    <p class="info-text">Aplica un descuento a una unidad específica. Ej: 50% en la 3ra unidad.</p>
+                    <div class="form-grid">
+                        <div class="form-group relative">
+                            <label class="form-label">Buscar nuevo producto (para reemplazar)</label>
+                            <input type="text" id="producto_nombre" class="form-input" placeholder="Buscar producto..." autocomplete="off"
+                                value="${cond.producto_nombre || ''}">
+                            <input type="hidden" name="cond_producto_id" id="producto_id" value="${cond.producto_id || ''}">
+                            <ul id="lista_productos" class="autocomplete-list rounded mt-1 bg-white shadow-md max-h-40 overflow-y-auto"></ul>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">N-ésima unidad a descontar</label>
+                            <input type="number" name="accion_numero_unidad" class="form-input"
+                                value="${acc.numero_unidad || ''}" required min="2">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Porcentaje de descuento (%)</label>
+                            <input type="number" name="accion_descuento_unidad" class="form-input"
+                                value="${acc.descuento_unidad || ''}" required min="0" max="100" step="0.01">
+                        </div>
+                    </div>`;
+                    inicializarBuscadorProducto();
+                    break;
 
                     case 'descuento_menor_valor_categoria':
-                        tipoCondicionInput.value = 'cantidad_producto_categoria';
-                        tipoAccionInput.value = 'descuento_menor_valor';
-                        camposDinamicosContainer.innerHTML = `
-                        <p class="info-text">Aplica un descuento al producto más barato dentro de una categoría seleccionada.</p>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label class="form-label">ID de la Categoría</label>
-                                <input type="number" name="cond_categoria_id" class="form-input" value="${cond.categoria_id || ''}" required min="1">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Cantidad mínima de productos</label>
-                                <input type="number" name="cond_cantidad_min_categoria" class="form-input" value="${cond.cantidad_min || ''}" required min="2">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Porcentaje de descuento (%)</label>
-                                <input type="number" name="accion_descuento_menor_valor" class="form-input" value="${acc.valor || ''}" required min="0" max="100" step="0.01">
-                            </div>
-                        </div>`;
-                        break;
+                    tipoCondicionInput.value = 'cantidad_producto_categoria';
+                    tipoAccionInput.value = 'descuento_menor_valor';
+                    camposDinamicosContainer.innerHTML = `
+                    <p class="info-text">Aplica un descuento al producto más barato dentro de una categoría seleccionada.</p>
+                    <div class="form-grid">
+                        <div class="form-group relative">
+                            <label class="form-label">Categoría</label>
+                            <input type="text" id="categoria_nombre" class="form-input" placeholder="Buscar categoría..." autocomplete="off"
+                                value="${cond.categoria_nombre || ''}">
+                            <input type="hidden" name="cond_categoria_id" id="categoria_id" value="${cond.categoria_id || ''}">
+                            <ul id="lista_categorias" class="autocomplete-list rounded mt-1 bg-white shadow-md max-h-40 overflow-y-auto"></ul>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Cantidad mínima de productos</label>
+                            <input type="number" name="cond_cantidad_min_categoria" class="form-input"
+                                value="${cond.cantidad_min || ''}" required min="2">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Porcentaje de descuento (%)</label>
+                            <input type="number" name="accion_descuento_menor_valor" class="form-input"
+                                value="${acc.valor || ''}" required min="0" max="100" step="0.01">
+                        </div>
+                    </div>`;
+                    inicializarBuscadorCategoria();
+                    break;
+
 
                     case 'nxm_general':
                         tipoCondicionInput.value = 'cantidad_total_productos';
@@ -371,6 +390,59 @@
                 console.warn('No se pudo determinar la regla actual para la promoción:', promocion);
             }
         });
+        // --- FUNCIONES DE AUTOCOMPLETADO ---
+        function inicializarBuscadorProducto() {
+            const input = document.getElementById('producto_nombre');
+            const hidden = document.getElementById('producto_id');
+            const lista = document.getElementById('lista_productos');
+            if (!input) return;
+
+            input.addEventListener('input', async () => {
+                const termino = input.value.trim();
+                if (termino.length < 2) { lista.innerHTML = ''; return; }
+
+                try {
+                    const res = await fetch('<?= url("producto/autocomplete") ?>?q=' + encodeURIComponent(termino));
+                    const data = await res.json();
+                    lista.innerHTML = data.map(p => `<li data-id="${p.id}" class="autocomplete-item">${p.nombre}</li>`).join('');
+                } catch (err) { console.error(err); }
+            });
+
+            lista.addEventListener('click', e => {
+                if (e.target.classList.contains('autocomplete-item')) {
+                    input.value = e.target.textContent;
+                    hidden.value = e.target.dataset.id;
+                    lista.innerHTML = '';
+                }
+            });
+        }
+
+        function inicializarBuscadorCategoria() {
+            const input = document.getElementById('categoria_nombre');
+            const hidden = document.getElementById('categoria_id');
+            const lista = document.getElementById('lista_categorias');
+            if (!input) return;
+
+            input.addEventListener('input', async () => {
+                const termino = input.value.trim();
+                if (termino.length < 2) { lista.innerHTML = ''; return; }
+
+                try {
+                    const res = await fetch('<?= url("categoria/buscarPorNombre") ?>?q=' + encodeURIComponent(termino));
+                    const data = await res.json();
+                    lista.innerHTML = data.map(c => `<li data-id="${c.id}" class="autocomplete-item">${c.nombre}</li>`).join('');
+                } catch (err) { console.error(err); }
+            });
+
+            lista.addEventListener('click', e => {
+                if (e.target.classList.contains('autocomplete-item')) {
+                    input.value = e.target.textContent;
+                    hidden.value = e.target.dataset.id;
+                    lista.innerHTML = '';
+                }
+            });
+        }
+
     </script>
 </body>
 
